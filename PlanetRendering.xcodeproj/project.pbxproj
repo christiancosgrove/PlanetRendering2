@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA0DFC4319D8598E0042C627 /* Planet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA0DFC4119D8598E0042C627 /* Planet.cpp */; };
+		AA0DFC4619D85D800042C627 /* Player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA0DFC4419D85D800042C627 /* Player.cpp */; };
 		AA68DB5519D8384600B073C6 /* ResourcePath.mm in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB5419D8384600B073C6 /* ResourcePath.mm */; };
 		AA68DB5819D8384600B073C6 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB5719D8384600B073C6 /* main.cpp */; };
 		AA68DB6919D83A0300B073C6 /* MainGame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB6719D83A0300B073C6 /* MainGame.cpp */; };
@@ -17,6 +19,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AA0DFC4119D8598E0042C627 /* Planet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Planet.cpp; sourceTree = "<group>"; };
+		AA0DFC4219D8598E0042C627 /* Planet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Planet.h; sourceTree = "<group>"; };
+		AA0DFC4419D85D800042C627 /* Player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Player.cpp; path = ../Player.cpp; sourceTree = "<group>"; };
+		AA0DFC4519D85D800042C627 /* Player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Player.h; path = ../Player.h; sourceTree = "<group>"; };
+		AA0DFC4719D861F00042C627 /* VectorHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorHelper.h; sourceTree = "<group>"; };
 		AA68DB4F19D8384600B073C6 /* PlanetRendering.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanetRendering.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA68DB5319D8384600B073C6 /* PlanetRendering-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "PlanetRendering-Info.plist"; sourceTree = "<group>"; };
 		AA68DB5419D8384600B073C6 /* ResourcePath.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ResourcePath.mm; sourceTree = "<group>"; };
@@ -63,6 +70,8 @@
 		AA68DB5119D8384600B073C6 /* PlanetRendering */ = {
 			isa = PBXGroup;
 			children = (
+				AA0DFC4419D85D800042C627 /* Player.cpp */,
+				AA0DFC4519D85D800042C627 /* Player.h */,
 				AA68DB5419D8384600B073C6 /* ResourcePath.mm */,
 				AA68DB5619D8384600B073C6 /* ResourcePath.hpp */,
 				AA68DB5719D8384600B073C6 /* main.cpp */,
@@ -72,6 +81,9 @@
 				AA68DB6819D83A0300B073C6 /* MainGame.h */,
 				AA68DB6A19D83B5700B073C6 /* GLManager.cpp */,
 				AA68DB6B19D83B5700B073C6 /* GLManager.h */,
+				AA0DFC4119D8598E0042C627 /* Planet.cpp */,
+				AA0DFC4219D8598E0042C627 /* Planet.h */,
+				AA0DFC4719D861F00042C627 /* VectorHelper.h */,
 			);
 			path = PlanetRendering;
 			sourceTree = "<group>";
@@ -180,8 +192,10 @@
 			files = (
 				AA68DB6C19D83B5700B073C6 /* GLManager.cpp in Sources */,
 				AA68DB6919D83A0300B073C6 /* MainGame.cpp in Sources */,
+				AA0DFC4619D85D800042C627 /* Player.cpp in Sources */,
 				AA68DB5819D8384600B073C6 /* main.cpp in Sources */,
 				AA68DB5519D8384600B073C6 /* ResourcePath.mm in Sources */,
+				AA0DFC4319D8598E0042C627 /* Planet.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

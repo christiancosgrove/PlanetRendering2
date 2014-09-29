@@ -11,10 +11,10 @@
 #include <cmath>
 #include <SFML/Graphics.hpp>
 
-sf::Vector3f Normalize(sf::Vector3f v)
+glm::vec3 Normalize(glm::vec3 v)
 {
     float len = sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-    return sf::Vector3f(v.x/len,v.y/len,v.z/len);
+    return glm::vec3(v.x/len,v.y/len,v.z/len);
 }
 
 #endif

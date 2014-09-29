@@ -8,12 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		AA0DFC4319D8598E0042C627 /* Planet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA0DFC4119D8598E0042C627 /* Planet.cpp */; };
+		AA4BABD719DA04B10022C8BC /* glm in Resources */ = {isa = PBXBuildFile; fileRef = AA4BABD619DA04B10022C8BC /* glm */; };
 		AA623B3C19D8709000C31816 /* Player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA623B3A19D8709000C31816 /* Player.cpp */; };
 		AA68DB5519D8384600B073C6 /* ResourcePath.mm in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB5419D8384600B073C6 /* ResourcePath.mm */; };
 		AA68DB5819D8384600B073C6 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB5719D8384600B073C6 /* main.cpp */; };
 		AA68DB6919D83A0300B073C6 /* MainGame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB6719D83A0300B073C6 /* MainGame.cpp */; };
 		AA68DB6C19D83B5700B073C6 /* GLManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB6A19D83B5700B073C6 /* GLManager.cpp */; };
-		AA68DB6E19D8404F00B073C6 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA68DB6D19D8404F00B073C6 /* OpenGL.framework */; };
+		AA68DB6E19D8404F00B073C6 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA68DB6D19D8404F00B073C6 /* OpenGL.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		AA68DB7119D8407700B073C6 /* fragmentShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */; };
 		AA68DB7419D8408A00B073C6 /* vertexShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA68DB7319D8408A00B073C6 /* vertexShader.glsl */; };
 /* End PBXBuildFile section */
@@ -22,6 +23,7 @@
 		AA0DFC4119D8598E0042C627 /* Planet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Planet.cpp; sourceTree = "<group>"; };
 		AA0DFC4219D8598E0042C627 /* Planet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Planet.h; sourceTree = "<group>"; };
 		AA0DFC4719D861F00042C627 /* VectorHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorHelper.h; sourceTree = "<group>"; };
+		AA4BABD619DA04B10022C8BC /* glm */ = {isa = PBXFileReference; lastKnownFileType = folder; path = glm; sourceTree = "<group>"; };
 		AA623B3A19D8709000C31816 /* Player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Player.cpp; sourceTree = "<group>"; };
 		AA623B3B19D8709000C31816 /* Player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Player.h; sourceTree = "<group>"; };
 		AA68DB4F19D8384600B073C6 /* PlanetRendering.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanetRendering.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,6 +72,7 @@
 		AA68DB5119D8384600B073C6 /* PlanetRendering */ = {
 			isa = PBXGroup;
 			children = (
+				AA4BABD619DA04B10022C8BC /* glm */,
 				AA623B3A19D8709000C31816 /* Player.cpp */,
 				AA623B3B19D8709000C31816 /* Player.h */,
 				AA68DB5419D8384600B073C6 /* ResourcePath.mm */,
@@ -162,6 +165,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA4BABD719DA04B10022C8BC /* glm in Resources */,
 				AA68DB7119D8407700B073C6 /* fragmentShader.glsl in Resources */,
 				AA68DB7419D8408A00B073C6 /* vertexShader.glsl in Resources */,
 			);

@@ -16,9 +16,9 @@
 MainGame::MainGame() : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Planet Rendering", sf::Style::Default, sf::ContextSettings(0,0,0,3,3))
 {
     std::cout << "version " << window.getSettings().majorVersion << "." << window.getSettings().minorVersion << std::endl;
-    GLManager glManager(resourcePath() + "fragmentShader.glsl", resourcePath() + "vertexShader.glsl");
+    //GLManager glManager(resourcePath() + "fragmentShader.glsl", resourcePath() + "vertexShader.glsl");
     Player player;
-    Planet planet(sf::Vector3f(0,0,0), 1);
+    Planet planet(glm::vec3(0,0,0), 1);
     window.setFramerateLimit(60);
     bool open = true;
     while (open)
@@ -35,7 +35,8 @@ MainGame::MainGame() : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Plane
         }
         glClear(GL_COLOR_BUFFER_BIT);
         planet.Update(player);
-        planet.Draw();
+        planet.Draw(player);
+        player.Update();
         window.display();
     }
     

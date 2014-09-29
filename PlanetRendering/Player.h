@@ -9,14 +9,16 @@
 #ifndef __PlanetRendering__Player__
 #define __PlanetRendering__Player__
 #include <SFML/Graphics.hpp>
-
+#include "glm/glm.hpp"
 
 class Player
 {
 public:
-    sf::Vector3f Position;
+    glm::vec3 Position;
     Player();
-    Player(sf::Vector3f pos);
+    Player(glm::vec3 pos);
+    void Update();
+    glm::mat4 GetViewMatrix();
 };
 
 #endif /* defined(__PlanetRendering__Player__) */

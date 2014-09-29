@@ -16,12 +16,18 @@
 
 struct Face
 {
-    sf::Vector3f v1,v2,v3;
-    Face(sf::Vector3f _v1, sf::Vector3f _v2, sf::Vector3f _v3) : v1(_v1), v2(_v2), v3(_v3)
+    glm::vec3 v1,v2,v3;
+    unsigned int level;
+    Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0)
     {
         
     }
-    //Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3) {}
+    Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level)
+    {
+        
+    }
+    
+    Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3), level(face.level) {}
     //Face& operator=(Face& rhs) { v1=rhs.v1;v2=rhs.v2;v3=rhs.v3;return *this; }
     
     //Face& operator=(Face& rhs) {memcpy(this, &rhs, sizeof(Face)); return *this; }
@@ -35,15 +41,15 @@ class Planet
 {
 public:
     
-    sf::Vector3f Position;
+    glm::vec3 Position;
     float Radius;
     
     
-    Planet(sf::Vector3f pos, float radius);
+    Planet(glm::vec3 pos, float radius);
     
     void Update(Player& player);
     
-    void Draw();
+    void Draw(Player& player);
     
 private:
     std::vector<Face> faces;
@@ -51,7 +57,7 @@ private:
     GLuint VBO;
     
     //takes a function of the player information and the current face
-    bool trySubdivide(std::vector<Face>::iterator& iterator, const std::function<bool(Player&, std::vector<Face>::iterator)>& func, Player& player);
+    bool trySubdivide(std::vector<Face>::iterator& iterator, const std::function<bool(Player&, Face)>& func, Player& player, std::vector<Face>& newFaces);
     inline void projectFaceOntoSphere(Face& f);
     void buildBaseMesh();
     void generateBuffers();

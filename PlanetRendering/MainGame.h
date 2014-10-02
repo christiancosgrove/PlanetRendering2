@@ -9,17 +9,16 @@
 #ifndef __PlanetRendering__MainGame__
 #define __PlanetRendering__MainGame__
 
-#include <SFML/Window.hpp>
 
-class MainGame
-{
-public:
-    static const int WINDOW_WIDTH = 800;
-    static const int WINDOW_HEIGHT = 600;
-    MainGame();
-private:
-    sf::Window window;
-};
+//class MainGame
+//{
+//public:
+//    static const int WINDOW_WIDTH = 800;
+//    static const int WINDOW_HEIGHT = 600;
+//    MainGame();
+//private:
+//    sf::Window window;
+//};
 
 
 

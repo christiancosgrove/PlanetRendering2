@@ -8,7 +8,6 @@
 
 #ifndef __PlanetRendering__Player__
 #define __PlanetRendering__Player__
-#include <SFML/Graphics.hpp>
 #include "glm/glm.hpp"
 #include "Camera.h"
 class Player

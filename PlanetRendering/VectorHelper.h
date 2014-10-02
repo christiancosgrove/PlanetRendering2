@@ -9,7 +9,6 @@
 #ifndef PlanetRendering_VectorHelper_h
 #define PlanetRendering_VectorHelper_h
 #include <cmath>
-#include <SFML/Graphics.hpp>
 
 glm::vec3 Normalize(glm::vec3 v)
 {

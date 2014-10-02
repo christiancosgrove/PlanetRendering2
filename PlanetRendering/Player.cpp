@@ -71,14 +71,14 @@ void Player::Update() //SDL implementation
     }
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;
-    if (mouseFocus)
-    {
-        Camera.XRotation += (float)(sf::Mouse::getPosition().y - 540)/200;
-        if (Camera.XRotation>0)
-            Camera.XRotation=0;
-        if (Camera.XRotation<-M_PI)
-            Camera.XRotation=-M_PI;
-        Camera.ZRotation += (float)(sf::Mouse::getPosition().x - 960)/200;
-        sf::Mouse::setPosition(sf::Vector2<int>(960,540));
-    }
+//    if (mouseFocus)
+//    {
+//        Camera.XRotation += (float)(sf::Mouse::getPosition().y - 540)/200;
+//        if (Camera.XRotation>0)
+//            Camera.XRotation=0;
+//        if (Camera.XRotation<-M_PI)
+//            Camera.XRotation=-M_PI;
+//        Camera.ZRotation += (float)(sf::Mouse::getPosition().x - 960)/200;
+//        sf::Mouse::setPosition(sf::Vector2<int>(960,540));
+//    }
 }

@@ -12,6 +12,7 @@
 #include <OpenGL/gl.h>
 #include <functional>
 #include "Player.h"
+#include <vector>
 
 struct Face
 {

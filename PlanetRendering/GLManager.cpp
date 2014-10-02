@@ -31,7 +31,13 @@ GLProgram::GLProgram(std::string fragName, std::string vertName) : programID(glC
 
 GLManager::GLManager(std::string fragName, std::string vertName) : Program(fragName, vertName)
 {
-    
+    initGL();
+}
+
+void GLManager::initGL()
+{
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 }
 
 GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)

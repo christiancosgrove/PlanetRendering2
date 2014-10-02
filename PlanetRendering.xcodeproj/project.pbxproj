@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		AA0DFC4319D8598E0042C627 /* Planet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA0DFC4119D8598E0042C627 /* Planet.cpp */; };
 		AA4BABD719DA04B10022C8BC /* glm in Resources */ = {isa = PBXBuildFile; fileRef = AA4BABD619DA04B10022C8BC /* glm */; };
+		AA4BABDA19DA08450022C8BC /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA4BABD819DA08450022C8BC /* Camera.cpp */; };
 		AA623B3C19D8709000C31816 /* Player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA623B3A19D8709000C31816 /* Player.cpp */; };
 		AA68DB5519D8384600B073C6 /* ResourcePath.mm in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB5419D8384600B073C6 /* ResourcePath.mm */; };
 		AA68DB5819D8384600B073C6 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA68DB5719D8384600B073C6 /* main.cpp */; };
@@ -17,6 +18,8 @@
 		AA68DB6E19D8404F00B073C6 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA68DB6D19D8404F00B073C6 /* OpenGL.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		AA68DB7119D8407700B073C6 /* fragmentShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */; };
 		AA68DB7419D8408A00B073C6 /* vertexShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA68DB7319D8408A00B073C6 /* vertexShader.glsl */; };
+		AACC3ED319DCE87500FEDC84 /* MainGame_SDL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */; };
+		AACC3ED519DCE8B700FEDC84 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACC3ED419DCE8B700FEDC84 /* SDL2.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +27,8 @@
 		AA0DFC4219D8598E0042C627 /* Planet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Planet.h; sourceTree = "<group>"; };
 		AA0DFC4719D861F00042C627 /* VectorHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorHelper.h; sourceTree = "<group>"; };
 		AA4BABD619DA04B10022C8BC /* glm */ = {isa = PBXFileReference; lastKnownFileType = folder; path = glm; sourceTree = "<group>"; };
+		AA4BABD819DA08450022C8BC /* Camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Camera.cpp; sourceTree = "<group>"; };
+		AA4BABD919DA08450022C8BC /* Camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Camera.h; sourceTree = "<group>"; };
 		AA623B3A19D8709000C31816 /* Player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Player.cpp; sourceTree = "<group>"; };
 		AA623B3B19D8709000C31816 /* Player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Player.h; sourceTree = "<group>"; };
 		AA68DB4F19D8384600B073C6 /* PlanetRendering.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanetRendering.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -38,6 +43,9 @@
 		AA68DB6D19D8404F00B073C6 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = fragmentShader.glsl; sourceTree = "<group>"; };
 		AA68DB7319D8408A00B073C6 /* vertexShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vertexShader.glsl; sourceTree = "<group>"; };
+		AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MainGame_SDL.cpp; sourceTree = "<group>"; };
+		AACC3ED219DCE87500FEDC84 /* MainGame_SDL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainGame_SDL.h; sourceTree = "<group>"; };
+		AACC3ED419DCE8B700FEDC84 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +53,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AACC3ED519DCE8B700FEDC84 /* SDL2.framework in Frameworks */,
 				AA68DB6E19D8404F00B073C6 /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -55,6 +64,7 @@
 		AA68DB4519D8384600B073C6 = {
 			isa = PBXGroup;
 			children = (
+				AACC3ED419DCE8B700FEDC84 /* SDL2.framework */,
 				AA68DB6D19D8404F00B073C6 /* OpenGL.framework */,
 				AA68DB5119D8384600B073C6 /* PlanetRendering */,
 				AA68DB5019D8384600B073C6 /* Products */,
@@ -72,6 +82,8 @@
 		AA68DB5119D8384600B073C6 /* PlanetRendering */ = {
 			isa = PBXGroup;
 			children = (
+				AA4BABD819DA08450022C8BC /* Camera.cpp */,
+				AA4BABD919DA08450022C8BC /* Camera.h */,
 				AA4BABD619DA04B10022C8BC /* glm */,
 				AA623B3A19D8709000C31816 /* Player.cpp */,
 				AA623B3B19D8709000C31816 /* Player.h */,
@@ -87,6 +99,8 @@
 				AA0DFC4119D8598E0042C627 /* Planet.cpp */,
 				AA0DFC4219D8598E0042C627 /* Planet.h */,
 				AA0DFC4719D861F00042C627 /* VectorHelper.h */,
+				AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */,
+				AACC3ED219DCE87500FEDC84 /* MainGame_SDL.h */,
 			);
 			path = PlanetRendering;
 			sourceTree = "<group>";
@@ -196,6 +210,8 @@
 			files = (
 				AA68DB6C19D83B5700B073C6 /* GLManager.cpp in Sources */,
 				AA68DB6919D83A0300B073C6 /* MainGame.cpp in Sources */,
+				AACC3ED319DCE87500FEDC84 /* MainGame_SDL.cpp in Sources */,
+				AA4BABDA19DA08450022C8BC /* Camera.cpp in Sources */,
 				AA623B3C19D8709000C31816 /* Player.cpp in Sources */,
 				AA68DB5819D8384600B073C6 /* main.cpp in Sources */,
 				AA68DB5519D8384600B073C6 /* ResourcePath.mm in Sources */,
@@ -313,6 +329,10 @@
 		AA68DB6519D8384600B073C6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = "PlanetRendering/PlanetRendering-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -321,6 +341,10 @@
 		AA68DB6619D8384600B073C6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = "PlanetRendering/PlanetRendering-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

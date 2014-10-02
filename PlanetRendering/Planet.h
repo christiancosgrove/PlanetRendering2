@@ -9,8 +9,7 @@
 #ifndef __PlanetRendering__Planet__
 #define __PlanetRendering__Planet__
 
-#include <SFML/Graphics.hpp>
-#include <SFML/OpenGL.hpp>
+#include <OpenGL/gl.h>
 #include <functional>
 #include "Player.h"
 

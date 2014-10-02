@@ -64,8 +64,16 @@ void Planet::generateBuffers()
 
 void Planet::updateVBO()
 {
+//    vertices.clear();
+//    for (Face f : faces)
+//    {
+//        vertices.push_back(Vertex(f.v1));
+//        vertices.push_back(Vertex(f.v1));
+//        vertices.push_back(Vertex(f.v1));
+//    }
+    
     //glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(Face) * faces.size(), &faces[0], GL_STATIC_DRAW);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 }
 
 
@@ -160,7 +168,7 @@ void Planet::Draw(Player& player)
 //    //glDisableVertexAttribArray(0);
 //    glDisableClientState(GL_VERTEX_ARRAY);
     
-    glLoadMatrixf(glm::value_ptr(player.GetViewMatrix()));
+    glLoadMatrixf(glm::value_ptr(player.Camera.GetTransformMatrix()));
     
     //TODO: fix to use vertex arrays instead -- this is incredibly inefficient
     for (auto f : faces)

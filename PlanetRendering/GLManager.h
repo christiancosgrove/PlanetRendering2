@@ -10,7 +10,7 @@
 #define __PlanetRendering__GLManager__
 
 #include <string>
-#include <SFML/OpenGL.hpp>
+#include <OpenGL/gl.h>
 
 class GLProgram
 {
@@ -28,6 +28,8 @@ class GLManager
 public:
     GLProgram Program;
     GLManager(std::string fragName, std::string vertName);
+private:
+    void initGL();
 };
 
 #endif /* defined(__PlanetRendering__GLManager__) */

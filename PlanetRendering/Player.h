@@ -10,15 +10,14 @@
 #define __PlanetRendering__Player__
 #include <SFML/Graphics.hpp>
 #include "glm/glm.hpp"
-
+#include "Camera.h"
 class Player
 {
 public:
-    glm::vec3 Position;
-    Player();
-    Player(glm::vec3 pos);
+    Player(int windowWidth, int windowHeight);
+    Player(glm::vec3 pos, int windowWidth, int windowHeight);
     void Update();
-    glm::mat4 GetViewMatrix();
+    Camera Camera;
 };
 
 #endif /* defined(__PlanetRendering__Player__) */

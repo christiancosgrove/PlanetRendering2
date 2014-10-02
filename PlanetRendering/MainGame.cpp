@@ -17,7 +17,7 @@ MainGame::MainGame() : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Plane
 {
     std::cout << "version " << window.getSettings().majorVersion << "." << window.getSettings().minorVersion << std::endl;
     //GLManager glManager(resourcePath() + "fragmentShader.glsl", resourcePath() + "vertexShader.glsl");
-    Player player;
+    Player player(WINDOW_WIDTH, WINDOW_HEIGHT);
     Planet planet(glm::vec3(0,0,0), 1);
     window.setFramerateLimit(60);
     bool open = true;
@@ -30,7 +30,14 @@ MainGame::MainGame() : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Plane
             {
                 case sf::Event::Closed:
                     open = false;
-                
+                    break;
+                case sf::Event::KeyPressed:
+                    switch (event.key.code)
+                {
+                    case sf::Keyboard::Escape:
+                        open = false;
+                }
+                    break;
             }
         }
         glClear(GL_COLOR_BUFFER_BIT);

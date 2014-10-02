@@ -18,7 +18,8 @@
 // Here is a small helper for you ! Have a look.
 #include "ResourcePath.hpp"
 #include "MainGame.h"
+#include "MainGame_SDL.h"
 int main(int, char const**)
 {
-    MainGame game;
+    MainGame_SDL game;
 }

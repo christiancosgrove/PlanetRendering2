@@ -33,6 +33,12 @@ struct Face
     //Face& operator=(Face& rhs) {memcpy(this, &rhs, sizeof(Face)); return *this; }
 };
 
+struct Vertex
+{
+    float x,y,z;
+    Vertex(glm::vec3 pos) : x(pos.x), y(pos.y), z(pos.z) {}
+};
+
 //TODO: implement vertex indexing
 
 //reference on subdivided icosahedrons:
@@ -51,10 +57,15 @@ public:
     
     void Draw(Player& player);
     
+    
+    
+    
 private:
     std::vector<Face> faces;
+    std::vector<Vertex> vertices;
     
     GLuint VBO;
+    GLuint VAO;
     
     //takes a function of the player information and the current face
     bool trySubdivide(std::vector<Face>::iterator& iterator, const std::function<bool(Player&, Face)>& func, Player& player, std::vector<Face>& newFaces);
@@ -62,7 +73,19 @@ private:
     void buildBaseMesh();
     void generateBuffers();
     void updateVBO();
+    inline float terrainNoise(float x, float y, float z);
+    inline float terrainNoise(glm::vec3 v);
 };
+
+float Planet::terrainNoise(float x, float y, float z)
+{
+    return 0;//0.01 * sin((x + y + z)*10);
+}
+
+float Planet::terrainNoise(glm::vec3 v)
+{
+    return terrainNoise(v.x,v.y,v.z);
+}
 
 void Planet::projectFaceOntoSphere(Face &f)
 {

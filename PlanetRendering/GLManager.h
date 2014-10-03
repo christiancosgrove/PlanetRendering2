@@ -20,6 +20,7 @@ public:
     GLProgram(std::string fragName, std::string vertName);
     
     static GLuint CompileShader(std::string shaderName, GLenum type);
+    void Use() { glUseProgram(programID); }
 };
 
 

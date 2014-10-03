@@ -50,7 +50,8 @@ Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(window
 void Player::Update() //SDL implementation
 {
     bool mouseFocus = true;
-    const float playerSpeed = 0.05f;
+    float len =glm::length(Camera.Position)-1.0f;
+    float playerSpeed = (std::exp2(len)-1.0f)/100.0f;
     //float shiftSpeedFactor = (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) ? 45.0f : 1.0f;
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     if (state[SDL_SCANCODE_W])
@@ -71,6 +72,19 @@ void Player::Update() //SDL implementation
     }
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;
+    
+    if (mouseFocus)
+    {
+        int x,y;
+        SDL_GetRelativeMouseState(&x, &y);
+        
+        Camera.XRotation += (float) (y)/200;
+        if (Camera.XRotation > 0) Camera.XRotation=0;
+        if (Camera.XRotation<-M_PI) Camera.XRotation=-M_PI;
+        Camera.ZRotation+=(float)(x)/200;
+        
+    }
+    
 //    if (mouseFocus)
 //    {
 //        Camera.XRotation += (float)(sf::Mouse::getPosition().y - 540)/200;

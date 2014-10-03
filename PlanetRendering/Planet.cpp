@@ -10,11 +10,11 @@
 #include "VectorHelper.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
-
+#include <iostream>
 Planet::Planet(glm::vec3 pos, float radius) : Position(pos), Radius(radius)
 {
-    buildBaseMesh();
     generateBuffers();
+    buildBaseMesh();
 }
 
 bool Planet::trySubdivide(std::vector<Face>::iterator& iterator, const std::function<bool (Player&, Face)>& func, Player& player, std::vector<Face>& newFaces)
@@ -27,6 +27,9 @@ bool Planet::trySubdivide(std::vector<Face>::iterator& iterator, const std::func
         glm::vec3 m12 = Normalize((f.v1 + f.v2) * 0.5f)*Radius;
         glm::vec3 m13 = Normalize((f.v1 + f.v3) * 0.5f)*Radius;
         glm::vec3 m23 = Normalize((f.v2 + f.v3) * 0.5f)*Radius;
+        m12*=1 + terrainNoise(m12);
+        m13*=1 + terrainNoise(m13);
+        m23*=1 + terrainNoise(m23);
         
         Face f1(m13,m23,m12, f.level+1);
         Face f2(f.v1,m13,m12,f.level+1);
@@ -49,7 +52,7 @@ void Planet::Update(Player& player)
     std::vector<Face> newFaces;
     for (auto it = faces.begin();it!=faces.end();)
     {
-        if (trySubdivide(it, [](Player& player, Face f)->bool { return f.level < 3; }, player, newFaces)) wasSubdivided=true;
+        if (trySubdivide(it, [](Player& player, Face f)->bool { return glm::length(-player.Camera.Position - (f.v1+f.v2+f.v3)*0.3333f) < exp2(-(float)f.level); }, player, newFaces)) wasSubdivided=true;
     }
     for (Face f : newFaces) faces.push_back(f);
     if (wasSubdivided) updateVBO();
@@ -57,23 +60,37 @@ void Planet::Update(Player& player)
 
 void Planet::generateBuffers()
 {
+    
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glGenVertexArraysAPPLE(1, &VAO);
+    glBindVertexArrayAPPLE(VAO);
     updateVBO();
 }
 
+static const GLfloat g_vertex_buffer_data[] = {
+    -1.0f, -1.0f, 0.0f,
+    1.0f, -1.0f, 0.0f,
+    0.0f,  1.0f, 0.0f,
+};
+
 void Planet::updateVBO()
 {
-//    vertices.clear();
-//    for (Face f : faces)
-//    {
-//        vertices.push_back(Vertex(f.v1));
-//        vertices.push_back(Vertex(f.v1));
-//        vertices.push_back(Vertex(f.v1));
-//    }
+    vertices.clear();
+    for (Face f : faces)
+    {
+        vertices.push_back(Vertex(f.v1));
+        vertices.push_back(Vertex(f.v2));
+        vertices.push_back(Vertex(f.v3));
+    }
+    std::cout << vertices.size()<<std::endl;
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindVertexArrayAPPLE(VAO);
     
-    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+//    
+     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 }
 
 
@@ -158,28 +175,37 @@ void Planet::buildBaseMesh()
 
 void Planet::Draw(Player& player)
 {
-//    glEnableClientState(GL_VERTEX_ARRAY);
-//    //glEnableVertexAttribArray(0);
-//    
-//    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
-//    glVertexPointer(3, GL_FLOAT, 0, &faces[0]);
-//    glDrawArrays(GL_TRIANGLES, 0, faces.size()*3);
-//    
-//    //glDisableVertexAttribArray(0);
-//    glDisableClientState(GL_VERTEX_ARRAY);
-    
+    if (vertices.size() >0)
+    {
+//        glEnableClientState(GL_VERTEX_ARRAY);
+//        glEnableVertexAttribArray(0);
+//        glBindVertexArrayAPPLE(VAO);
+//        
+//        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//        //glVertexPointer(3, GL_FLOAT, 0, &faces[0]);
+//        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+//        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+//        
+//        glDisableVertexAttribArray(0);
+    }
     glLoadMatrixf(glm::value_ptr(player.Camera.GetTransformMatrix()));
     
     //TODO: fix to use vertex arrays instead -- this is incredibly inefficient
     for (auto f : faces)
     {
-        glBegin(GL_TRIANGLES);
+        glBegin(GL_LINES);
         glColor3f(1.0,0.0,0.0);
         glVertex3f(f.v1.x,f.v1.y,f.v1.z);
         glColor3f(0,0.0,1.0);
         glVertex3f(f.v2.x,f.v2.y,f.v2.z);
         glColor3f(0,1.0,0.0);
+        
+        glVertex3f(f.v1.x,f.v1.y,f.v1.z);
         glVertex3f(f.v3.x,f.v3.y,f.v3.z);
+        glVertex3f(f.v2.x,f.v2.y,f.v2.z);
+        glVertex3f(f.v3.x,f.v3.y,f.v3.z);
+        
+        
         glEnd();
     }
 }

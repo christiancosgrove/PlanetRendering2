@@ -25,12 +25,13 @@ GLProgram::GLProgram(std::string fragName, std::string vertName) : programID(glC
     glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
     std::vector<char> errorMessage(infoLogLength);
     glGetProgramInfoLog(programID, infoLogLength, NULL, &errorMessage[0]);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+//    glDeleteShader(vertexShader);
+//    glDeleteShader(fragmentShader);
 }
 
 GLManager::GLManager(std::string fragName, std::string vertName) : Program(fragName, vertName)
 {
+    Program.Use();
     initGL();
 }
 
@@ -38,6 +39,8 @@ void GLManager::initGL()
 {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }
 
 GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)

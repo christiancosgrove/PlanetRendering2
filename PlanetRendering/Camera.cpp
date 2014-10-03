@@ -1,7 +1,7 @@
 #include "Camera.h"
 
 Camera::Camera(int windowWidth, int windowHeight) : 
-	Position(0.0f, 0.0f, 0.0f), 
+	Position(1.1f, 0.0f, 0.0f),
 	aspectRatio(((float)windowWidth)/(float)windowHeight),
 	FieldOfView(85.0f), XRotation(0.0f), ZRotation(0.0f),
 	NEAR_PLANE(0.1f), FAR_PLANE(200.0f)
@@ -26,7 +26,7 @@ glm::mat4 Camera::GetProjectionMatrix()
 	return glm::perspective(
 		FieldOfView,
 		1.333333f,
-		0.001f,  //near clipping plane
+		0.00001f,  //near clipping plane
 		1000.0f //far clipping plane
 	);
 }

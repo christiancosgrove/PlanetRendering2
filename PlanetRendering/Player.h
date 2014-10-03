@@ -17,6 +17,7 @@ public:
     Player(glm::vec3 pos, int windowWidth, int windowHeight);
     void Update();
     Camera Camera;
+private:
 };
 
 #endif /* defined(__PlanetRendering__Player__) */

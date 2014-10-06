@@ -8,6 +8,7 @@
 
 #include "Player.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include <algorithm>
 
 #include <SDL2/SDL.h>
 Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight) {}
@@ -51,24 +52,24 @@ void Player::Update() //SDL implementation
 {
     bool mouseFocus = true;
     float len =glm::length(Camera.Position)-1.0f;
-    float playerSpeed = (std::exp2(len)-1.0f)/100.0f;
-    //float shiftSpeedFactor = (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) ? 45.0f : 1.0f;
+    float playerSpeed = std::min((std::exp2(len)-1.0f)/100.0f,0.1f);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
+    float shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 45.0f : 1.0f;
     if (state[SDL_SCANCODE_W])
     {
-        Camera.Position+=Camera.GetViewDirection() * playerSpeed;
+        Camera.Position+=Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor;
     }
     if (state[SDL_SCANCODE_S])
     {
-        Camera.Position-=Camera.GetViewDirection() * playerSpeed;
+        Camera.Position-=Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor;
     }
     if (state[SDL_SCANCODE_A])
     {
-        Camera.Position+=glm::vec3(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed;
+        Camera.Position+=glm::vec3(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
     if (state[SDL_SCANCODE_D])
     {
-        Camera.Position-=glm::vec3(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed;
+        Camera.Position-=glm::vec3(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;

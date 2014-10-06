@@ -11,13 +11,14 @@
 #include <stdexcept>
 #include "GLManager.h"
 #include "Planet.h"
+#include <iostream>
 MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
 {
-    //SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    if (SDL_Init(SDL_INIT_VIDEO)) throw std::logic_error("Failed to initialize SDL!  " + std::string(SDL_GetError()));
+//    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+//    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+//    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    //SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     
     window = SDL_CreateWindow("Planet Rendering", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
@@ -30,6 +31,9 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     glManager.Program.Use();
     glClearColor(0,0,0,1);
     
+    std::cout << "gl_renderer:" << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "gl_context: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "gl_shading_lang_version: " << glGetString(GL_SHADING_LANGUAGE_VERSION);
     
     Player player(WINDOW_WIDTH, WINDOW_HEIGHT);
     Planet planet(glm::vec3(0,0,0), 1);
@@ -38,17 +42,17 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     while (gameState!=GameState::EXIT)
     {
         HandleEvents();
-        Draw(planet, player);
+        Draw(planet, player,glManager);
         Update(planet, player);
     }
     
 }
 
-void MainGame_SDL::Draw(Planet& planet, Player& player)
+void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
 {
     glClearDepth(1.);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    planet.Draw(player);
+    planet.Draw(player, glManager);
     SDL_GL_SwapWindow(window);
 }
 

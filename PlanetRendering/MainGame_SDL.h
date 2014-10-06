@@ -23,10 +23,10 @@ public:
     {
         PLAY, EXIT,
     };
-    static const int WINDOW_WIDTH = 800;
-    static const int WINDOW_HEIGHT = 600;
+    static const int WINDOW_WIDTH = 1200;
+    static const int WINDOW_HEIGHT = 900;
     MainGame_SDL();
-    void Draw(Planet& planet, Player& player);
+    void Draw(Planet& planet, Player& player, GLManager& glManager);
     void Update(Planet& planet, Player& player);
     void HandleEvents();
 private:

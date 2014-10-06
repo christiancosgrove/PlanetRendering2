@@ -13,6 +13,7 @@
 #include <functional>
 #include "Player.h"
 #include <vector>
+#include "GLManager.h"
 
 struct Face
 {
@@ -35,8 +36,8 @@ struct Face
 
 struct Vertex
 {
-    float x,y,z;
-    Vertex(glm::vec3 pos) : x(pos.x), y(pos.y), z(pos.z) {}
+    float x,y,z,w;
+    Vertex(glm::vec4 pos) : x(pos.x), y(pos.y), z(pos.z), w(pos.w) {}
 };
 
 //TODO: implement vertex indexing
@@ -55,11 +56,13 @@ public:
     
     void Update(Player& player);
     
-    void Draw(Player& player);
+    void Draw(Player& player, GLManager& glManager);
     
     
     
     
+    inline float terrainNoise(float x, float y, float z);
+    inline float terrainNoise(glm::vec3 v);
 private:
     std::vector<Face> faces;
     std::vector<Vertex> vertices;
@@ -69,17 +72,16 @@ private:
     
     //takes a function of the player information and the current face
     bool trySubdivide(std::vector<Face>::iterator& iterator, const std::function<bool(Player&, Face)>& func, Player& player, std::vector<Face>& newFaces);
+    bool tryCombine(std::vector<Face>::iterator& iterator, const std::function<bool(Player&, Face)>& func, Player& player, std::vector<Face>& newFaces);
     inline void projectFaceOntoSphere(Face& f);
     void buildBaseMesh();
     void generateBuffers();
     void updateVBO();
-    inline float terrainNoise(float x, float y, float z);
-    inline float terrainNoise(glm::vec3 v);
 };
 
 float Planet::terrainNoise(float x, float y, float z)
 {
-    return 0;//0.01 * sin((x + y + z)*10);
+    return 0.01 * sin((x + y + z)*10) + 0.005*sin((x + y + z)*100);
 }
 
 float Planet::terrainNoise(glm::vec3 v)

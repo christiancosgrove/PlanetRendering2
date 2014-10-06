@@ -45,6 +45,34 @@ bool Planet::trySubdivide(std::vector<Face>::iterator& iterator, const std::func
     }
     else { ++iterator; return false; }
 }
+bool Planet::tryCombine(std::vector<Face>::iterator& iterator, const std::function<bool (Player&, Face)>& func, Player& player, std::vector<Face>& newFaces)
+{
+    
+    Face f(*iterator);
+    
+    if (func(player, f))
+    {
+        glm::vec3 m12 = Normalize((f.v1 + f.v2) * 0.5f)*Radius;
+        glm::vec3 m13 = Normalize((f.v1 + f.v3) * 0.5f)*Radius;
+        glm::vec3 m23 = Normalize((f.v2 + f.v3) * 0.5f)*Radius;
+        m12*=1 + terrainNoise(m12);
+        m13*=1 + terrainNoise(m13);
+        m23*=1 + terrainNoise(m23);
+        
+        Face f1(m13,m23,m12, f.level+1);
+        Face f2(f.v1,m13,m12,f.level+1);
+        Face f3(m12,m23,f.v2,f.level+1);
+        Face f4(m13,f.v3,m23,f.level+1);
+        
+        iterator=faces.erase(iterator);
+        newFaces.push_back(f1);
+        newFaces.push_back(f2);
+        newFaces.push_back(f3);
+        newFaces.push_back(f4);
+        return true;
+    }
+    else { ++iterator; return false; }
+}
 
 void Planet::Update(Player& player)
 {
@@ -52,10 +80,13 @@ void Planet::Update(Player& player)
     std::vector<Face> newFaces;
     for (auto it = faces.begin();it!=faces.end();)
     {
-        if (trySubdivide(it, [](Player& player, Face f)->bool { return glm::length(-player.Camera.Position - (f.v1+f.v2+f.v3)*0.3333f) < exp2(-(float)f.level); }, player, newFaces)) wasSubdivided=true;
+        if (trySubdivide(it, [](Player& player, Face f)->bool { return std::min(std::min(
+                                                                                glm::length(-player.Camera.Position - f.v1),
+                                                                                glm::length(-player.Camera.Position - f.v2)),
+                                                                                glm::length(-player.Camera.Position - f.v3)) < exp2(-(float)f.level+4); }, player, newFaces)) wasSubdivided=true;
     }
     for (Face f : newFaces) faces.push_back(f);
-    if (wasSubdivided) updateVBO();
+    if (wasSubdivided && vertices.size()==0) updateVBO();
 }
 
 void Planet::generateBuffers()
@@ -63,15 +94,12 @@ void Planet::generateBuffers()
     
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glGenVertexArraysAPPLE(1, &VAO);
-    glBindVertexArrayAPPLE(VAO);
-    updateVBO();
 }
 
 static const GLfloat g_vertex_buffer_data[] = {
-    -1.0f, -1.0f, 0.0f,
-    1.0f, -1.0f, 0.0f,
-    0.0f,  1.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f, 1.0f,
+    1.0f, -1.0f, 0.0f,1.0f,
+    0.0f,  1.0f, 0.0f,1.0f,
 };
 
 void Planet::updateVBO()
@@ -79,18 +107,18 @@ void Planet::updateVBO()
     vertices.clear();
     for (Face f : faces)
     {
-        vertices.push_back(Vertex(f.v1));
-        vertices.push_back(Vertex(f.v2));
-        vertices.push_back(Vertex(f.v3));
+        vertices.push_back(Vertex(glm::vec4(f.v1,1.0f)));
+        vertices.push_back(Vertex(glm::vec4(f.v2,1.0f)));
+        vertices.push_back(Vertex(glm::vec4(f.v3,1.0f)));
     }
     std::cout << vertices.size()<<std::endl;
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBindVertexArrayAPPLE(VAO);
     
+    glBindBuffer(GL_ARRAY_BUFFER,VBO);
 //    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-//    
-     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+//
+    
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    std::cout << "error: " << (glGetError()) << std::endl;
 }
 
 
@@ -148,48 +176,26 @@ void Planet::buildBaseMesh()
     faces.push_back(Face(icosaVertices[9], icosaVertices[10], icosaVertices[11]));
     faces.push_back(Face(icosaVertices[10], icosaVertices[6], icosaVertices[11]));
     
-    
-    
-//    
-//    float phi = (1 + sqrt(5))/2;
-//    glm::vec3 c0 = glm::vec3(0, 1, phi);
-//    glm::vec3 c1 = glm::vec3(0, -1, phi);
-//    glm::vec3 c2 = glm::vec3(0, 1, -phi);
-//    glm::vec3 c3 = glm::vec3(0, -1, -phi);
-//    
-//    glm::vec3 c4 = glm::vec3(1, phi, 0);
-//    glm::vec3 c5 = glm::vec3(-1, phi, 0);
-//    glm::vec3 c6 = glm::vec3(1, -phi, 0);
-//    glm::vec3 c7 = glm::vec3(-1, -phi, 0);
-//    
-//    glm::vec3 c8 = glm::vec3(phi, 0, 1);
-//    glm::vec3 c9 = glm::vec3(phi, 0, 1);
-//    glm::vec3 c10 = glm::vec3(phi, 0, 1);
-//    glm::vec3 c11 = glm::vec3(phi, 0, 1);
-//    
-//    faces.push_back(<#const_reference __x#>)
-    
-    
-    //faces.push_back(Face(glm::vec3(0,0,1),glm::vec3(1,0,0),glm::vec3(0,1,0)));
 }
 
-void Planet::Draw(Player& player)
+void Planet::Draw(Player& player, GLManager& glManager)
 {
-    if (vertices.size() >0)
-    {
-//        glEnableClientState(GL_VERTEX_ARRAY);
-//        glEnableVertexAttribArray(0);
-//        glBindVertexArrayAPPLE(VAO);
-//        
+        glLoadMatrixf(glm::value_ptr(player.Camera.GetTransformMatrix()));
+    GLuint attribLoc = glGetAttribLocation(glManager.Program.programID, "vertexPos");
+    
+//    if (vertices.size() >0)
+//    {
 //        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-//        //glVertexPointer(3, GL_FLOAT, 0, &faces[0]);
-//        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-//        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+//        
+////        glBindVertexArrayAPPLE(VAO);
+//        
+//        //glVertexPointer(4, GL_FLOAT, 0, (void*)0);
+//        glVertexAttribPointer(attribLoc, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+//        glDrawArrays(GL_TRIANGLES, 0, 3);
 //        
 //        glDisableVertexAttribArray(0);
-    }
-    glLoadMatrixf(glm::value_ptr(player.Camera.GetTransformMatrix()));
-    
+//    }
+//    
     //TODO: fix to use vertex arrays instead -- this is incredibly inefficient
     for (auto f : faces)
     {

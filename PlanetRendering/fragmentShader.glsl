@@ -1,7 +1,6 @@
-#version 320 core
-out vec4 color;
-in float height;
+//out vec4 color;
+varying float height;
 void main()
 {
-    gl_FragColor = vec4((height-0.5),0,0,1);
+    gl_FragColor = vec4((height-1.0)*20.,0,0,1);
 }

@@ -7,6 +7,6 @@ void main()
 {
 //    gl_Position.xyz=vertexPos;
     //    gl_Position.w=1.0;
-     height = length(gl_Vertex);
+     height = length(gl_Vertex)-1.0;
     gl_Position = gl_ModelViewMatrix * gl_Vertex;
 }

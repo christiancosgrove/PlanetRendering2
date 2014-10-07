@@ -11,12 +11,15 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include <iostream>
+
+//Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
 Planet::Planet(glm::vec3 pos, float radius) : Position(pos), Radius(radius)
 {
     generateBuffers();
     buildBaseMesh();
 }
 
+//This function accepts a boolean-valued function of displacement.  If the function is true, the function will divide the given face into four subfaces, each of which will be recursively subjected to the same subdivision scheme.  It is important that the input function terminates at a particular level of detail, or the program will crash.
 bool Planet::trySubdivide(std::vector<Face>::iterator& iterator, const std::function<bool (Player&, Face)>& func, Player& player, std::vector<Face>& newFaces)
 {
     
@@ -27,6 +30,7 @@ bool Planet::trySubdivide(std::vector<Face>::iterator& iterator, const std::func
         glm::vec3 m12 = Normalize((f.v1 + f.v2) * 0.5f)*Radius;
         glm::vec3 m13 = Normalize((f.v1 + f.v3) * 0.5f)*Radius;
         glm::vec3 m23 = Normalize((f.v2 + f.v3) * 0.5f)*Radius;
+        //float off =0.1f * randFloat() / (float)(1<<f.level);
         m12*=1 + terrainNoise(m12);
         m13*=1 + terrainNoise(m13);
         m23*=1 + terrainNoise(m23);
@@ -45,30 +49,32 @@ bool Planet::trySubdivide(std::vector<Face>::iterator& iterator, const std::func
     }
     else { ++iterator; return false; }
 }
+//Similarly to trySubdivide, this function combines four faces into a larger face if a boolean-valued function is statisfied.
 bool Planet::tryCombine(std::vector<Face>::iterator& iterator, const std::function<bool (Player&, Face)>& func, Player& player, std::vector<Face>& newFaces)
 {
     
     Face f(*iterator);
+    Face f1,f2,f3;
+    //TODO: check for shared vertices.  If vertices are shared, combine four triangles.
     
-    if (func(player, f))
+    if ((iterator+1)!=faces.end())
+        if ((iterator+1)->level==f.level) f1 = *(iterator+1);
+    else return false;
+    else return false;
+    if ((iterator+2)!=faces.end())
+        if ((iterator+2)->level==f.level) f2 = *(iterator+2);
+    else return false;
+    else return false;
+    if ((iterator+3)!=faces.end())
+        if ((iterator+3)->level==f.level) f3 = *(iterator+3);
+    else return false;
+    else return false;
+    
+    if (func(player, f) || func(player, f1)|| func(player, f2) || func(player, f3))
     {
-        glm::vec3 m12 = Normalize((f.v1 + f.v2) * 0.5f)*Radius;
-        glm::vec3 m13 = Normalize((f.v1 + f.v3) * 0.5f)*Radius;
-        glm::vec3 m23 = Normalize((f.v2 + f.v3) * 0.5f)*Radius;
-        m12*=1 + terrainNoise(m12);
-        m13*=1 + terrainNoise(m13);
-        m23*=1 + terrainNoise(m23);
-        
-        Face f1(m13,m23,m12, f.level+1);
-        Face f2(f.v1,m13,m12,f.level+1);
-        Face f3(m12,m23,f.v2,f.level+1);
-        Face f4(m13,f.v3,m23,f.level+1);
-        
-        iterator=faces.erase(iterator);
-        newFaces.push_back(f1);
-        newFaces.push_back(f2);
-        newFaces.push_back(f3);
-        newFaces.push_back(f4);
+        for (int i = 0; i<4 && iterator!=faces.end();i++) iterator = faces.erase(iterator);
+        Face nf(f.v1,f2.v3,f3.v2);
+        newFaces.push_back(nf);
         return true;
     }
     else { ++iterator; return false; }
@@ -80,10 +86,16 @@ void Planet::Update(Player& player)
     std::vector<Face> newFaces;
     for (auto it = faces.begin();it!=faces.end();)
     {
-        if (trySubdivide(it, [](Player& player, Face f)->bool { return std::min(std::min(
-                                                                                glm::length(-player.Camera.Position - f.v1),
-                                                                                glm::length(-player.Camera.Position - f.v2)),
-                                                                                glm::length(-player.Camera.Position - f.v3)) < exp2(-(float)f.level+4); }, player, newFaces)) wasSubdivided=true;
+        
+        if (tryCombine(it, [this](Player& player, Face f)->bool { return std::min(std::min(
+                                                                                                glm::length(-player.Camera.Position - f.v1),
+                                                                                                glm::length(-player.Camera.Position - f.v2)),
+                                                                                       glm::length(-player.Camera.Position - f.v3)) > (float)(1 << (LOD_MULTIPLIER+2)) / ((float)(1 << (f.level))); }, player, newFaces)) wasSubdivided=true;
+        else if (trySubdivide(it, [this](Player& player, Face f)->bool { return std::min(std::min(
+                                                                                         glm::length(-player.Camera.Position - f.v1),
+                                                                                         glm::length(-player.Camera.Position - f.v2)),
+                                                                                glm::length(-player.Camera.Position - f.v3)) < (float)(1 << LOD_MULTIPLIER) / ((float)(1 << (f.level))); }, player, newFaces)) wasSubdivided=true;
+        
     }
     for (Face f : newFaces) faces.push_back(f);
     if (wasSubdivided && vertices.size()==0) updateVBO();
@@ -181,7 +193,7 @@ void Planet::buildBaseMesh()
 void Planet::Draw(Player& player, GLManager& glManager)
 {
         glLoadMatrixf(glm::value_ptr(player.Camera.GetTransformMatrix()));
-    GLuint attribLoc = glGetAttribLocation(glManager.Program.programID, "vertexPos");
+//    GLuint attribLoc = glGetAttribLocation(glManager.Program.programID, "vertexPos");
     
 //    if (vertices.size() >0)
 //    {
@@ -206,7 +218,7 @@ void Planet::Draw(Player& player, GLManager& glManager)
         glVertex3f(f.v2.x,f.v2.y,f.v2.z);
         glColor3f(0,1.0,0.0);
         
-        glVertex3f(f.v1.x,f.v1.y,f.v1.z);
+        glVertex3f(f.v3.x,f.v3.y,f.v3.z);
         glVertex3f(f.v3.x,f.v3.y,f.v3.z);
         glVertex3f(f.v2.x,f.v2.y,f.v2.z);
         glVertex3f(f.v3.x,f.v3.y,f.v3.z);

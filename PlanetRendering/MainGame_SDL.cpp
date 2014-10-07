@@ -50,7 +50,6 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
 
 void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
 {
-    glClearDepth(1.);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     planet.Draw(player, glManager);
     SDL_GL_SwapWindow(window);

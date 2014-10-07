@@ -19,6 +19,7 @@ struct Face
 {
     glm::vec3 v1,v2,v3;
     unsigned int level;
+    Face() : level(0) {}
     Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0)
     {
         
@@ -50,7 +51,7 @@ public:
     
     glm::vec3 Position;
     float Radius;
-    
+    const int LOD_MULTIPLIER=4;
     
     Planet(glm::vec3 pos, float radius);
     
@@ -79,9 +80,14 @@ private:
     void updateVBO();
 };
 
+inline float randFloat()
+{
+    return (float)rand() / RAND_MAX;
+}
+
 float Planet::terrainNoise(float x, float y, float z)
 {
-    return 0.01 * sin((x + y + z)*10) + 0.005*sin((x + y + z)*100);
+    return 0.1 * sin(sin(((0.1*x + 0.1*y - 0.1*z))*10)) + 0.005*sin(sin((x + y + z)*100));
 }
 
 float Planet::terrainNoise(glm::vec3 v)

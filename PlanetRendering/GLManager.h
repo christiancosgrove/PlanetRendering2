@@ -10,7 +10,7 @@
 #define __PlanetRendering__GLManager__
 
 #include <string>
-#include <OpenGL/gl.h>
+#include <OpenGL/gl3.h>
 
 class GLProgram
 {
@@ -20,7 +20,11 @@ public:
     GLProgram(std::string fragName, std::string vertName);
     
     static GLuint CompileShader(std::string shaderName, GLenum type);
-    void Use() { glUseProgram(programID); }
+    inline void Use() { glUseProgram(programID); }
+    inline void SetMatrix4fv(std::string name, const GLfloat* value)
+    {
+        glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, value);
+    }
 };
 
 

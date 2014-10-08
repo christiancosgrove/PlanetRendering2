@@ -10,7 +10,7 @@
 #define __PlanetRendering__MainGame_SDL__
 
 #include <SDL2/SDL.h>
-#include <OpenGL/gl.h>
+#include <OpenGL/gl3.h>
 #include "Planet.h"
 #include "Player.h"
 

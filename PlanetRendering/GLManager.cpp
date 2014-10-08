@@ -39,9 +39,9 @@ void GLManager::initGL()
 {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glDisable(GL_CULL_FACE);
+//    glEnable(GL_DEPTH_TEST);
+//    glDepthFunc(GL_LESS);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)

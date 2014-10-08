@@ -9,7 +9,7 @@
 #ifndef __PlanetRendering__Planet__
 #define __PlanetRendering__Planet__
 
-#include <OpenGL/gl.h>
+#include <OpenGL/gl3.h>
 #include <functional>
 #include "Player.h"
 #include <vector>

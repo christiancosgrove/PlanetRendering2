@@ -52,7 +52,7 @@ void Player::Update() //SDL implementation
 {
     bool mouseFocus = true;
     float len =glm::length(Camera.Position)-1.0f;
-    float playerSpeed = std::min((std::exp2(len)-1.0f)/100.0f,0.1f);
+    float playerSpeed = std::min((std::exp2(len)-1.0f)/100.0f,0.0025f);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     float shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 45.0f : 1.0f;
     if (state[SDL_SCANCODE_W])

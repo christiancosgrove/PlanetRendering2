@@ -19,6 +19,11 @@ Planet::Planet(glm::vec3 pos, float radius) : Position(pos), Radius(radius)
     buildBaseMesh();
 }
 
+Planet::~Planet()
+{
+    glDeleteVertexArrays(1, &VAO);
+}
+
 //This function accepts a boolean-valued function of displacement.  If the function is true, the function will divide the given face into four subfaces, each of which will be recursively subjected to the same subdivision scheme.  It is important that the input function terminates at a particular level of detail, or the program will crash.
 bool Planet::trySubdivide(std::vector<Face>::iterator& iterator, const std::function<bool (Player&, Face)>& func, Player& player, std::vector<Face>& newFaces)
 {
@@ -105,11 +110,14 @@ void Planet::generateBuffers()
 {
     
     glGenVertexArrays(1, &VAO);
-    std::cout << "\n\nerror: " << (glGetError()) << "\n\n";
     glBindVertexArray(VAO);
-    std::cout << "\n\nerror: " << (glGetError()) << "\n\n";
     glGenBuffers(1, &VBO);
+    
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glBindVertexArray(0);
     updateVBO();
 }
 
@@ -192,10 +200,11 @@ void Planet::Draw(Player& player, GLManager& glManager)
 
     if (vertices.size() >0)
     {
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        
+        glBindVertexArray(VAO);
+        //glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-        glDisableVertexAttribArray(0);
+        //glDisableVertexAttribArray(0);
+        glBindVertexArray(0);
     }
 }

@@ -37,10 +37,12 @@ GLManager::GLManager(std::string fragName, std::string vertName) : Program(fragN
 
 void GLManager::initGL()
 {
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-//    glEnable(GL_DEPTH_TEST);
-//    glDepthFunc(GL_LESS);
+    glDisable(GL_CULL_FACE);
+    //TODO: get back face culling working
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 

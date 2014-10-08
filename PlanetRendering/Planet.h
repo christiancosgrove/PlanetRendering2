@@ -54,6 +54,7 @@ public:
     const int LOD_MULTIPLIER=4;
     
     Planet(glm::vec3 pos, float radius);
+    ~Planet();
     
     void Update(Player& player);
     

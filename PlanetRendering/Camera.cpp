@@ -26,7 +26,7 @@ glm::mat4 Camera::GetProjectionMatrix()
 	return glm::perspective(
 		FieldOfView,
 		1.333333f,
-		0.00001f,  //near clipping plane
+		0.00000001f,  //near clipping plane
 		1000.0f //far clipping plane
 	);
 }

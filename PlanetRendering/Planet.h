@@ -17,18 +17,22 @@
 struct Face
 {
     glm::vec3 v1,v2,v3;
+    Face* child0;
+    Face* child1;
+    Face* child2;
+    Face* child3;
     unsigned int level;
     Face() : level(0) {}
-    Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0)
+    Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), child0(nullptr),child1(nullptr), child2(nullptr), child3(nullptr)
     {
         
     }
-    Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level)
+    Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level),child0(nullptr), child1(nullptr), child2(nullptr), child3(nullptr)
     {
         
     }
     
-    Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3), level(face.level) {}
+    Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3), level(face.level), child0(face.child0), child1(face.child1), child2(face.child2),child3(face.child3)  {}
     //Face& operator=(Face& rhs) { v1=rhs.v1;v2=rhs.v2;v3=rhs.v3;return *this; }
     
     //Face& operator=(Face& rhs) {memcpy(this, &rhs, sizeof(Face)); return *this; }
@@ -72,12 +76,14 @@ private:
     GLuint VAO;
     
     //takes a function of the player information and the current face
-    bool trySubdivide(std::vector<Face>::iterator& iterator, const std::function<bool(Player&, Face)>& func, Player& player, std::vector<Face>& newFaces);
-    bool tryCombine(std::vector<Face>::iterator& iterator, const std::function<bool(Player&, Face)>& func, Player& player, std::vector<Face>& newFaces);
+    bool trySubdivide(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
+    bool tryCombine(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
     inline void projectFaceOntoSphere(Face& f);
     void buildBaseMesh();
     void generateBuffers();
     void updateVBO();
+    void recursiveUpdate(Face& face);
+    bool recursiveSubdivide(Face* face, Player& player);
 };
 
 inline float randFloat()

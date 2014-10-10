@@ -9,6 +9,7 @@
 #include "Player.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include <algorithm>
+#include <iostream>
 
 #include <SDL2/SDL.h>
 Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight) {}
@@ -74,6 +75,8 @@ void Player::Update() //SDL implementation
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;
     
+    const float earthDiameter = 12756200.0f;
+    
     if (mouseFocus)
     {
         int x,y;
@@ -83,7 +86,7 @@ void Player::Update() //SDL implementation
         if (Camera.XRotation > 0) Camera.XRotation=0;
         if (Camera.XRotation<-M_PI) Camera.XRotation=-M_PI;
         Camera.ZRotation+=(float)(x)/200;
-        
+        std::cout << "Height above earth surface: " << len * earthDiameter << " m" <<std::endl;
     }
     
 //    if (mouseFocus)

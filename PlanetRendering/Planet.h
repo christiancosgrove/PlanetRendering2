@@ -1,3 +1,5 @@
+#pragma once
+
 //
 //  Planet.h
 //  PlanetRendering
@@ -5,9 +7,6 @@
 //  Created by Christian on 9/28/14.
 //  Copyright (c) 2014 Christian. All rights reserved.
 //
-
-#ifndef __PlanetRendering__Planet__
-#define __PlanetRendering__Planet__
 
 #include <OpenGL/gl3.h>
 #include <functional>
@@ -88,7 +87,7 @@ inline float randFloat()
 
 float Planet::terrainNoise(float x, float y, float z)
 {
-    return 0.1 * sin(sin(((0.1*x + 0.1*y - 0.1*z))*10)) + 0.005*sin(sin((x + y + z)*100));
+    return 0;//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
 }
 
 float Planet::terrainNoise(glm::vec3 v)
@@ -102,4 +101,3 @@ void Planet::projectFaceOntoSphere(Face &f)
 }
 
 
-#endif /* defined(__PlanetRendering__Planet__) */

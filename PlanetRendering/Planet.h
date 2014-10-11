@@ -16,18 +16,18 @@
 
 struct Face
 {
-    glm::vec3 v1,v2,v3;
+    glm::dvec3 v1,v2,v3;
     Face* child0;
     Face* child1;
     Face* child2;
     Face* child3;
     unsigned int level;
     Face() : level(0) {}
-    Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), child0(nullptr),child1(nullptr), child2(nullptr), child3(nullptr)
+    Face(glm::dvec3 _v1, glm::dvec3 _v2, glm::dvec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), child0(nullptr),child1(nullptr), child2(nullptr), child3(nullptr)
     {
         
     }
-    Face(glm::vec3 _v1, glm::vec3 _v2, glm::vec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level),child0(nullptr), child1(nullptr), child2(nullptr), child3(nullptr)
+    Face(glm::dvec3 _v1, glm::dvec3 _v2, glm::dvec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level),child0(nullptr), child1(nullptr), child2(nullptr), child3(nullptr)
     {
         
     }
@@ -40,8 +40,8 @@ struct Face
 
 struct Vertex
 {
-    float x,y,z,w;
-    Vertex(glm::vec4 pos) : x(pos.x), y(pos.y), z(pos.z), w(pos.w) {}
+    double x,y,z,w;
+    Vertex(glm::dvec4 pos) : x(pos.x), y(pos.y), z(pos.z), w(pos.w) {}
 };
 
 //TODO: implement vertex indexing
@@ -53,7 +53,7 @@ class Planet
 public:
     
     glm::vec3 Position;
-    float Radius;
+    double Radius;
     const int LOD_MULTIPLIER=4;
     
     Planet(glm::vec3 pos, float radius);
@@ -66,8 +66,8 @@ public:
     
     
     
-    inline float terrainNoise(float x, float y, float z);
-    inline float terrainNoise(glm::vec3 v);
+    inline double terrainNoise(double x, double y, double z);
+    inline double terrainNoise(glm::dvec3 v);
 private:
     std::vector<Face> faces;
     std::vector<Vertex> vertices;
@@ -84,6 +84,9 @@ private:
     void updateVBO();
     void recursiveUpdate(Face& face);
     bool recursiveSubdivide(Face* face, Player& player);
+    bool recursiveCombine(Face* face, Player& player);
+    void combineFace(Face* face);
+    int time;
 };
 
 inline float randFloat()
@@ -91,12 +94,12 @@ inline float randFloat()
     return (float)rand() / RAND_MAX;
 }
 
-float Planet::terrainNoise(float x, float y, float z)
+double Planet::terrainNoise(double x, double y, double z)
 {
     return 0;//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
 }
 
-float Planet::terrainNoise(glm::vec3 v)
+double Planet::terrainNoise(glm::dvec3 v)
 {
     return terrainNoise(v.x,v.y,v.z);
 }

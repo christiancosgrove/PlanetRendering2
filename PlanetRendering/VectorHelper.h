@@ -10,10 +10,10 @@
 #define PlanetRendering_VectorHelper_h
 #include <cmath>
 
-glm::vec3 Normalize(glm::vec3 v)
+glm::dvec3 Normalize(glm::dvec3 v)
 {
-    float len = sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-    return glm::vec3(v.x/len,v.y/len,v.z/len);
+    double len = sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    return glm::dvec3(v.x/len,v.y/len,v.z/len);
 }
 
 #endif

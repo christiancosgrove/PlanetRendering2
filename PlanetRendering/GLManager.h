@@ -25,6 +25,14 @@ public:
     {
         glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, value);
     }
+    inline void SetMatrix4dv(std::string name, const GLdouble* value)
+    {
+        glUniformMatrix4dv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, value);
+    }
+    inline void SetFloat(std::string name, GLfloat value)
+    {
+        glUniform1f(glGetUniformLocation(programID, name.c_str()), value);
+    }
 };
 
 

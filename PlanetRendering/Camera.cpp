@@ -11,9 +11,9 @@ Camera::Camera(int windowWidth, int windowHeight) :
 
 Camera::~Camera() {}
 
-glm::mat4 Camera::GetViewMatrix()
+glm::dmat4 Camera::GetViewMatrix()
 {
-	return glm::eulerAngleXZ(XRotation, ZRotation) * glm::translate(Position) * glm::scale(glm::vec3(1.0f, 1.0f, 1.0f));
+	return glm::eulerAngleXZ(XRotation, ZRotation) * glm::translate(Position) * glm::scale(glm::dvec3(1.0, 1.0, 1.0));
 }
 
 void Camera::ResizedWindow(int windowWidth, int windowHeight)
@@ -21,21 +21,21 @@ void Camera::ResizedWindow(int windowWidth, int windowHeight)
 	//aspectRatio = ((float)windowWidth)/((float)windowHeight);
 }
 
-glm::mat4 Camera::GetProjectionMatrix()
+glm::dmat4 Camera::GetProjectionMatrix()
 {
 	return glm::perspective(
 		FieldOfView,
-		1.333333f,
-		0.00000001f,  //near clipping plane
-		1000.0f //far clipping plane
+		1.333333,
+		0.00000000000001,  //near clipping plane
+		1000.0 //far clipping plane
 	);
 }
-glm::mat4 Camera::GetTransformMatrix()
+glm::dmat4 Camera::GetTransformMatrix()
 {
 	return GetProjectionMatrix() * GetViewMatrix();
 }
 
-glm::vec3 Camera::GetViewDirection()
+glm::dvec3 Camera::GetViewDirection()
 {
-	return glm::vec3(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f) * glm::eulerAngleXZ(XRotation, ZRotation));
+	return glm::dvec3(glm::dvec4(0.0, 0.0, 1.0, 1.0) * glm::eulerAngleXZ(XRotation, ZRotation));
 }

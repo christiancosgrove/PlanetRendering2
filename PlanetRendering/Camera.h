@@ -8,17 +8,17 @@ class Camera
 public:
 	Camera(int windowWidth, int windowHeight);
     ~Camera();
-	glm::mat4 GetViewMatrix();
-	glm::mat4 GetProjectionMatrix();
-	glm::mat4 GetTransformMatrix();
-	glm::vec3 GetViewDirection();
-	glm::vec3 Position;
-	float XRotation;
-	float ZRotation;
-	float FieldOfView;
+	glm::dmat4 GetViewMatrix();
+	glm::dmat4 GetProjectionMatrix();
+	glm::dmat4 GetTransformMatrix();
+	glm::dvec3 GetViewDirection();
+	glm::dvec3 Position;
+	double XRotation;
+	double ZRotation;
+	double FieldOfView;
 	void ResizedWindow(int windowWidth, int windowHeight);
-	const float NEAR_PLANE;
-	const float FAR_PLANE;
+	const double NEAR_PLANE;
+	const double FAR_PLANE;
 private:
 	float aspectRatio;
 };

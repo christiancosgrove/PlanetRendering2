@@ -14,8 +14,9 @@
 #include <algorithm>
 #include <random>
 
+
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, float radius) : Position(pos), Radius(radius)
+Planet::Planet(glm::vec3 pos, float radius) : Position(pos), Radius(radius), time(0)
 {
     
     generateBuffers();
@@ -31,20 +32,19 @@ Planet::~Planet()
 bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
 {
     
-    //Face f(f_old.v3,f_old.v2,f_old.v1,f_old.level);
     
     if (func(player, *iterator))
     {
-        glm::vec3 m12 = Normalize((iterator->v1 + iterator->v2) * 0.5f)*Radius;
-        glm::vec3 m13 = Normalize((iterator->v1 + iterator->v3) * 0.5f)*Radius;
-        glm::vec3 m23 = Normalize((iterator->v2 + iterator->v3) * 0.5f)*Radius;
+        if (iterator->child0!=nullptr || iterator->child1!=nullptr || iterator->child2!=nullptr || iterator->child3!=nullptr)
+            return true;
+        glm::dvec3 m12 = Normalize((iterator->v1 + iterator->v2) * 0.5)*Radius;
+        glm::dvec3 m13 = Normalize((iterator->v1 + iterator->v3) * 0.5)*Radius;
+        glm::dvec3 m23 = Normalize((iterator->v2 + iterator->v3) * 0.5)*Radius;
         //float off =0.1f * randFloat() / (float)(1<<f.level);
         m12*=1 + terrainNoise(m12);
         m13*=1 + terrainNoise(m13);
         m23*=1 + terrainNoise(m23);
         
-        if (iterator->child0==nullptr && iterator->child1==nullptr && iterator->child2==nullptr && iterator->child3==nullptr)
-        {
         Face* f0 = new Face(m13,m12,m23, iterator->level+1);
         Face* f1 = new Face(iterator->v3,m13,m23,iterator->level+1);
         Face* f2 = new Face(m23,m12,iterator->v2,iterator->level+1);
@@ -59,7 +59,7 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         iterator->child1 = f1;
         iterator->child2 = f2;
         iterator->child3 = f3;
-        }
+        
         return true;
     }
 //    else { ++iterator; return false; }
@@ -70,65 +70,59 @@ bool Planet::tryCombine(Face* iterator, const std::function<bool (Player&, const
 {
     
     //TODO: check for shared vertices.  If vertices are shared, combine four triangles.
-//    
-//    Face f1,f2,f3;
-    
-    
-//    auto it1 = std::find_if(faces.begin(), faces.end(), [f](const Face& face) -> bool{ return face.v3==f.v3 && face.level==f.level; });
-//    if (it1==faces.end()) return false;
-//    auto it2 = std::find_if(faces.begin(), faces.end(), [f](const Face& face) -> bool{ return face.v2==f.v2 && face.level==f.level; });
-//    if (it2==faces.end()) return false;
-//    auto it3 = std::find_if(faces.begin(), faces.end(), [f](const Face& face) -> bool{ return face.v1==f.v1 && face.level==f.level; });
-//    if (it3==faces.end()) return false;
-//    
-//    Face f1(*it1);
-//    Face f2(*it2);
-//    Face f3(*it3);
-    
-//    if ((iterator+1)!=faces.end())
-//        if ((iterator+1)->level==f.level && (iterator+1)->v3==f.v3) f1 = *(iterator+1);
-//    else return false;
-//    else return false;
-//    if ((iterator+2)!=faces.end())
-//        if ((iterator+2)->level==f.level && (iterator+2)->v2==f.v2) f2 = *(iterator+2);
-//    else return false;
-//    else return false;
-//    if ((iterator+3)!=faces.end())
-//        if ((iterator+3)->level==f.level && (iterator+3)->v1==f.v1) f3 = *(iterator+3);
-//    else return false;
-//    else return false;
-    
+    if (iterator==nullptr) return false;
+    if (iterator->child0==nullptr || iterator->child1==nullptr || iterator->child2==nullptr || iterator->child3==nullptr) return false;
     if ((func(player, *iterator) || func(player, *iterator->child0)|| func(player, *iterator->child1) || func(player, *iterator->child2) || func(player, *iterator->child3)) && iterator->level>0)
     {
-//        for (int i = 0; i<4 && iterator!=faces.end();i++) iterator = faces.erase(iterator);
-//        Face nf(f1.v1,f2.v3,f3.v2, f.level-1);
-        //        newFaces.push_back(nf);
-        delete iterator->child0;
-        delete iterator->child1;
-        delete iterator->child2;
-        delete iterator->child3;
+        combineFace(iterator);
         
         return true;
     }
-    else { ++iterator; return false; }
+    return false;
+}
+
+void Planet::combineFace(Face* face)
+{
+    if (face->level==0) return;
+    if (face->child0!=nullptr)
+    {
+        combineFace(face->child0);
+        delete face->child0;
+        face->child0 = nullptr;
+    }
+    if (face->child1!=nullptr)
+    {
+        combineFace(face->child1);
+        delete face->child1;
+        face->child1 = nullptr;
+    }
+    if (face->child2!=nullptr)
+    {
+        combineFace(face->child2);
+        delete face->child2;
+        face->child2 = nullptr;
+    }
+    if (face->child3!=nullptr)
+    {
+        combineFace(face->child3);
+        delete face->child3;
+        face->child3 = nullptr;
+    }
 }
 
 void Planet::Update(Player& player)
 {
     bool wasSubdivided = false;
-    std::vector<Face> newFaces;
-    for (auto it = faces.begin();it!=faces.end();it++)
+    if (time%10==0)
     {
-        
-//        if (tryCombine(it, [this](Player& player, Face f)->bool { return std::min(std::min(
-//                                                                                                glm::length(-player.Camera.Position - f.v1),
-//                                                                                                glm::length(-player.Camera.Position - f.v2)),
-//                                                                                       glm::length(-player.Camera.Position - f.v3)) >= (float)(1 << (LOD_MULTIPLIER)) / ((float)(1 << (f.level-1))); }, player, newFaces)) wasSubdivided=true;
-           if (recursiveSubdivide(&(*it), player))
-              wasSubdivided=true;
-        
+        for (auto it = faces.begin();it!=faces.end();it++)
+        {
+            if (recursiveCombine(&(*it), player))
+                wasSubdivided=true;
+            if (recursiveSubdivide(&(*it), player))
+                wasSubdivided=true;
+        }
     }
-//    for (Face f : newFaces) faces.push_back(f);
     if (wasSubdivided || vertices.size()==0) updateVBO();
 }
 
@@ -142,7 +136,7 @@ void Planet::generateBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribLPointer(0, 4, GL_DOUBLE, 0, (void*)0);
     glBindVertexArray(0);
 //    updateVBO();
 }
@@ -158,9 +152,9 @@ void Planet::recursiveUpdate(Face& face)
     }
     else
     {
-        vertices.push_back(Vertex(glm::vec4(face.v1,1.0f)));
-        vertices.push_back(Vertex(glm::vec4(face.v2,1.0f)));
-        vertices.push_back(Vertex(glm::vec4(face.v3,1.0f)));
+        vertices.push_back(Vertex(glm::dvec4(face.v1,1.0f)));
+        vertices.push_back(Vertex(glm::dvec4(face.v2,1.0f)));
+        vertices.push_back(Vertex(glm::dvec4(face.v3,1.0f)));
     }
 }
 
@@ -182,6 +176,30 @@ bool Planet::recursiveSubdivide(Face* face, Player& player)
         recursiveSubdivide(face->child3,player);
         return true;
     }
+    return false;
+}
+
+bool Planet::recursiveCombine(Face* face, Player& player)
+{
+    if (face==nullptr) return false;
+    if (!tryCombine(face,
+                    
+                    [this](Player& player, Face f)->bool { return std::min(std::min(
+                                                                                    glm::length(-player.Camera.Position - f.v1),
+                                                                                    glm::length(-player.Camera.Position - f.v2)),
+                                                                           glm::length(-player.Camera.Position - f.v3))
+                        >= (double)(1 << (LOD_MULTIPLIER)) / ((double)(1 << (f.level-1))); }
+                    
+                    , player))
+    {
+        
+        recursiveCombine(face->child0, player) ||
+                recursiveCombine(face->child1, player) ||
+                recursiveCombine(face->child2, player) ||
+        recursiveCombine(face->child3, player);
+        return false;
+    }
+    else return true;
 }
 
 void Planet::updateVBO()
@@ -200,7 +218,7 @@ void Planet::updateVBO()
 
 void Planet::buildBaseMesh()
 {
-    glm::vec3 icosaVertices[12];
+    glm::dvec3 icosaVertices[12];
     
     double theta = 26.56505117707799f * M_PI / 180.0; // refer paper for theta value
     
@@ -257,8 +275,14 @@ void Planet::buildBaseMesh()
 void Planet::Draw(Player& player, GLManager& glManager)
 {
     glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-    glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-
+    glManager.Program.Use();
+    glUniform1f(1,(GLfloat)time);
+    std::cout << glGetUniformLocation(glManager.Program.programID, "theTime") << "\n\n";
+    
+    glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+    
+    
+    
     if (vertices.size() >0)
     {
         

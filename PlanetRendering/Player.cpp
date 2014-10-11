@@ -52,10 +52,10 @@ Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(window
 void Player::Update() //SDL implementation
 {
     bool mouseFocus = true;
-    float len =glm::length(Camera.Position)-1.0f;
-    float playerSpeed = std::min((std::exp2(len)-1.0f)/100.0f,0.0025f);
+    double len =glm::length(Camera.Position)-1.0;
+    double playerSpeed = std::min((std::exp2(len)-1.0)/100.0,0.0025);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
-    float shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 45.0f : 1.0f;
+    double shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 45.0 : 1.0;
     if (state[SDL_SCANCODE_W])
     {
         Camera.Position+=Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor;
@@ -66,16 +66,16 @@ void Player::Update() //SDL implementation
     }
     if (state[SDL_SCANCODE_A])
     {
-        Camera.Position+=glm::vec3(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+        Camera.Position+=glm::dvec3(glm::dvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
     if (state[SDL_SCANCODE_D])
     {
-        Camera.Position-=glm::vec3(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+        Camera.Position-=glm::dvec3(glm::dvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;
     
-    const float earthDiameter = 12756200.0f;
+    const float earthDiameter = 12756200.0;
     
     if (mouseFocus)
     {

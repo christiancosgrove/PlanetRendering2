@@ -274,7 +274,7 @@ void Planet::buildBaseMesh()
 
 void Planet::Draw(Player& player, GLManager& glManager)
 {
-    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+//    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     glManager.Program.Use();
     glUniform1f(1,(GLfloat)time);
     std::cout << glGetUniformLocation(glManager.Program.programID, "theTime") << "\n\n";

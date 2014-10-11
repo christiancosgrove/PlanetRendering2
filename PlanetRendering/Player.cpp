@@ -72,6 +72,14 @@ void Player::Update() //SDL implementation
     {
         Camera.Position-=glm::dvec3(glm::dvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
+    if (state[SDL_SCANCODE_SPACE])
+    {
+        Camera.Position-=glm::dvec3(glm::dvec4(0.0, 1.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+    }
+//    if (state[SDL_SCANCODE_LSHIFT])
+//    {
+//        Camera.Position-=glm::dvec3(glm::dvec4(0.0, 0.0, 1.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+//    }
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;
     

@@ -54,7 +54,7 @@ public:
     
     glm::vec3 Position;
     double Radius;
-    const int LOD_MULTIPLIER=4;
+    const int LOD_MULTIPLIER=5;
     
     Planet(glm::vec3 pos, float radius);
     ~Planet();
@@ -74,11 +74,15 @@ private:
     
     GLuint VBO;
     GLuint VAO;
+    //TODO: implement vertex indexing for faster rendering and less CPU-GPU communcation
     
     //takes a function of the player information and the current face
     bool trySubdivide(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
     bool tryCombine(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
     inline void projectFaceOntoSphere(Face& f);
+    inline double randDouble(double seedx, double seedy);
+    inline double randDouble(glm::dvec2 vec);
+    inline glm::dvec2 sphericalCoordinates(glm::dvec3 pos);
     void buildBaseMesh();
     void generateBuffers();
     void updateVBO();
@@ -89,14 +93,25 @@ private:
     int time;
 };
 
-inline float randFloat()
+double Planet::randDouble(double seedx, double seedy)
 {
-    return (float)rand() / RAND_MAX;
+    double fract;
+    return std::modf(sin((12.9898 * seedx + 78.233 * seedy)*43758.5453), &fract);
+    
+}
+double Planet::randDouble(glm::dvec2 vec)
+{
+    return randDouble(vec.x, vec.y);
+}
+
+glm::dvec2 Planet::sphericalCoordinates(glm::dvec3 pos)
+{
+    return glm::dvec2(std::atan2(pos.y, pos.x), std::atan2(pos.z, sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z)));
 }
 
 double Planet::terrainNoise(double x, double y, double z)
 {
-    return 0;//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
+    return 0.01*randDouble(sphericalCoordinates(glm::dvec3(x,y,z)));//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
 }
 
 double Planet::terrainNoise(glm::dvec3 v)

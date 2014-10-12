@@ -41,6 +41,7 @@ void GLManager::initGL()
     //TODO: get back face culling working
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glDepthRange(0.0, 0.9);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

@@ -15,6 +15,7 @@
 #include <random>
 
 
+
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
 Planet::Planet(glm::vec3 pos, float radius) : Position(pos), Radius(radius), time(0)
 {
@@ -37,18 +38,46 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
     {
         if (iterator->child0!=nullptr || iterator->child1!=nullptr || iterator->child2!=nullptr || iterator->child3!=nullptr)
             return true;
-        glm::dvec3 m12 = Normalize((iterator->v1 + iterator->v2) * 0.5)*Radius;
-        glm::dvec3 m13 = Normalize((iterator->v1 + iterator->v3) * 0.5)*Radius;
-        glm::dvec3 m23 = Normalize((iterator->v2 + iterator->v3) * 0.5)*Radius;
-        //float off =0.1f * randFloat() / (float)(1<<f.level);
-        m12*=1 + terrainNoise(m12);
-        m13*=1 + terrainNoise(m13);
-        m23*=1 + terrainNoise(m23);
+        
+        
+        
+        glm::dvec3 v1 = iterator->v1;
+        glm::dvec3 v2 = iterator->v2;
+        glm::dvec3 v3 = iterator->v3;
+        
+        glm::dvec3 nv1 = glm::normalize(v1);
+        glm::dvec3 nv2 = glm::normalize(v2);
+        glm::dvec3 nv3 = glm::normalize(v3);
+        
+        double l1 = glm::length(v1);
+        double l2 = glm::length(v2);
+        double l3 = glm::length(v3);
+        
+        
+        glm::dvec3 m12 = glm::normalize((nv1 + nv2) * 0.5)*Radius;
+        glm::dvec3 m13 = glm::normalize((nv1 + nv3) * 0.5)*Radius;
+        glm::dvec3 m23 = glm::normalize((nv2 + nv3) * 0.5)*Radius;
+        
+    
+        
+        
+        
+        double fac =1./(double)(1 << iterator->level);
+        
+        
+        m12*=1 + terrainNoise(m12) * fac;
+        m13*=1 + terrainNoise(m13) * fac;
+        m23*=1 + terrainNoise(m23) * fac;
+        
+        m12*=(l1 + l2)/2.;
+        m13*=(l1 + l3)/2.;
+        m23*=(l2 + l3)/2.;
+        
         
         Face* f0 = new Face(m13,m12,m23, iterator->level+1);
-        Face* f1 = new Face(iterator->v3,m13,m23,iterator->level+1);
-        Face* f2 = new Face(m23,m12,iterator->v2,iterator->level+1);
-        Face* f3 = new Face(m13,iterator->v1,m12,iterator->level+1);
+        Face* f1 = new Face(v3,m13,m23,iterator->level+1);
+        Face* f2 = new Face(m23,m12,v2,iterator->level+1);
+        Face* f3 = new Face(m13,v1,m12,iterator->level+1);
         
         //iterator=faces.erase(iterator);
 //        newFaces.push_back(f0);
@@ -218,19 +247,19 @@ void Planet::updateVBO()
 
 void Planet::buildBaseMesh()
 {
-    glm::dvec3 icosaVertices[12];
+    glm::dvec3 icosahedron[12];
     
-    double theta = 26.56505117707799f * M_PI / 180.0; // refer paper for theta value
+    double theta = 26.56505117707799 * M_PI / 180.0; // refer paper for theta value
     
     double stheta = std::sin(theta);
     double ctheta = std::cos(theta);
     
-    icosaVertices[0] = glm::vec3(0.0f, 0.0f, -1.0f); // the lower vertex
+    icosahedron[0] = glm::dvec3(0.0f, 0.0f, -1.0f); // bottom vertex of icosahedron
     
     // the lower pentagon
     double phi = M_PI / 5.0;
     for (int i = 1; i < 6; ++i) {
-        icosaVertices[i] = glm::vec3(
+        icosahedron[i] = glm::dvec3(
                                     ctheta * std::cos(phi), ctheta * std::sin(phi), -stheta);
         
         phi += 2.0 * M_PI / 5.0;
@@ -239,36 +268,37 @@ void Planet::buildBaseMesh()
     // the upper pentagon
     phi = 0.0;
     for (int i = 6; i < 11; ++i) {
-        icosaVertices[i] = glm::vec3(
+        icosahedron[i] = glm::dvec3(
                                           ctheta * std::cos(phi), ctheta * std::sin(phi), stheta);
         
         phi += 2.0 * M_PI / 5.0;
     }
     
-    icosaVertices[11] = glm::vec3(0.0f, 0.0f, 1.0f); // the upper vertex
+    icosahedron[11] = glm::dvec3(0.0, 0.0, 1.0); // top vertex of icosahedron
     
-    faces.push_back(Face(icosaVertices[0], icosaVertices[3], icosaVertices[2]));
-    faces.push_back(Face(icosaVertices[0], icosaVertices[4], icosaVertices[3]));
-    faces.push_back(Face(icosaVertices[0], icosaVertices[5], icosaVertices[4]));
-    faces.push_back(Face(icosaVertices[0], icosaVertices[1], icosaVertices[5]));
+    faces.push_back(Face(icosahedron[0], icosahedron[2], icosahedron[1]));
+    faces.push_back(Face(icosahedron[0], icosahedron[3], icosahedron[2]));
+    faces.push_back(Face(icosahedron[0], icosahedron[4], icosahedron[3]));
+    faces.push_back(Face(icosahedron[0], icosahedron[5], icosahedron[4]));
+    faces.push_back(Face(icosahedron[0], icosahedron[1], icosahedron[5]));
     
-    faces.push_back(Face(icosaVertices[1], icosaVertices[2], icosaVertices[7]));
-    faces.push_back(Face(icosaVertices[2], icosaVertices[3], icosaVertices[8]));
-    faces.push_back(Face(icosaVertices[3], icosaVertices[4], icosaVertices[9]));
-    faces.push_back(Face(icosaVertices[4], icosaVertices[5], icosaVertices[10]));
-    faces.push_back(Face(icosaVertices[5], icosaVertices[1], icosaVertices[6]));
+    faces.push_back(Face(icosahedron[1], icosahedron[2], icosahedron[7]));
+    faces.push_back(Face(icosahedron[2], icosahedron[3], icosahedron[8]));
+    faces.push_back(Face(icosahedron[3], icosahedron[4], icosahedron[9]));
+    faces.push_back(Face(icosahedron[4], icosahedron[5], icosahedron[10]));
+    faces.push_back(Face(icosahedron[5], icosahedron[1], icosahedron[6]));
     
-    faces.push_back(Face(icosaVertices[1], icosaVertices[7], icosaVertices[6]));
-    faces.push_back(Face(icosaVertices[2], icosaVertices[8], icosaVertices[7]));
-    faces.push_back(Face(icosaVertices[3], icosaVertices[9], icosaVertices[8]));
-    faces.push_back(Face(icosaVertices[4], icosaVertices[10], icosaVertices[9]));
-    faces.push_back(Face(icosaVertices[5], icosaVertices[6], icosaVertices[10]));
+    faces.push_back(Face(icosahedron[1], icosahedron[7], icosahedron[6]));
+    faces.push_back(Face(icosahedron[2], icosahedron[8], icosahedron[7]));
+    faces.push_back(Face(icosahedron[3], icosahedron[9], icosahedron[8]));
+    faces.push_back(Face(icosahedron[4], icosahedron[10], icosahedron[9]));
+    faces.push_back(Face(icosahedron[5], icosahedron[6], icosahedron[10]));
     
-    faces.push_back(Face(icosaVertices[6], icosaVertices[7], icosaVertices[11]));
-    faces.push_back(Face(icosaVertices[7], icosaVertices[8], icosaVertices[11]));
-    faces.push_back(Face(icosaVertices[8], icosaVertices[9], icosaVertices[11]));
-    faces.push_back(Face(icosaVertices[9], icosaVertices[10], icosaVertices[11]));
-    faces.push_back(Face(icosaVertices[10], icosaVertices[6], icosaVertices[11]));
+    faces.push_back(Face(icosahedron[6], icosahedron[7], icosahedron[11]));
+    faces.push_back(Face(icosahedron[7], icosahedron[8], icosahedron[11]));
+    faces.push_back(Face(icosahedron[8], icosahedron[9], icosahedron[11]));
+    faces.push_back(Face(icosahedron[9], icosahedron[10], icosahedron[11]));
+    faces.push_back(Face(icosahedron[10], icosahedron[6], icosahedron[11]));
     
 }
 
@@ -277,7 +307,6 @@ void Planet::Draw(Player& player, GLManager& glManager)
 //    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     glManager.Program.Use();
     glUniform1f(1,(GLfloat)time);
-    std::cout << glGetUniformLocation(glManager.Program.programID, "theTime") << "\n\n";
     
     glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
     
@@ -287,9 +316,7 @@ void Planet::Draw(Player& player, GLManager& glManager)
     {
         
         glBindVertexArray(VAO);
-        //glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-        //glDisableVertexAttribArray(0);
         glBindVertexArray(0);
     }
 }

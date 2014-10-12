@@ -13,21 +13,21 @@
 #include "Player.h"
 #include <vector>
 #include "GLManager.h"
-
+#include "typedefs.h"
 struct Face
 {
-    glm::dvec3 v1,v2,v3;
+    vvec3 v1,v2,v3;
     Face* child0;
     Face* child1;
     Face* child2;
     Face* child3;
     unsigned int level;
     Face() : level(0) {}
-    Face(glm::dvec3 _v1, glm::dvec3 _v2, glm::dvec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), child0(nullptr),child1(nullptr), child2(nullptr), child3(nullptr)
+    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), child0(nullptr),child1(nullptr), child2(nullptr), child3(nullptr)
     {
         
     }
-    Face(glm::dvec3 _v1, glm::dvec3 _v2, glm::dvec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level),child0(nullptr), child1(nullptr), child2(nullptr), child3(nullptr)
+    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level),child0(nullptr), child1(nullptr), child2(nullptr), child3(nullptr)
     {
         
     }
@@ -40,8 +40,8 @@ struct Face
 
 struct Vertex
 {
-    double x,y,z,w;
-    Vertex(glm::dvec4 pos) : x(pos.x), y(pos.y), z(pos.z), w(pos.w) {}
+    vfloat x,y,z, w;
+    Vertex(vvec4 pos) : x(pos.x), y(pos.y), z(pos.z), w(pos.w) {}
 };
 
 //TODO: implement vertex indexing
@@ -53,8 +53,8 @@ class Planet
 public:
     
     glm::vec3 Position;
-    double Radius;
-    const int LOD_MULTIPLIER=5;
+    vfloat Radius;
+    const int LOD_MULTIPLIER=4;
     
     Planet(glm::vec3 pos, float radius);
     ~Planet();
@@ -66,8 +66,8 @@ public:
     
     
     
-    inline double terrainNoise(double x, double y, double z);
-    inline double terrainNoise(glm::dvec3 v);
+    inline vfloat terrainNoise(vfloat x, vfloat y, vfloat z);
+    inline vfloat terrainNoise(vvec3 v);
 private:
     std::vector<Face> faces;
     std::vector<Vertex> vertices;
@@ -80,9 +80,9 @@ private:
     bool trySubdivide(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
     bool tryCombine(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
     inline void projectFaceOntoSphere(Face& f);
-    inline double randDouble(double seedx, double seedy);
-    inline double randDouble(glm::dvec2 vec);
-    inline glm::dvec2 sphericalCoordinates(glm::dvec3 pos);
+    inline vfloat randvfloat(vfloat seedx, vfloat seedy);
+    inline vfloat randvfloat(vvec2 vec);
+    inline glm::dvec2 sphericalCoordinates(vvec3 pos);
     void buildBaseMesh();
     void generateBuffers();
     void updateVBO();
@@ -93,28 +93,28 @@ private:
     int time;
 };
 
-double Planet::randDouble(double seedx, double seedy)
+vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)
 {
-    double fract;
+    vfloat fract;
     return std::modf(sin((12.9898 * seedx + 78.233 * seedy)*43758.5453), &fract);
     
 }
-double Planet::randDouble(glm::dvec2 vec)
+vfloat Planet::randvfloat(vvec2 vec)
 {
-    return randDouble(vec.x, vec.y);
+    return randvfloat(vec.x, vec.y);
 }
 
-glm::dvec2 Planet::sphericalCoordinates(glm::dvec3 pos)
+glm::dvec2 Planet::sphericalCoordinates(vvec3 pos)
 {
     return glm::dvec2(std::atan2(pos.y, pos.x), std::atan2(pos.z, sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z)));
 }
 
-double Planet::terrainNoise(double x, double y, double z)
+vfloat Planet::terrainNoise(vfloat x, vfloat y, vfloat z)
 {
-    return 0.01*randDouble(sphericalCoordinates(glm::dvec3(x,y,z)));//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
+    return 0.01*randvfloat(sphericalCoordinates(vvec3(x,y,z)));//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
 }
 
-double Planet::terrainNoise(glm::dvec3 v)
+vfloat Planet::terrainNoise(vvec3 v)
 {
     return terrainNoise(v.x,v.y,v.z);
 }

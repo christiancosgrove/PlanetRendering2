@@ -23,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AA073A9E19EB2CB10048B9BE /* typedefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = typedefs.h; sourceTree = "<group>"; };
 		AA0DFC4119D8598E0042C627 /* Planet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Planet.cpp; sourceTree = "<group>"; };
 		AA0DFC4219D8598E0042C627 /* Planet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Planet.h; sourceTree = "<group>"; };
 		AA0DFC4719D861F00042C627 /* VectorHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorHelper.h; sourceTree = "<group>"; };
@@ -98,6 +99,7 @@
 				AA0DFC4719D861F00042C627 /* VectorHelper.h */,
 				AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */,
 				AACC3ED219DCE87500FEDC84 /* MainGame_SDL.h */,
+				AA073A9E19EB2CB10048B9BE /* typedefs.h */,
 			);
 			path = PlanetRendering;
 			sourceTree = "<group>";

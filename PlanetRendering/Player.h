@@ -10,6 +10,7 @@
 #define __PlanetRendering__Player__
 #include "glm/glm.hpp"
 #include "Camera.h"
+#include "typedefs.h"
 class Player
 {
 public:

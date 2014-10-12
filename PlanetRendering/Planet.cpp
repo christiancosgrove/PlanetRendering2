@@ -41,22 +41,22 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         
         
         
-        glm::dvec3 v1 = iterator->v1;
-        glm::dvec3 v2 = iterator->v2;
-        glm::dvec3 v3 = iterator->v3;
+        vvec3 v1 = iterator->v1;
+        vvec3 v2 = iterator->v2;
+        vvec3 v3 = iterator->v3;
         
-        glm::dvec3 nv1 = glm::normalize(v1);
-        glm::dvec3 nv2 = glm::normalize(v2);
-        glm::dvec3 nv3 = glm::normalize(v3);
+        vvec3 nv1 = glm::normalize(v1);
+        vvec3 nv2 = glm::normalize(v2);
+        vvec3 nv3 = glm::normalize(v3);
         
         double l1 = glm::length(v1);
         double l2 = glm::length(v2);
         double l3 = glm::length(v3);
         
         
-        glm::dvec3 m12 = glm::normalize((nv1 + nv2) * 0.5)*Radius;
-        glm::dvec3 m13 = glm::normalize((nv1 + nv3) * 0.5)*Radius;
-        glm::dvec3 m23 = glm::normalize((nv2 + nv3) * 0.5)*Radius;
+        vvec3 m12 = glm::normalize((nv1 + nv2) * (vfloat)0.5f)*Radius;
+        vvec3 m13 = glm::normalize((nv1 + nv3) * (vfloat)0.5f)*Radius;
+        vvec3 m23 = glm::normalize((nv2 + nv3) * (vfloat)0.5f)*Radius;
         
     
         
@@ -142,7 +142,7 @@ void Planet::combineFace(Face* face)
 void Planet::Update(Player& player)
 {
     bool wasSubdivided = false;
-    if (time%10==0)
+    //if (time%10==0)
     {
         for (auto it = faces.begin();it!=faces.end();it++)
         {
@@ -165,7 +165,11 @@ void Planet::generateBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     
     glEnableVertexAttribArray(0);
+#ifdef VERTEX_DOUBLE
     glVertexAttribLPointer(0, 4, GL_DOUBLE, 0, (void*)0);
+#else
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+#endif
     glBindVertexArray(0);
 //    updateVBO();
 }
@@ -181,9 +185,9 @@ void Planet::recursiveUpdate(Face& face)
     }
     else
     {
-        vertices.push_back(Vertex(glm::dvec4(face.v1,1.0f)));
-        vertices.push_back(Vertex(glm::dvec4(face.v2,1.0f)));
-        vertices.push_back(Vertex(glm::dvec4(face.v3,1.0f)));
+        vertices.push_back(Vertex(vvec4(face.v1,1.0)));
+        vertices.push_back(Vertex(vvec4(face.v2,1.0)));
+        vertices.push_back(Vertex(vvec4(face.v3,1.0)));
     }
 }
 
@@ -247,19 +251,19 @@ void Planet::updateVBO()
 
 void Planet::buildBaseMesh()
 {
-    glm::dvec3 icosahedron[12];
+    vvec3 icosahedron[12];
     
     double theta = 26.56505117707799 * M_PI / 180.0; // refer paper for theta value
     
     double stheta = std::sin(theta);
     double ctheta = std::cos(theta);
     
-    icosahedron[0] = glm::dvec3(0.0f, 0.0f, -1.0f); // bottom vertex of icosahedron
+    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f); // bottom vertex of icosahedron
     
     // the lower pentagon
     double phi = M_PI / 5.0;
     for (int i = 1; i < 6; ++i) {
-        icosahedron[i] = glm::dvec3(
+        icosahedron[i] = vvec3(
                                     ctheta * std::cos(phi), ctheta * std::sin(phi), -stheta);
         
         phi += 2.0 * M_PI / 5.0;
@@ -268,13 +272,13 @@ void Planet::buildBaseMesh()
     // the upper pentagon
     phi = 0.0;
     for (int i = 6; i < 11; ++i) {
-        icosahedron[i] = glm::dvec3(
+        icosahedron[i] = vvec3(
                                           ctheta * std::cos(phi), ctheta * std::sin(phi), stheta);
         
         phi += 2.0 * M_PI / 5.0;
     }
     
-    icosahedron[11] = glm::dvec3(0.0, 0.0, 1.0); // top vertex of icosahedron
+    icosahedron[11] = vvec3(0.0, 0.0, 1.0); // top vertex of icosahedron
     
     faces.push_back(Face(icosahedron[0], icosahedron[2], icosahedron[1]));
     faces.push_back(Face(icosahedron[0], icosahedron[3], icosahedron[2]));
@@ -304,12 +308,14 @@ void Planet::buildBaseMesh()
 
 void Planet::Draw(Player& player, GLManager& glManager)
 {
-//    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     glManager.Program.Use();
     glUniform1f(1,(GLfloat)time);
-    
+#ifdef VERTEX_DOUBLE
     glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-    
+#else
+    glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+#endif
     
     
     if (vertices.size() >0)

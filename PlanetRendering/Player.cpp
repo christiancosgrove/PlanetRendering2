@@ -52,10 +52,10 @@ Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(window
 void Player::Update() //SDL implementation
 {
     bool mouseFocus = true;
-    double len =glm::length(Camera.Position)-1.0;
-    double playerSpeed = std::min((std::exp2(len)-1.0)/100.0,0.0025);
+    vfloat len =glm::length(Camera.Position)-1.0;
+    vfloat playerSpeed = std::min((std::exp2(len)-1.0)/100.0,0.0025);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
-    double shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 45.0 : 1.0;
+    vfloat shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 45.0 : 1.0;
     if (state[SDL_SCANCODE_W])
     {
         Camera.Position+=Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor;
@@ -66,19 +66,19 @@ void Player::Update() //SDL implementation
     }
     if (state[SDL_SCANCODE_A])
     {
-        Camera.Position+=glm::dvec3(glm::dvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+        Camera.Position+=vvec3(vvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
     if (state[SDL_SCANCODE_D])
     {
-        Camera.Position-=glm::dvec3(glm::dvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+        Camera.Position-=vvec3(vvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
     if (state[SDL_SCANCODE_SPACE])
     {
-        Camera.Position-=glm::dvec3(glm::dvec4(0.0, 1.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+        Camera.Position-=vvec3(vvec4(0.0, 1.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
 //    if (state[SDL_SCANCODE_LSHIFT])
 //    {
-//        Camera.Position-=glm::dvec3(glm::dvec4(0.0, 0.0, 1.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+//        Camera.Position-=vvec3(vvec4(0.0, 0.0, 1.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
 //    }
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;

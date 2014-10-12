@@ -2,24 +2,24 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
 #include "glm/gtx/euler_angles.hpp"
-
+#include "typedefs.h"
 class Camera
 {
 public:
 	Camera(int windowWidth, int windowHeight);
     ~Camera();
-	glm::dmat4 GetViewMatrix();
-	glm::dmat4 GetProjectionMatrix();
-	glm::dmat4 GetTransformMatrix();
-	glm::dvec3 GetViewDirection();
-	glm::dvec3 Position;
-	double XRotation;
-	double ZRotation;
-	double FieldOfView;
+	vmat4 GetViewMatrix();
+	vmat4 GetProjectionMatrix();
+	vmat4 GetTransformMatrix();
+	vvec3 GetViewDirection();
+	vvec3 Position;
+	vfloat XRotation;
+	vfloat ZRotation;
+	vfloat FieldOfView;
 	void ResizedWindow(int windowWidth, int windowHeight);
-	const double NEAR_PLANE;
-	const double FAR_PLANE;
+	const vfloat NEAR_PLANE;
+	const vfloat FAR_PLANE;
 private:
-	float aspectRatio;
+	vfloat aspectRatio;
 };
 

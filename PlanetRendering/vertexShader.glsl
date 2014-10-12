@@ -1,7 +1,7 @@
 #version 410 core
+
 layout (location = 0) in dvec4 vertexPos;
 
-uniform float theTime;
 uniform dmat4 transformMatrix;
 
 out float height;
@@ -14,5 +14,5 @@ void main()
     //    gl_Position.w=1.0;
     height = float(length(vertexPos)-1.0);
     coord = vec3(vertexPos);
-    gl_Position = vec4(transformMatrix * vertexPos) * (1.+theTime);// 0.1*sin(time/10.));
+    gl_Position = vec4(transformMatrix * vertexPos);// 0.1*sin(time/10.));
 }

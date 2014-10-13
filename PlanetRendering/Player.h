@@ -18,6 +18,7 @@ public:
     Player(glm::vec3 pos, int windowWidth, int windowHeight);
     void Update();
     Camera Camera;
+    vfloat DistFromSurface;
 private:
 };
 

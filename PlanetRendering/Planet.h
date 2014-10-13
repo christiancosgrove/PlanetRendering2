@@ -85,8 +85,8 @@ private:
     inline glm::dvec2 sphericalCoordinates(vvec3 pos);
     void buildBaseMesh();
     void generateBuffers();
-    void updateVBO();
-    void recursiveUpdate(Face& face);
+    void updateVBO(Player& player);
+    void recursiveUpdate(Face& face, Player& player);
     bool recursiveSubdivide(Face* face, Player& player);
     bool recursiveCombine(Face* face, Player& player);
     void combineFace(Face* face);
@@ -96,7 +96,8 @@ private:
 vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)
 {
     vfloat fract;
-    return std::modf(sin((12.9898 * seedx + 78.233 * seedy)*43758.5453), &fract);
+    return std::modf(sin((12.9898 * seedx + 78.233 * seedy)*43758614.5453), &fract);
+    
     
 }
 vfloat Planet::randvfloat(vvec2 vec)

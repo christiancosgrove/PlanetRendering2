@@ -62,7 +62,7 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         
         
         
-        double fac =1./(double)(1 << iterator->level);
+        double fac =1./(double)(1 << iterator->level)*std::cbrt((iterator->level+1));
         
         
         m12*=1 + terrainNoise(m12) * fac;
@@ -152,7 +152,7 @@ void Planet::Update(Player& player)
                 wasSubdivided=true;
         }
     }
-    if (wasSubdivided || vertices.size()==0) updateVBO();
+    if (wasSubdivided || vertices.size()==0) updateVBO(player);
 }
 
 void Planet::generateBuffers()
@@ -174,14 +174,16 @@ void Planet::generateBuffers()
 //    updateVBO();
 }
 
-void Planet::recursiveUpdate(Face& face)
+void Planet::recursiveUpdate(Face& face, Player& player)
 {
+    vfloat dist = std::min(std::min(glm::length(-player.Camera.Position - face.v1),glm::length(-player.Camera.Position - face.v2)),glm::length(-player.Camera.Position - face.v3));
+    if (player.DistFromSurface > dist) player.DistFromSurface = dist;
     if (face.child0!=nullptr && face.child1!=nullptr && face.child2!=nullptr && face.child3!=nullptr)
     {
-        recursiveUpdate(*face.child0);
-        recursiveUpdate(*face.child1);
-        recursiveUpdate(*face.child2);
-        recursiveUpdate(*face.child3);
+        recursiveUpdate(*face.child0, player);
+        recursiveUpdate(*face.child1, player);
+        recursiveUpdate(*face.child2, player);
+        recursiveUpdate(*face.child3, player);
     }
     else
     {
@@ -235,11 +237,12 @@ bool Planet::recursiveCombine(Face* face, Player& player)
     else return true;
 }
 
-void Planet::updateVBO()
+void Planet::updateVBO(Player& player)
 {
     vertices.clear();
+    player.DistFromSurface=10.;
     for (Face& f : faces)
-        recursiveUpdate(f);
+        recursiveUpdate(f, player);
     
     if (vertices.size()>0)
     {

@@ -3,8 +3,8 @@
 Camera::Camera(int windowWidth, int windowHeight) : 
 	Position(1.1f, 0.0f, 0.0f),
 	aspectRatio(((float)windowWidth)/(float)windowHeight),
-	FieldOfView(85.0f), XRotation(0.0f), ZRotation(0.0f),
-	NEAR_PLANE(0.0f), FAR_PLANE(200.0f)
+	FieldOfView(85.0f), XRotation(0.0f), ZRotation(0.0f), YRotation(0.0f),
+	NEAR_PLANE(0.00000001), FAR_PLANE(200.0f)
 {
     aspectRatio = ((float)windowWidth)/(float)windowHeight;
 }
@@ -32,10 +32,10 @@ vmat4 Camera::GetProjectionMatrix()
 }
 vmat4 Camera::GetTransformMatrix()
 {
-	return GetProjectionMatrix() * GetViewMatrix();
+    return glm::rotate(GetProjectionMatrix() , 0.0, vvec3(0,0,1))* GetViewMatrix();
 }
 
 vvec3 Camera::GetViewDirection()
 {
-	return vvec3(vvec4(0.0, 0.0, 1.0, 1.0) * glm::eulerAngleXZ(XRotation, ZRotation));
+    return vvec3(vvec4(0.0, 0.0, 1.0, 1.0) * glm::eulerAngleXZ(XRotation, ZRotation));
 }

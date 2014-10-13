@@ -6,6 +6,7 @@ uniform dmat4 transformMatrix;
 
 out float height;
 out vec3 coord;
+const float seaLevel=0.415;//225;
 
 
 void main()
@@ -14,5 +15,6 @@ void main()
     //    gl_Position.w=1.0;
     height = float(length(vertexPos)-1.0);
     coord = vec3(vertexPos);
+    
     gl_Position = vec4(transformMatrix * vertexPos);// 0.1*sin(time/10.));
 }

@@ -15,6 +15,7 @@ public:
 	vvec3 Position;
 	vfloat XRotation;
 	vfloat ZRotation;
+    vfloat YRotation;
 	vfloat FieldOfView;
 	void ResizedWindow(int windowWidth, int windowHeight);
 	const vfloat NEAR_PLANE;

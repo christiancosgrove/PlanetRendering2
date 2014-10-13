@@ -12,8 +12,8 @@
 #include <iostream>
 
 #include <SDL2/SDL.h>
-Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight) {}
-Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight) {}
+Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0){}
+Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0) {}
 
 //void Player::Update() // SFML implementation
 //{
@@ -52,8 +52,8 @@ Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(window
 void Player::Update() //SDL implementation
 {
     bool mouseFocus = true;
-    vfloat len =glm::length(Camera.Position)-1.0;
-    vfloat playerSpeed = std::min((std::exp2(len)-1.0)/100.0,0.0025);
+    vfloat len =DistFromSurface;//glm::length(Camera.Position)-1.0;
+    vfloat playerSpeed = std::min((std::exp2(len)-1.)/100.0,0.0025);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     vfloat shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 45.0 : 1.0;
     if (state[SDL_SCANCODE_W])
@@ -76,6 +76,14 @@ void Player::Update() //SDL implementation
     {
         Camera.Position-=vvec3(vvec4(0.0, 1.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
     }
+    if (state[SDL_SCANCODE_Q])
+    {
+        Camera.YRotation+=0.5;
+    }
+    if (state[SDL_SCANCODE_E])
+    {
+        Camera.YRotation-=0.5;
+    }
 //    if (state[SDL_SCANCODE_LSHIFT])
 //    {
 //        Camera.Position-=vvec3(vvec4(0.0, 0.0, 1.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
@@ -83,7 +91,7 @@ void Player::Update() //SDL implementation
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;
     
-    const float earthDiameter = 12756200.0;
+    const vfloat earthDiameter = 12756200.0;
     
     if (mouseFocus)
     {
@@ -94,7 +102,7 @@ void Player::Update() //SDL implementation
         if (Camera.XRotation > 0) Camera.XRotation=0;
         if (Camera.XRotation<-M_PI) Camera.XRotation=-M_PI;
         Camera.ZRotation+=(float)(x)/200;
-        std::cout << "Height above earth surface: " << len * earthDiameter << " m" <<std::endl;
+        std::cout << "Height above earth surface: " << len*earthDiameter << " m\n";
     }
     
 //    if (mouseFocus)

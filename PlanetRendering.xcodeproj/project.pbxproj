@@ -26,7 +26,6 @@
 		AA073A9E19EB2CB10048B9BE /* typedefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = typedefs.h; sourceTree = "<group>"; };
 		AA0DFC4119D8598E0042C627 /* Planet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Planet.cpp; sourceTree = "<group>"; };
 		AA0DFC4219D8598E0042C627 /* Planet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Planet.h; sourceTree = "<group>"; };
-		AA0DFC4719D861F00042C627 /* VectorHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorHelper.h; sourceTree = "<group>"; };
 		AA4BABD619DA04B10022C8BC /* glm */ = {isa = PBXFileReference; lastKnownFileType = folder; path = glm; sourceTree = "<group>"; };
 		AA4BABD819DA08450022C8BC /* Camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Camera.cpp; sourceTree = "<group>"; };
 		AA4BABD919DA08450022C8BC /* Camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Camera.h; sourceTree = "<group>"; };
@@ -96,7 +95,6 @@
 				AA68DB6B19D83B5700B073C6 /* GLManager.h */,
 				AA0DFC4119D8598E0042C627 /* Planet.cpp */,
 				AA0DFC4219D8598E0042C627 /* Planet.h */,
-				AA0DFC4719D861F00042C627 /* VectorHelper.h */,
 				AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */,
 				AACC3ED219DCE87500FEDC84 /* MainGame_SDL.h */,
 				AA073A9E19EB2CB10048B9BE /* typedefs.h */,

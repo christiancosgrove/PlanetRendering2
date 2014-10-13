@@ -4,9 +4,8 @@ Camera::Camera(int windowWidth, int windowHeight) :
 	Position(1.1f, 0.0f, 0.0f),
 	aspectRatio(((float)windowWidth)/(float)windowHeight),
 	FieldOfView(85.0f), XRotation(0.0f), ZRotation(0.0f), YRotation(0.0f),
-	NEAR_PLANE(0.00000001), FAR_PLANE(200.0f)
+	NEAR_PLANE(0.000000001), FAR_PLANE(200.0f)
 {
-    aspectRatio = ((float)windowWidth)/(float)windowHeight;
 }
 
 Camera::~Camera() {}

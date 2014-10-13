@@ -11,6 +11,7 @@
 #include "glm/glm.hpp"
 #include "Camera.h"
 #include "typedefs.h"
+//This class contains functions for controlling the camera using the mouse and keyboard.
 class Player
 {
 public:

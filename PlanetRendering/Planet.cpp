@@ -7,17 +7,18 @@
 //
 
 #include "Planet.h"
-#include "VectorHelper.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include <time.h>
 
 
+const float Planet::ROTATION_RATE=0.001f;
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, float radius) : Position(pos), Radius(radius), time(0)
+Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed) : Position(pos), Radius(radius), time(0), SEED(seed)
 {
     
     generateBuffers();
@@ -27,7 +28,12 @@ Planet::Planet(glm::vec3 pos, float radius) : Position(pos), Radius(radius), tim
 Planet::~Planet()
 {
     glDeleteVertexArrays(1, &VAO);
+    for (auto it = faces.begin(); it!=faces.end();)
+    {
+        it = faces.erase(it);
+    }
 }
+
 
 //This function accepts a boolean-valued function of displacement.  If the function is true, the function will divide the given face into four subfaces, each of which will be recursively subjected to the same subdivision scheme.  It is important that the input function terminates at a particular level of detail, or the program will crash.
 bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
@@ -153,6 +159,7 @@ void Planet::Update(Player& player)
         }
     }
     if (wasSubdivided || vertices.size()==0) updateVBO(player);
+    time++;
 }
 
 void Planet::generateBuffers()
@@ -165,10 +172,13 @@ void Planet::generateBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 #ifdef VERTEX_DOUBLE
-    glVertexAttribLPointer(0, 4, GL_DOUBLE, 0, (void*)0);
+    glVertexAttribLPointer(0, 4, GL_DOUBLE, sizeof(Vertex), (void*)0);
+    glVertexAttribLPointer(1, 4, GL_DOUBLE, sizeof(Vertex), (void*)(4 * sizeof(vfloat)));
 #else
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribLPointer(0, 4, GL_FLOAT, sizeof(Vertex), GL_FALSE,(void*)0);
+    glVertexAttribLPointer(1, 4, GL_FLOAT, sizeof(Vertex), GL_FALSE,(void*)(4 * sizeof(vfloat)));
 #endif
     glBindVertexArray(0);
 //    updateVBO();
@@ -187,9 +197,10 @@ void Planet::recursiveUpdate(Face& face, Player& player)
     }
     else
     {
-        vertices.push_back(Vertex(vvec4(face.v1,1.0)));
-        vertices.push_back(Vertex(vvec4(face.v2,1.0)));
-        vertices.push_back(Vertex(vvec4(face.v3,1.0)));
+        vvec3 norm = face.GetNormal();
+        vertices.push_back(Vertex(vvec4(face.v1,1.0),norm));
+        vertices.push_back(Vertex(vvec4(face.v2,1.0),norm));
+        vertices.push_back(Vertex(vvec4(face.v3,1.0),norm));
     }
 }
 
@@ -319,6 +330,9 @@ void Planet::Draw(Player& player, GLManager& glManager)
 #else
     glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
 #endif
+    
+    float angle = time * ROTATION_RATE;
+    glManager.Program.SetVector3fv("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
     
     
     if (vertices.size() >0)

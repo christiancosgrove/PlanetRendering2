@@ -14,15 +14,24 @@
 #include <vector>
 #include "GLManager.h"
 #include "typedefs.h"
+//Representation of a triangular face on CPU side of program
+//represents a single node in the face tree
 struct Face
 {
+    //vertices of triangle
     vvec3 v1,v2,v3;
+    //pointers to children in tree structure
     Face* child0;
     Face* child1;
     Face* child2;
     Face* child3;
+    //depth in tree
     unsigned int level;
     Face() : level(0) {}
+    ~Face()
+    {
+    }
+    
     Face(vvec3 _v1, vvec3 _v2, vvec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), child0(nullptr),child1(nullptr), child2(nullptr), child3(nullptr)
     {
         
@@ -31,72 +40,104 @@ struct Face
     {
         
     }
-    
+    //copy constructor
     Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3), level(face.level), child0(face.child0), child1(face.child1), child2(face.child2),child3(face.child3)  {}
-    //Face& operator=(Face& rhs) { v1=rhs.v1;v2=rhs.v2;v3=rhs.v3;return *this; }
+    //returns the normal vector of the face (used for lighting calculations)
+    inline vvec3 GetNormal()
+    {
+        return glm::normalize(glm::cross(v1 - v2, v1 - v3));
+    }
     
-    //Face& operator=(Face& rhs) {memcpy(this, &rhs, sizeof(Face)); return *this; }
 };
-
+//Representation of a single vertex for communication with GPU
+//recursiveUpdate function interops between two representations of vertex data (convenient Face & rendering Vertex representations)
+//Contains position as well as normal vectors
+//Due to the number of vertices, would like to implement vertex indexing (essentially ignoring duplicated vertices)
 struct Vertex
 {
     vfloat x,y,z, w;
-    Vertex(vvec4 pos) : x(pos.x), y(pos.y), z(pos.z), w(pos.w) {}
+    vfloat nx, ny, nz;
+    Vertex(vvec4 pos, vvec3 normal) : x(pos.x), y(pos.y), z(pos.z), w(pos.w),
+    nx(normal.x), ny(normal.y), nz(normal.z)
+    {}
 };
 
 //TODO: implement vertex indexing
 
-//reference on subdivided icosahedrons:
+//reference on subdivided icosahedrons (the geodesic sphere):
 //http://www.donhavey.com/blog/tutorials/tutorial-3-the-icosahedron-sphere/
+
+
+//This class contains functionality for rendering and generating the procedural planet
 class Planet
 {
 public:
-    
+    //Position is defaulted to origin (shaders may not work if pos!=origin right now)
     glm::vec3 Position;
+    //radius of planet in device coordinates (default 1)
     vfloat Radius;
+    //Number of levels of detail (impacts rendering performance)
     const int LOD_MULTIPLIER=4;
-    
-    Planet(glm::vec3 pos, float radius);
+    //Seed used for random number generator (RNG needs to be updates)
+    const vfloat SEED;
+    //Initialization of planet
+    Planet(glm::vec3 pos, vfloat radius, vfloat seed);
+    //De-initialization of planet (destruction of GL objects)
     ~Planet();
-    
+    //Perform subdivisions/combinations accordingly, update vertex buffers
     void Update(Player& player);
-    
+    //Render planet with Vertex Buffer Object/Vertex Array Object
     void Draw(Player& player, GLManager& glManager);
-    
-    
-    
-    
+    //Terrain generation function in cartesion coordinates (spherically-symmetric)
     inline vfloat terrainNoise(vfloat x, vfloat y, vfloat z);
     inline vfloat terrainNoise(vvec3 v);
 private:
+    //Planet faces.  This array only contains the base icosahedron vertices, and deeper faces are stored on the heap (in a tree structure).  These are not directly transferred to the GPU
     std::vector<Face> faces;
+    //Array of vertices.  This array is generated every time the geometry is updated (perhaps this can be optimized) and is copied directly to the GPU.
     std::vector<Vertex> vertices;
     
+    //VBO=Vertex Buffer Object.  This OpenGL API object contains functionality for sending arrays of vertices (with arbitrary attributes) to the GPU.  The attributes of each vertex can be referenced in the vertex shader.
     GLuint VBO;
+    //VAO=Vertex Array Object.  This OpenGL API object contains functionality for saving the configuration of vertex arrays (i.e. pointers to attributes).
     GLuint VAO;
     //TODO: implement vertex indexing for faster rendering and less CPU-GPU communcation
     
+    //This function, which accepts a face and a boolean-valued function of the player's position and that face, checks whether a face is ready to be subdivided (in this case, close enough to the camera) and performs the subdivision.  The function argument of this method makes it more modular; the function used to CHECK whether to subdivide the face is external.
     //takes a function of the player information and the current face
     bool trySubdivide(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
+    //Like trySubdivide, this function accepts a face and a function of the face and the player.  Instead of subdividing the face if it meets the function's criteria, it instead COMBINES the face's children.  Also like trySubdivide, this function is heavily reliant on the tree structure of the faces (one may now see why it was chosen over a one-dimensional resizeable array).
     bool tryCombine(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
-    inline void projectFaceOntoSphere(Face& f);
+    //This function is a pseudorandom number generator of two arguments (in this case the polar and azimuthal angles of the vertex in spherical coordinates)
     inline vfloat randvfloat(vfloat seedx, vfloat seedy);
     inline vfloat randvfloat(vvec2 vec);
+    //converts a Cartesian vector to a two-dimesnional polar-azimuthal vector (ignores radius)
     inline glm::dvec2 sphericalCoordinates(vvec3 pos);
+    //construct base icosahedron
     void buildBaseMesh();
+    //initialize VBO and VAO
     void generateBuffers();
+    //Reconstruct vertex array and send vertices to GPU
     void updateVBO(Player& player);
+    //Append vertices deepest in the tree to vertex array to be sent to GPU
+    //also calculates the player's minimum distance to the planet surface
     void recursiveUpdate(Face& face, Player& player);
+    //Perform trySubdivide by recursively traversing tree
     bool recursiveSubdivide(Face* face, Player& player);
+    //Perform tryCombine by recursively traversing tree
     bool recursiveCombine(Face* face, Player& player);
+    //Simple function which deletes children vertices in order to combine the face.
     void combineFace(Face* face);
+    //number of ticks (executions of Update()) since start; used in rotation of sun
     int time;
+    //Radians/tick rotation rate of sun around planet
+    static const float ROTATION_RATE;
 };
-
+//TODO: need new, more efficent RNG
 vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)
 {
     vfloat fract;
-    return std::modf(sin((12.9898 * seedx + 78.233 * seedy)*43758614.5453), &fract);
+    return std::modf(sin((12.9898 * (seedx+SEED) + 78.233 * (seedy+SEED))*4375861423.5453), &fract);
     
     
 }
@@ -119,10 +160,4 @@ vfloat Planet::terrainNoise(vvec3 v)
 {
     return terrainNoise(v.x,v.y,v.z);
 }
-
-void Planet::projectFaceOntoSphere(Face &f)
-{
-    
-}
-
 

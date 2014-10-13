@@ -38,7 +38,6 @@ GLManager::GLManager(std::string fragName, std::string vertName) : Program(fragN
 void GLManager::initGL()
 {
 //    glDisable(GL_CULL_FACE);
-    //TODO: get back face culling working
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glDepthRange(0.0, 1.0);
@@ -46,12 +45,13 @@ void GLManager::initGL()
     glDepthFunc(GL_LEQUAL);
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
-
+//compile an OpenGL shader
 GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)
 {
     GLuint shaderId = glCreateShader(type);
     
     std::string code;
+    //read file with an ifstream
     std::ifstream stream(shaderName, std::ios::in);
     if (stream.is_open())
     {
@@ -64,6 +64,7 @@ GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)
     GLint result = GL_FALSE;
     int infoLogLength;
     
+    //compile shader and list any errors in console
     printf("Compiling shader %s\n", shaderName.c_str());
     const char* src = code.c_str();
     glShaderSource(shaderId, 1, &src, 0);

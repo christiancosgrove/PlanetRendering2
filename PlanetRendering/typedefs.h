@@ -1,5 +1,7 @@
 #pragma once
 
+//This file allows one to easily switch between double and single precision for vertex data
+//Just include or remove #define VERTEX_DOUBLE.
 #define VERTEX_DOUBLE
 #ifdef VERTEX_DOUBLE
 

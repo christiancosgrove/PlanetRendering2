@@ -84,10 +84,6 @@ void Player::Update() //SDL implementation
     {
         Camera.YRotation-=0.5;
     }
-//    if (state[SDL_SCANCODE_LSHIFT])
-//    {
-//        Camera.Position-=vvec3(vvec4(0.0, 0.0, 1.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
-//    }
     if (state[SDL_SCANCODE_LALT])
         mouseFocus = !mouseFocus;
     
@@ -105,14 +101,4 @@ void Player::Update() //SDL implementation
         std::cout << "Height above earth surface: " << len*earthDiameter << " m\n";
     }
     
-//    if (mouseFocus)
-//    {
-//        Camera.XRotation += (float)(sf::Mouse::getPosition().y - 540)/200;
-//        if (Camera.XRotation>0)
-//            Camera.XRotation=0;
-//        if (Camera.XRotation<-M_PI)
-//            Camera.XRotation=-M_PI;
-//        Camera.ZRotation += (float)(sf::Mouse::getPosition().x - 960)/200;
-//        sf::Mouse::setPosition(sf::Vector2<int>(960,540));
-//    }
 }

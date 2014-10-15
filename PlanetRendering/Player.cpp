@@ -55,7 +55,7 @@ void Player::Update() //SDL implementation
     vfloat len =DistFromSurface;//glm::length(Camera.Position)-1.0;
     vfloat playerSpeed = std::min((std::exp2(len)-1.)/100.0,0.0025);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
-    vfloat shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 45.0 : 1.0;
+    vfloat shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 8.0 : 1.0;
     if (state[SDL_SCANCODE_W])
     {
         Camera.Position+=Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor;

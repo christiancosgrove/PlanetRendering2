@@ -15,10 +15,10 @@
 #include <time.h>
 
 
-const float Planet::ROTATION_RATE=0.001f;
+const float Planet::ROTATION_RATE=0.0001f;
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed) : Position(pos), Radius(radius), time(0), SEED(seed)
+Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID)
 {
     
     generateBuffers();
@@ -148,7 +148,7 @@ void Planet::combineFace(Face* face)
 void Planet::Update(Player& player)
 {
     bool wasSubdivided = false;
-    //if (time%10==0)
+    if (time%10==0)
     {
         for (auto it = faces.begin();it!=faces.end();it++)
         {
@@ -177,8 +177,8 @@ void Planet::generateBuffers()
     glVertexAttribLPointer(0, 4, GL_DOUBLE, sizeof(Vertex), (void*)0);
     glVertexAttribLPointer(1, 4, GL_DOUBLE, sizeof(Vertex), (void*)(4 * sizeof(vfloat)));
 #else
-    glVertexAttribLPointer(0, 4, GL_FLOAT, sizeof(Vertex), GL_FALSE,(void*)0);
-    glVertexAttribLPointer(1, 4, GL_FLOAT, sizeof(Vertex), GL_FALSE,(void*)(4 * sizeof(vfloat)));
+    glVertexAttribPointer(0, 4, GL_FLOAT, sizeof(Vertex), GL_FALSE,(void*)0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, sizeof(Vertex), GL_FALSE,(void*)(4 * sizeof(vfloat)));
 #endif
     glBindVertexArray(0);
 //    updateVBO();
@@ -258,7 +258,7 @@ void Planet::updateVBO(Player& player)
     if (vertices.size()>0)
     {
         glBindBuffer(GL_ARRAY_BUFFER,VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_DYNAMIC_DRAW);
     }
 }
 
@@ -267,32 +267,26 @@ void Planet::buildBaseMesh()
 {
     vvec3 icosahedron[12];
     
-    double theta = 26.56505117707799 * M_PI / 180.0; // refer paper for theta value
+    double theta = 26.56505117707799 * M_PI / 180.0;
     
-    double stheta = std::sin(theta);
-    double ctheta = std::cos(theta);
+    double sine = std::sin(theta);
+    double cosine = std::cos(theta);
     
-    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f); // bottom vertex of icosahedron
-    
-    // the lower pentagon
-    double phi = M_PI / 5.0;
-    for (int i = 1; i < 6; ++i) {
-        icosahedron[i] = vvec3(
-                                    ctheta * std::cos(phi), ctheta * std::sin(phi), -stheta);
-        
-        phi += 2.0 * M_PI / 5.0;
+    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f); //bottom vertex
+    //upper pentagon
+    int i;
+    double phi;
+    for (i = 1, phi=M_PI/5.; i < 6; ++i,phi+=2.*M_PI/5.) {
+        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), -sine);
     }
     
-    // the upper pentagon
-    phi = 0.0;
-    for (int i = 6; i < 11; ++i) {
-        icosahedron[i] = vvec3(
-                                          ctheta * std::cos(phi), ctheta * std::sin(phi), stheta);
+    //lower pentagon
+    for (i = 6, phi=0.; i < 11; ++i, phi+=2.*M_PI/5.) {
+        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), sine);
         
-        phi += 2.0 * M_PI / 5.0;
     }
     
-    icosahedron[11] = vvec3(0.0, 0.0, 1.0); // top vertex of icosahedron
+    icosahedron[11] = vvec3(0.0, 0.0, 1.0); // top vertex
     
     faces.push_back(Face(icosahedron[0], icosahedron[2], icosahedron[1]));
     faces.push_back(Face(icosahedron[0], icosahedron[3], icosahedron[2]));
@@ -322,7 +316,15 @@ void Planet::buildBaseMesh()
 
 void Planet::Draw(Player& player, GLManager& glManager)
 {
-    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    switch (CurrentRenderMode)
+    {
+        case RenderMode::SOLID:
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        break;
+        case RenderMode::WIRE:
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        break;
+    }
     glManager.Program.Use();
     glUniform1f(1,(GLfloat)time);
 #ifdef VERTEX_DOUBLE

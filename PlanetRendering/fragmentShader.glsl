@@ -3,7 +3,6 @@
 //uniform float time;
 out vec4 color;
 in float height;
-in vec3 coord;
 in vec3 fragNormal;
 const float seaLevel=0.415;//225;
 
@@ -22,8 +21,8 @@ void main()
     interp = clamp(10.*(height-seaLevel),0,1);
     interp*=interp*interp*interp*interp*interp*1000000.;
     color = color - (color - vec4(1,1,1,1))*interp;
-    float lightness = dot(sunDir, fragNormal);
-    color*=(lightness+1.0)/2.;//vec4(fragNormal,1.0);
+    float lightness = clamp(dot(sunDir, fragNormal),0,1);
+    color*=lightness;//vec4(fragNormal,1.0);
     
 //    float t = 100000.*(coord.x*coord.y*coord.z*coord.x*coord.y) + 0/100.;
 //    color = vec4(sin(t),sin(t+1.),sin(t+2.),1.0);

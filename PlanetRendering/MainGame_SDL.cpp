@@ -59,7 +59,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     //Main loop
     while (gameState!=GameState::EXIT)
     {
-        HandleEvents();
+        HandleEvents(planet);
         Draw(planet, player,glManager);
         Update(planet, player);
     }
@@ -82,7 +82,7 @@ void MainGame_SDL::Update(Planet& planet, Player& player)
     player.Update();
 }
 
-void MainGame_SDL::HandleEvents()
+void MainGame_SDL::HandleEvents(Planet& planet)
 {
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -98,6 +98,10 @@ void MainGame_SDL::HandleEvents()
                 case SDL_SCANCODE_ESCAPE:
                     gameState = GameState::EXIT;
                     break;
+                case SDL_SCANCODE_TAB:
+                if (planet.CurrentRenderMode==Planet::RenderMode::SOLID) planet.CurrentRenderMode=Planet::RenderMode::WIRE;
+                else planet.CurrentRenderMode=Planet::RenderMode::SOLID;
+                break;
             }
                 break;
         }

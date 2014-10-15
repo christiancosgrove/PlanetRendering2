@@ -72,12 +72,18 @@ struct Vertex
 class Planet
 {
 public:
+    enum class RenderMode
+    {
+        SOLID,
+        WIRE,
+    };
+    RenderMode CurrentRenderMode;
     //Position is defaulted to origin (shaders may not work if pos!=origin right now)
     glm::vec3 Position;
     //radius of planet in device coordinates (default 1)
     vfloat Radius;
     //Number of levels of detail (impacts rendering performance)
-    const int LOD_MULTIPLIER=4;
+    const int LOD_MULTIPLIER=5;
     //Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
     //Initialization of planet
@@ -133,6 +139,7 @@ private:
     //Radians/tick rotation rate of sun around planet
     static const float ROTATION_RATE;
 };
+
 //TODO: need new, more efficent RNG
 vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)
 {

@@ -32,7 +32,7 @@ public:
     //All terrain subdivision and player movement here
     void Update(Planet& planet, Player& player);
     //handles keyboard events -- e.g. close window
-    void HandleEvents();
+    void HandleEvents(Planet& planet);
 private:
     //SDL window for program
     SDL_Window* window;

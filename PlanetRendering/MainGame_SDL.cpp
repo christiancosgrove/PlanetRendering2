@@ -54,7 +54,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     
     //seed random generator (change time(nullptr) to number for a deterministic seed)
     srand(time(nullptr));
-    Planet planet(glm::vec3(0,0,0), 1, (vfloat)rand()/RAND_MAX);
+    Planet planet(glm::vec3(0,0,0), 1, (vfloat)rand()/RAND_MAX, player, glManager);
     
     //Main loop
     while (gameState!=GameState::EXIT)
@@ -78,7 +78,7 @@ void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
 
 void MainGame_SDL::Update(Planet& planet, Player& player)
 {
-    planet.Update(player);
+    //aplanet.Update(player);
     player.Update();
 }
 

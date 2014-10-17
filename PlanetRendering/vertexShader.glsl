@@ -15,5 +15,7 @@ void main()
     height = float(length(vertexPos)-1.0);
     fragNormal = vec3(normal);
     
+    
     gl_Position = vec4(transformMatrix * vertexPos);// 0.1*sin(time/10.));
+    float d = gl_Position.z;
 }

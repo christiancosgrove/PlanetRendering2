@@ -14,6 +14,7 @@
 #include <vector>
 #include "GLManager.h"
 #include "typedefs.h"
+#include <thread>
 //Representation of a triangular face on CPU side of program
 //represents a single node in the face tree
 struct Face
@@ -87,11 +88,11 @@ public:
     //Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
     //Initialization of planet
-    Planet(glm::vec3 pos, vfloat radius, vfloat seed);
+    Planet(glm::vec3 pos, vfloat radius, vfloat seed,Player& _player, GLManager& _glManager);
     //De-initialization of planet (destruction of GL objects)
     ~Planet();
     //Perform subdivisions/combinations accordingly, update vertex buffers
-    void Update(Player& player);
+    void Update();
     //Render planet with Vertex Buffer Object/Vertex Array Object
     void Draw(Player& player, GLManager& glManager);
     //Terrain generation function in cartesion coordinates (spherically-symmetric)
@@ -107,6 +108,11 @@ private:
     GLuint VBO;
     //VAO=Vertex Array Object.  This OpenGL API object contains functionality for saving the configuration of vertex arrays (i.e. pointers to attributes).
     GLuint VAO;
+    
+    GLManager& glManager;
+    Player& player;
+    std::mutex renderMutex;
+    
     //TODO: implement vertex indexing for faster rendering and less CPU-GPU communcation
     
     //This function, which accepts a face and a boolean-valued function of the player's position and that face, checks whether a face is ready to be subdivided (in this case, close enough to the camera) and performs the subdivision.  The function argument of this method makes it more modular; the function used to CHECK whether to subdivide the face is external.
@@ -127,7 +133,7 @@ private:
     void updateVBO(Player& player);
     //Append vertices deepest in the tree to vertex array to be sent to GPU
     //also calculates the player's minimum distance to the planet surface
-    void recursiveUpdate(Face& face, Player& player);
+    void recursiveUpdate(Face& face, Player& player, std::vector<Vertex>& newVertices);
     //Perform trySubdivide by recursively traversing tree
     bool recursiveSubdivide(Face* face, Player& player);
     //Perform tryCombine by recursively traversing tree
@@ -135,16 +141,19 @@ private:
     //Simple function which deletes children vertices in order to combine the face.
     void combineFace(Face* face);
     //number of ticks (executions of Update()) since start; used in rotation of sun
-    int time;
+    float time;
     //Radians/tick rotation rate of sun around planet
     static const float ROTATION_RATE;
+    bool closed;
+    bool subdivided;
+    unsigned int prevVerticesSize;
 };
 
 //TODO: need new, more efficent RNG
 vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)
 {
     vfloat fract;
-    return std::modf(sin((12.9898 * (seedx+SEED) + 78.233 * (seedy+SEED))*4375861423.5453), &fract);
+    return std::modf(sin((12.9898 * (seedx+SEED) + 78.233 * (seedy+SEED))*437586142312314.5453), &fract);
     
     
 }

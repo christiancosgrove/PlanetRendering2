@@ -18,15 +18,18 @@
 const float Planet::ROTATION_RATE=0.0001f;
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID)
+Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false)
 {
     
     generateBuffers();
     buildBaseMesh();
+    std::thread t(&Planet::Update, this);
+    t.detach();
 }
 
 Planet::~Planet()
 {
+    closed = true;
     glDeleteVertexArrays(1, &VAO);
     for (auto it = faces.begin(); it!=faces.end();)
     {
@@ -38,7 +41,7 @@ Planet::~Planet()
 //This function accepts a boolean-valued function of displacement.  If the function is true, the function will divide the given face into four subfaces, each of which will be recursively subjected to the same subdivision scheme.  It is important that the input function terminates at a particular level of detail, or the program will crash.
 bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
 {
-    
+    if (closed) return false;
     
     if (func(player, *iterator))
     {
@@ -103,7 +106,7 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
 //Similarly to trySubdivide, this function combines four faces into a larger face if a boolean-valued function is statisfied.
 bool Planet::tryCombine(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
 {
-    
+    if (closed) return false;
     //TODO: check for shared vertices.  If vertices are shared, combine four triangles.
     if (iterator==nullptr) return false;
     if (iterator->child0==nullptr || iterator->child1==nullptr || iterator->child2==nullptr || iterator->child3==nullptr) return false;
@@ -118,6 +121,7 @@ bool Planet::tryCombine(Face* iterator, const std::function<bool (Player&, const
 
 void Planet::combineFace(Face* face)
 {
+    if (closed) return;
     if (face->level==0) return;
     if (face->child0!=nullptr)
     {
@@ -145,21 +149,21 @@ void Planet::combineFace(Face* face)
     }
 }
 
-void Planet::Update(Player& player)
+void Planet::Update()
 {
-    bool wasSubdivided = false;
-    if (time%10==0)
-    {
+    if (!closed) {
+    subdivided = false;
         for (auto it = faces.begin();it!=faces.end();it++)
         {
             if (recursiveCombine(&(*it), player))
-                wasSubdivided=true;
+                subdivided=true;
             if (recursiveSubdivide(&(*it), player))
-                wasSubdivided=true;
+                subdivided=true;
         }
-    }
-    if (wasSubdivided || vertices.size()==0) updateVBO(player);
+    if (subdivided || vertices.size()==0) updateVBO(player);
     time++;
+    Update();
+    }
 }
 
 void Planet::generateBuffers()
@@ -184,23 +188,25 @@ void Planet::generateBuffers()
 //    updateVBO();
 }
 
-void Planet::recursiveUpdate(Face& face, Player& player)
+void Planet::recursiveUpdate(Face& face, Player& player, std::vector<Vertex>& newVertices)
 {
     vfloat dist = std::min(std::min(glm::length(-player.Camera.Position - face.v1),glm::length(-player.Camera.Position - face.v2)),glm::length(-player.Camera.Position - face.v3));
     if (player.DistFromSurface > dist) player.DistFromSurface = dist;
     if (face.child0!=nullptr && face.child1!=nullptr && face.child2!=nullptr && face.child3!=nullptr)
     {
-        recursiveUpdate(*face.child0, player);
-        recursiveUpdate(*face.child1, player);
-        recursiveUpdate(*face.child2, player);
-        recursiveUpdate(*face.child3, player);
+        recursiveUpdate(*face.child0, player,newVertices);
+        recursiveUpdate(*face.child1, player,newVertices);
+        recursiveUpdate(*face.child2, player,newVertices);
+        recursiveUpdate(*face.child3, player,newVertices);
     }
     else
     {
+        //renderMutex.lock();
         vvec3 norm = face.GetNormal();
-        vertices.push_back(Vertex(vvec4(face.v1,1.0),norm));
-        vertices.push_back(Vertex(vvec4(face.v2,1.0),norm));
-        vertices.push_back(Vertex(vvec4(face.v3,1.0),norm));
+        newVertices.push_back(Vertex(vvec4(face.v1,1.0),norm));
+        newVertices.push_back(Vertex(vvec4(face.v2,1.0),norm));
+        newVertices.push_back(Vertex(vvec4(face.v3,1.0),norm));
+        //renderMutex.unlock();
     }
 }
 
@@ -227,6 +233,7 @@ bool Planet::recursiveSubdivide(Face* face, Player& player)
 
 bool Planet::recursiveCombine(Face* face, Player& player)
 {
+    if (closed) return false;
     if (face==nullptr) return false;
     if (!tryCombine(face,
                     
@@ -250,15 +257,16 @@ bool Planet::recursiveCombine(Face* face, Player& player)
 
 void Planet::updateVBO(Player& player)
 {
-    vertices.clear();
+    //vertices.clear();
+    std::vector<Vertex> newVertices;
     player.DistFromSurface=10.;
     for (Face& f : faces)
-        recursiveUpdate(f, player);
-    
-    if (vertices.size()>0)
+        recursiveUpdate(f, player, newVertices);
+    if (!closed)
     {
-        glBindBuffer(GL_ARRAY_BUFFER,VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_DYNAMIC_DRAW);
+    renderMutex.lock();
+    vertices = newVertices;
+    renderMutex.unlock();
     }
 }
 
@@ -316,6 +324,21 @@ void Planet::buildBaseMesh()
 
 void Planet::Draw(Player& player, GLManager& glManager)
 {
+    renderMutex.lock();
+#ifdef VERTEX_DOUBLE
+    glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+#else
+    glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+#endif
+    renderMutex.unlock();
+    renderMutex.lock();
+    if (prevVerticesSize!=vertices.size())
+    {
+        glBindBuffer(GL_ARRAY_BUFFER,VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STREAM_DRAW);
+        prevVerticesSize=vertices.size();
+    }
+    renderMutex.unlock();
     switch (CurrentRenderMode)
     {
         case RenderMode::SOLID:
@@ -327,16 +350,12 @@ void Planet::Draw(Player& player, GLManager& glManager)
     }
     glManager.Program.Use();
     glUniform1f(1,(GLfloat)time);
-#ifdef VERTEX_DOUBLE
-    glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-#else
-    glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-#endif
     
     float angle = time * ROTATION_RATE;
     glManager.Program.SetVector3fv("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
     
     
+    renderMutex.lock();
     if (vertices.size() >0)
     {
         
@@ -344,4 +363,5 @@ void Planet::Draw(Player& player, GLManager& glManager)
         glDrawArrays(GL_TRIANGLES, 0, vertices.size());
         glBindVertexArray(0);
     }
+    renderMutex.unlock();
 }

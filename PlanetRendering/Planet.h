@@ -84,7 +84,7 @@ public:
     //radius of planet in device coordinates (default 1)
     vfloat Radius;
     //Number of levels of detail (impacts rendering performance)
-    const int LOD_MULTIPLIER=5;
+    const int LOD_MULTIPLIER=6;
     //Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
     //Initialization of planet
@@ -103,11 +103,13 @@ private:
     std::vector<Face> faces;
     //Array of vertices.  This array is generated every time the geometry is updated (perhaps this can be optimized) and is copied directly to the GPU.
     std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
     
     //VBO=Vertex Buffer Object.  This OpenGL API object contains functionality for sending arrays of vertices (with arbitrary attributes) to the GPU.  The attributes of each vertex can be referenced in the vertex shader.
     GLuint VBO;
     //VAO=Vertex Array Object.  This OpenGL API object contains functionality for saving the configuration of vertex arrays (i.e. pointers to attributes).
     GLuint VAO;
+    GLuint IBO;
     
     GLManager& glManager;
     Player& player;
@@ -133,7 +135,7 @@ private:
     void updateVBO(Player& player);
     //Append vertices deepest in the tree to vertex array to be sent to GPU
     //also calculates the player's minimum distance to the planet surface
-    void recursiveUpdate(Face& face, Player& player, std::vector<Vertex>& newVertices);
+    void recursiveUpdate(Face& face, unsigned int index1, unsigned int index2, unsigned int index3, Player& player, std::vector<Vertex>& newVertices, std::vector<unsigned int>& newIndices);
     //Perform trySubdivide by recursively traversing tree
     bool recursiveSubdivide(Face* face, Player& player);
     //Perform tryCombine by recursively traversing tree

@@ -33,6 +33,7 @@ public:
     void Update(Planet& planet, Player& player);
     //handles keyboard events -- e.g. close window
     void HandleEvents(Planet& planet);
+    static vfloat ElapsedMilliseconds;
 private:
     //SDL window for program
     SDL_Window* window;

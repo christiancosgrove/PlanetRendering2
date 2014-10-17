@@ -172,9 +172,11 @@ void Planet::generateBuffers()
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &IBO);
+    
     
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 #ifdef VERTEX_DOUBLE
@@ -188,24 +190,58 @@ void Planet::generateBuffers()
 //    updateVBO();
 }
 
-void Planet::recursiveUpdate(Face& face, Player& player, std::vector<Vertex>& newVertices)
+void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index2, unsigned int index3, Player& player, std::vector<Vertex>& newVertices, std::vector<unsigned int>& newIndices)
 {
-    vfloat dist = std::min(std::min(glm::length(-player.Camera.Position - face.v1),glm::length(-player.Camera.Position - face.v2)),glm::length(-player.Camera.Position - face.v3));
-    if (player.DistFromSurface > dist) player.DistFromSurface = dist;
+//    vfloat dist = std::min(std::min(glm::length(-player.Camera.Position - face.v1),glm::length(-player.Camera.Position - face.v2)),glm::length(-player.Camera.Position - face.v3));
+//    if (player.DistFromSurface > dist) player.DistFromSurface = dist;
     if (face.child0!=nullptr && face.child1!=nullptr && face.child2!=nullptr && face.child3!=nullptr)
     {
-        recursiveUpdate(*face.child0, player,newVertices);
-        recursiveUpdate(*face.child1, player,newVertices);
-        recursiveUpdate(*face.child2, player,newVertices);
-        recursiveUpdate(*face.child3, player,newVertices);
+        vvec3 norm = face.GetNormal();
+        unsigned int ni1,ni2,ni3; //new indices
+        unsigned int currIndex=newVertices.size();
+        if (face.level==0)
+        {
+            newVertices.push_back(Vertex(vvec4(face.v1,1.0), norm));
+            newVertices.push_back(Vertex(vvec4(face.v2,1.0), norm));
+            newVertices.push_back(Vertex(vvec4(face.v3,1.0), norm));
+            index1 = currIndex + 0;
+            index2 = currIndex + 1;
+            index3 = currIndex + 2;
+        }
+        currIndex = newVertices.size();
+        
+        vvec3 norm1 = face.child1->GetNormal();
+        vvec3 norm2 = face.child2->GetNormal();
+        vvec3 norm3 = face.child3->GetNormal();
+        
+        
+        newVertices.push_back(Vertex(vvec4(face.child0->v1,1.0), (norm1 + norm3)*0.5));
+        newVertices.push_back(Vertex(vvec4(face.child0->v2,1.0), (norm1 + norm2)*0.5));
+        newVertices.push_back(Vertex(vvec4(face.child0->v3,1.0), (norm2 + norm3)*0.5));
+        ni1 = currIndex + 0;
+        ni2 = currIndex + 1;
+        ni3 = currIndex + 2;
+        
+        recursiveUpdate(*face.child0, ni1, ni2, ni3, player, newVertices, newIndices);
+        recursiveUpdate(*face.child1, index3, ni1, ni3, player,newVertices, newIndices);
+        recursiveUpdate(*face.child2, ni3, ni2, index2, player,newVertices, newIndices);
+        recursiveUpdate(*face.child3, ni1, index1,ni2, player,newVertices, newIndices);
+//        recursiveUpdate(*face.child1, index1, ni1, ni3,player,newVertices);
+//        recursiveUpdate(*face.child2, player,newVertices);
+//        recursiveUpdate(*face.child3, player,newVertices);
     }
     else
     {
         //renderMutex.lock();
-        vvec3 norm = face.GetNormal();
-        newVertices.push_back(Vertex(vvec4(face.v1,1.0),norm));
-        newVertices.push_back(Vertex(vvec4(face.v2,1.0),norm));
-        newVertices.push_back(Vertex(vvec4(face.v3,1.0),norm));
+        
+        newIndices.push_back(index1);
+        newIndices.push_back(index2);
+        newIndices.push_back(index3);
+        
+        
+//        newVertices.push_back(Vertex(vvec4(face.v1,1.0),norm));
+//        newVertices.push_back(Vertex(vvec4(face.v2,1.0),norm));
+//        newVertices.push_back(Vertex(vvec4(face.v3,1.0),norm));
         //renderMutex.unlock();
     }
 }
@@ -257,16 +293,17 @@ bool Planet::recursiveCombine(Face* face, Player& player)
 
 void Planet::updateVBO(Player& player)
 {
-    //vertices.clear();
     std::vector<Vertex> newVertices;
+    std::vector<unsigned int> newIndices;
     player.DistFromSurface=10.;
     for (Face& f : faces)
-        recursiveUpdate(f, player, newVertices);
+        recursiveUpdate(f, 0, 0, 0, player, newVertices, newIndices);
     if (!closed)
     {
-    renderMutex.lock();
-    vertices = newVertices;
-    renderMutex.unlock();
+        renderMutex.lock();
+        vertices = newVertices;
+        indices = newIndices;
+        renderMutex.unlock();
     }
 }
 
@@ -335,7 +372,9 @@ void Planet::Draw(Player& player, GLManager& glManager)
     if (prevVerticesSize!=vertices.size())
     {
         glBindBuffer(GL_ARRAY_BUFFER,VBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STREAM_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STREAM_DRAW);
         prevVerticesSize=vertices.size();
     }
     renderMutex.unlock();
@@ -356,11 +395,15 @@ void Planet::Draw(Player& player, GLManager& glManager)
     
     
     renderMutex.lock();
+    std::cout << vertices.size() << "\n\n";
     if (vertices.size() >0)
     {
         
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+        //glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
         glBindVertexArray(0);
     }
     renderMutex.unlock();

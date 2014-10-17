@@ -12,6 +12,9 @@
 #include "GLManager.h"
 #include "Planet.h"
 #include <iostream>
+
+vfloat MainGame_SDL::ElapsedMilliseconds = 0.0f;
+
 MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
 {
     //if SDL fails, close program
@@ -55,6 +58,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     //seed random generator (change time(nullptr) to number for a deterministic seed)
     srand(time(nullptr));
     Planet planet(glm::vec3(0,0,0), 1, (vfloat)rand()/RAND_MAX, player, glManager);
+    std::cout << "GL error: " << glGetError() << std::endl;
     
     //Main loop
     while (gameState!=GameState::EXIT)
@@ -68,12 +72,14 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
 
 void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
 {
+    clock_t now = clock();
     //clear color & depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     planet.Draw(player, glManager);
     
     //swap doublebuffers (doublebuffering prevents screen tearing)
     SDL_GL_SwapWindow(window);
+    ElapsedMilliseconds = (vfloat)(clock_t() - now) / CLOCKS_PER_SEC;
 }
 
 void MainGame_SDL::Update(Planet& planet, Player& player)

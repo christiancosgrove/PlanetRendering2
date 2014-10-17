@@ -10,6 +10,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <algorithm>
 #include <iostream>
+#include "MainGame_SDL.h"
 
 #include <SDL2/SDL.h>
 Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0){}
@@ -53,7 +54,7 @@ void Player::Update() //SDL implementation
 {
     bool mouseFocus = true;
     vfloat len =DistFromSurface;//glm::length(Camera.Position)-1.0;
-    vfloat playerSpeed = 0.001;//std::min((std::exp2(len)-1.)/100.0,0.0025);
+    vfloat playerSpeed = 0.00000000000000001 * MainGame_SDL::ElapsedMilliseconds;//std::min((std::exp2(len)-1.)/100.0,0.0025);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     vfloat shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 50.0 : 1.0;
     if (state[SDL_SCANCODE_W])

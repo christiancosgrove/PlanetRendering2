@@ -84,7 +84,7 @@ public:
     //radius of planet in device coordinates (default 1)
     vfloat Radius;
     //Number of levels of detail (impacts rendering performance)
-    const int LOD_MULTIPLIER=6;
+    const int LOD_MULTIPLIER=5;
     //Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
     //Initialization of planet

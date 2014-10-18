@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <random>
 #include <time.h>
-
+#include "MainGame_SDL.h"
 
 const float Planet::ROTATION_RATE=0.0001f;
 
@@ -161,7 +161,6 @@ void Planet::Update()
                 subdivided=true;
         }
     if (subdivided || vertices.size()==0) updateVBO(player);
-    time++;
     Update();
     }
 }
@@ -361,12 +360,15 @@ void Planet::buildBaseMesh()
 
 void Planet::Draw(Player& player, GLManager& glManager)
 {
+    time+=MainGame_SDL::ElapsedMilliseconds/10000000000000;
     renderMutex.lock();
 #ifdef VERTEX_DOUBLE
     glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
 #else
     glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
 #endif
+    glUniform1f(glGetUniformLocation(glManager.Program.programID,"time"),time);
+    
     renderMutex.unlock();
     renderMutex.lock();
     if (prevVerticesSize!=vertices.size())

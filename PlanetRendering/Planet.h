@@ -58,9 +58,9 @@ struct Face
 //Due to the number of vertices, would like to implement vertex indexing (essentially ignoring duplicated vertices)
 struct Vertex
 {
-    vfloat x,y,z, w;
+    vfloat x,y,z;
     vfloat nx, ny, nz;
-    Vertex(vvec4 pos, vvec3 normal) : x(pos.x), y(pos.y), z(pos.z), w(pos.w),
+    Vertex(vvec3 pos, vvec3 normal) : x(pos.x), y(pos.y), z(pos.z),
     nx(normal.x), ny(normal.y), nz(normal.z)
     {}
 };
@@ -86,12 +86,14 @@ public:
     //radius of planet in device coordinates (default 1)
     vfloat Radius;
     const vfloat EARTH_DIAMETER = 12756200.0;
-    //nonzero number reflecting how fractal-like the terrain is (smaller values lead to more variation at smaller scales)
-    const unsigned int TERRAIN_REGULARITY = 4;
+    //number in [0,1] reflecting how fractal-like the terrain is (larger values lead to more variation at smaller scales)
+    const float TERRAIN_REGULARITY = 0.33;
     
     //Number of levels of detail (impacts rendering performance)
     //Multiplies average # of vertices by 4^N
     const int LOD_MULTIPLIER=6;
+    
+    float SeaLevel;
     
     enum class RotationMode
     {
@@ -163,6 +165,7 @@ private:
     bool recursiveCombine(Face* face, Player& player);
     //Simple function which deletes children vertices in order to combine the face.
     void combineFace(Face* face);
+    void setUniforms();
     //number of ticks (executions of Update()) since start; used in rotation of sun
     float time;
     bool closed;

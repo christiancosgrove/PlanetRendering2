@@ -1,8 +1,8 @@
 #pragma once
 
 //This file allows one to easily switch between double and single precision for vertex data
-//Just include or remove #define VERTEX_DOUBLE.
-#define VERTEX_DOUBLE
+//Just include or remove #define VERTEX_DOUBLE. Note: because GPUs are heavily optimized for them, single precision floating point numbers are significantly more efficient.  Double precision numbers are used when a large amount of detail is needed.
+//#define VERTEX_DOUBLE
 #ifdef VERTEX_DOUBLE
 
 typedef double vfloat;

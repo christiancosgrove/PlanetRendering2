@@ -5,7 +5,8 @@ out vec4 color;
 in float height;
 in float latitude;
 in vec3 fragNormal;
-const float seaLevel=0.415;//225;
+uniform float seaLevel;
+//const float seaLevel=0.415;//225;
 
 const vec4 coldWaterColor = vec4(0.0945,0.2011,0.45,1.0);
 const vec4 warmWaterColor = vec4(0.0867,0.3336,0.51,1.0);

@@ -92,6 +92,7 @@ void MainGame_SDL::Update(Planet& planet, Player& player)
 void MainGame_SDL::HandleEvents(Planet& planet)
 {
     static const float rotationSpeedIncrement = planet.ROTATION_RATE*10;
+    static const float seaLevelIncrement = planet.SeaLevel*0.025f;
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -119,6 +120,14 @@ void MainGame_SDL::HandleEvents(Planet& planet)
                     break;
                 case SDL_SCANCODE_G:
                     planet.ROTATION_RATE-=rotationSpeedIncrement;
+                    break;
+                case SDL_SCANCODE_UP:
+                    planet.SeaLevel+=seaLevelIncrement;
+                    break;
+                case SDL_SCANCODE_DOWN:
+                    planet.SeaLevel-=seaLevelIncrement;
+                    break;
+                default:
                     break;
             }
                 break;

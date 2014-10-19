@@ -9,6 +9,7 @@
 #include "GLManager.h"
 #include <fstream>
 #include <vector>
+#include "typedefs.h"
 
 GLProgram::GLProgram(std::string fragName, std::string vertName) : programID(glCreateProgram()), fragmentShader(CompileShader(fragName, GL_FRAGMENT_SHADER)), vertexShader(CompileShader(vertName, GL_VERTEX_SHADER))
 {
@@ -56,7 +57,15 @@ GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)
     {
         std::string line = "";
         while (std::getline(stream, line))
+        {
             code+="\n"+line;
+#ifdef VERTEX_DOUBLE
+            if (type==GL_VERTEX_SHADER && line.substr(0,8)=="#version")
+            {
+                code+="\n#define VERTEX_DOUBLE";
+            }
+#endif
+        }
         stream.close();
     }
     

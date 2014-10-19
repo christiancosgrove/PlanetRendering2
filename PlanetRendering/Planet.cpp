@@ -17,7 +17,7 @@
 
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f)
+Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f), SeaLevel(0.001f)
 {
     
     generateBuffers();
@@ -60,9 +60,9 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         vvec3 nv2 = glm::normalize(v2);
         vvec3 nv3 = glm::normalize(v3);
         
-        double l1 = glm::length(v1);
-        double l2 = glm::length(v2);
-        double l3 = glm::length(v3);
+        vfloat l1 = glm::length(v1);
+        vfloat l2 = glm::length(v2);
+        vfloat l3 = glm::length(v3);
         
         
         vvec3 m12 = glm::normalize((nv1 + nv2) * (vfloat)0.5f)*Radius;
@@ -73,7 +73,7 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         
         
         
-        double fac =1./(double)(1 << iterator->level)*std::pow((iterator->level+1), 1./TERRAIN_REGULARITY);
+        vfloat fac =1./(vfloat)(1 << iterator->level)*std::pow((iterator->level+1), TERRAIN_REGULARITY);
         
         
         m12*=1 + terrainNoise(m12) * fac;
@@ -176,11 +176,11 @@ void Planet::generateBuffers()
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 #ifdef VERTEX_DOUBLE
-    glVertexAttribLPointer(0, 4, GL_DOUBLE, sizeof(Vertex), (void*)0);
-    glVertexAttribLPointer(1, 4, GL_DOUBLE, sizeof(Vertex), (void*)(4 * sizeof(vfloat)));
+    glVertexAttribLPointer(0, 3, GL_DOUBLE, sizeof(Vertex), (void*)__offsetof(Vertex, x));
+    glVertexAttribLPointer(1, 3, GL_DOUBLE, sizeof(Vertex), (void*)__offsetof(Vertex, nx));
 #else
-    glVertexAttribPointer(0, 4, GL_FLOAT, sizeof(Vertex), GL_FALSE,(void*)0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, sizeof(Vertex), GL_FALSE,(void*)(4 * sizeof(vfloat)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),(void*)__offsetof(Vertex, x));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),(void*)__offsetof(Vertex, nx));
 #endif
     glBindVertexArray(0);
 //    updateVBO();
@@ -202,9 +202,9 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         unsigned int currIndex=newVertices.size();
         if (face.level==0)
         {
-            newVertices.push_back(Vertex(vvec4(face.v1,1.0), norm));
-            newVertices.push_back(Vertex(vvec4(face.v2,1.0), norm));
-            newVertices.push_back(Vertex(vvec4(face.v3,1.0), norm));
+            newVertices.push_back(Vertex(face.v1, norm));
+            newVertices.push_back(Vertex(face.v2, norm));
+            newVertices.push_back(Vertex(face.v3, norm));
             index1 = currIndex + 0;
             index2 = currIndex + 1;
             index3 = currIndex + 2;
@@ -216,9 +216,9 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         vvec3 norm3 = face.child3->GetNormal();
         
         
-        newVertices.push_back(Vertex(vvec4(face.child0->v1,1.0), (norm1 + norm3)*0.5));
-        newVertices.push_back(Vertex(vvec4(face.child0->v2,1.0), (norm1 + norm2)*0.5));
-        newVertices.push_back(Vertex(vvec4(face.child0->v3,1.0), (norm2 + norm3)*0.5));
+        newVertices.push_back(Vertex(face.child0->v1, (norm1 + norm3)*static_cast<vfloat>(0.5)));
+        newVertices.push_back(Vertex(face.child0->v2, (norm1 + norm2)*static_cast<vfloat>(0.5)));
+        newVertices.push_back(Vertex(face.child0->v3, (norm2 + norm3)*static_cast<vfloat>(0.5)));
         ni1 = currIndex + 0;
         ni2 = currIndex + 1;
         ni3 = currIndex + 2;
@@ -353,14 +353,9 @@ void Planet::buildBaseMesh()
 
 void Planet::Draw(Player& player, GLManager& glManager)
 {
+    setUniforms();
     time+=MainGame_SDL::ElapsedMilliseconds;
     renderMutex.lock();
-#ifdef VERTEX_DOUBLE
-    glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-#else
-    glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-#endif
-    glUniform1f(glGetUniformLocation(glManager.Program.programID,"time"),time);
     
     renderMutex.unlock();
     renderMutex.lock();
@@ -382,12 +377,7 @@ void Planet::Draw(Player& player, GLManager& glManager)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         break;
     }
-    glManager.Program.Use();
-    glUniform1f(1,(GLfloat)time);
     
-    float angle = (CurrentRotationMode == RotationMode::ROTATION ? 1 : -1) * time * ROTATION_RATE * M_PI / 180.;
-    glManager.Program.SetVector3fv("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
-    player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
     
     
     renderMutex.lock();
@@ -402,4 +392,19 @@ void Planet::Draw(Player& player, GLManager& glManager)
         glBindVertexArray(0);
     }
     renderMutex.unlock();
+}
+void Planet::setUniforms()
+{
+    glManager.Program.Use();
+#ifdef VERTEX_DOUBLE
+    glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+#else
+    glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+#endif
+    glManager.Program.SetFloat("time",time);
+    glManager.Program.SetFloat("seaLevel", SeaLevel);
+    
+    float angle = (CurrentRotationMode == RotationMode::ROTATION ? 1 : -1) * time * ROTATION_RATE * M_PI / 180.;
+    glManager.Program.SetVector3fv("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
+    player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
 }

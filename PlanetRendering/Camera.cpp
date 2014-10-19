@@ -31,7 +31,7 @@ vmat4 Camera::GetProjectionMatrix()
 }
 vmat4 Camera::GetTransformMatrix()
 {
-    return glm::rotate(GetProjectionMatrix() , 0.0, vvec3(0,0,1))* GetViewMatrix();
+    return glm::rotate(GetProjectionMatrix() , static_cast<vfloat>(0.0), vvec3(0,0,1))* GetViewMatrix();
 }
 
 vvec3 Camera::GetViewDirection()

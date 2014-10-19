@@ -21,28 +21,50 @@ public:
     GLProgram(std::string fragName, std::string vertName);
     //This function reads from a local file and compiles it into an OpenGL shader
     static GLuint CompileShader(std::string shaderName, GLenum type);
-    inline void Use() { glUseProgram(programID); }
-    inline void SetMatrix4fv(std::string name, const GLfloat* value)
-    {
-        glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, value);
-    }
-    inline void SetMatrix4dv(std::string name, const GLdouble* value)
-    {
-        glUniformMatrix4dv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, value);
-    }
-    inline void SetFloat(std::string name, GLfloat value)
-    {
-        glUniform1f(glGetUniformLocation(programID, name.c_str()), value);
-    }
-    inline void SetVector3fv(std::string name, const GLfloat* value)
-    {
-        glUniform3fv(glGetUniformLocation(programID, name.c_str()), 1, value);
-    }
-    inline void SetVector3fv(std::string name, const glm::vec3& value)
-    {
-        SetVector3fv(name, glm::value_ptr(value));
-    }
+    inline void Use();
+    inline void SetMatrix4(std::string name, const GLfloat* value);
+    inline void SetMatrix4(std::string name, const GLdouble* value);
+    inline void SetFloat(std::string name, GLfloat value);
+    inline void SetVector3(std::string name, const GLfloat* value);
+    inline void SetVector3(std::string name, const glm::vec3& value);
+    inline void SetVector3(std::string name, const GLdouble* value);
+    inline void SetVector3(std::string name, const glm::dvec3& value);
 };
+
+void GLProgram::Use()
+{
+    glUseProgram(programID);
+}
+void GLProgram::SetMatrix4(std::string name, const GLfloat *value)
+{
+    glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, value);
+}
+void GLProgram::SetMatrix4(std::string name, const GLdouble *value)
+{
+    glUniformMatrix4dv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, value);
+}
+void GLProgram::SetFloat(std::string name, GLfloat value)
+{
+    glUniform1f(glGetUniformLocation(programID, name.c_str()), value);
+}
+void GLProgram::SetVector3(std::string name, const GLfloat *value)
+{
+    glUniform3fv(glGetUniformLocation(programID, name.c_str()), 1, value);
+}
+void GLProgram::SetVector3(std::string name, const glm::vec3 &value)
+{
+    SetVector3(name, glm::value_ptr(value));
+}
+void GLProgram::SetVector3(std::string name, const GLdouble* value)
+{
+    glUniform3dv(glGetUniformLocation(programID, name.c_str()), 1, value);
+}
+void GLProgram::SetVector3(std::string name, const glm::dvec3& value)
+{
+    SetVector3(name, glm::value_ptr(value));
+}
+
+
 
 //this class further abstracts the GLProgram class, allowing for additional OpenGL configuration
 class GLManager

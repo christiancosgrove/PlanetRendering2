@@ -16,7 +16,7 @@
 Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0){}
 Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0) {}
 
-//void Player::Update() // SFML implementation
+//void Player::Update() // SFML implementation (original)
 //{
 //    bool mouseFocus = true;
 //    const float playerSpeed = 0.05f;
@@ -50,13 +50,13 @@ Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(window
 //        sf::Mouse::setPosition(sf::Vector2<int>(960,540));
 //    }
 //}
-void Player::Update() //SDL implementation
+void Player::Update() //SDL implementation -- updated
 {
     bool mouseFocus = true;
-    vfloat len =glm::length(Camera.GetPosition())-1.0;
-    vfloat playerSpeed = 0.001 * MainGame_SDL::ElapsedMilliseconds;// ASDstd::min((std::exp2(len)-1.)/100.0,0.0025);
+    //vfloat len =glm::length(Camera.GetPosition())-1.0;
+    vfloat playerSpeed = 0.001 * MainGame_SDL::ElapsedMilliseconds;// std::min((std::exp2(len)-1.)/100.0,0.0025);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
-    vfloat shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT]) ? 200.0 : 1.0;
+    vfloat shiftSpeedFactor = state[SDL_SCANCODE_LSHIFT] ? 200.0 : 1.0;
     if (state[SDL_SCANCODE_W])
     {
         Camera.position+=Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor;
@@ -85,9 +85,6 @@ void Player::Update() //SDL implementation
     {
         Camera.YRotation-=0.5;
     }
-    if (state[SDL_SCANCODE_LALT])
-        mouseFocus = !mouseFocus;
-    
     
     if (mouseFocus)
     {

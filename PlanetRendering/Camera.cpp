@@ -3,7 +3,7 @@
 Camera::Camera(int windowWidth, int windowHeight) : 
 	position(1.1f, 0.0f, 0.0f),
 	aspectRatio(((float)windowWidth)/(float)windowHeight),
-	FieldOfView(85.0f), XRotation(0.0f), ZRotation(0.0f), YRotation(0.0f),PlanetRotation(0.0),
+	FieldOfView(60.), XRotation(0.0f), ZRotation(0.0f), YRotation(0.0f),PlanetRotation(0.0),
 NEAR_PLANE(std::numeric_limits<float>::epsilon()), FAR_PLANE(200.0f)
 {
 }
@@ -29,6 +29,7 @@ vmat4 Camera::GetProjectionMatrix()
 		FAR_PLANE //far clipping plane
 	);
 }
+
 vmat4 Camera::GetTransformMatrix()
 {
     return glm::rotate(GetProjectionMatrix() , static_cast<vfloat>(0.0), vvec3(0,0,1))* GetViewMatrix();

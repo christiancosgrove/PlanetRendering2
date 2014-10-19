@@ -33,7 +33,9 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     
     
     //Initialize window and check for errors
-    window = SDL_CreateWindow("Planet Rendering", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    SDL_DisplayMode currentMode;
+    SDL_GetCurrentDisplayMode(0, &currentMode);
+    window = SDL_CreateWindow("Planet Rendering", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentMode.w, currentMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP);
     SDL_SetRelativeMouseMode(SDL_TRUE);
     if (window==nullptr) throw std::logic_error("Window failed to be initialized");
     SDL_GLContext context = SDL_GL_CreateContext(window);
@@ -43,7 +45,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     //Initialize GLManager object - provides OOP abstraction of some OpenGL API features (shader programs)
     GLManager glManager(resourcePath() + "fragmentShader.glsl", resourcePath() + "vertexShader.glsl");
     glManager.Program.Use();
-    
+    glManager.Program.SetFloat("aspectRatio", (float)currentMode.w/currentMode.h);
     //Set background color and default depth buffer values
     glClearColor(0,0,0,1);
     glClearDepth(1.0);
@@ -54,7 +56,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     std::cout << "gl_context: " << glGetString(GL_VERSION) << std::endl;
     std::cout << "gl_shading_lang_version: " << glGetString(GL_SHADING_LANGUAGE_VERSION);
     //initialize player object (contains camera functionality)
-    Player player(WINDOW_WIDTH, WINDOW_HEIGHT);
+    Player player(currentMode.w, currentMode.h);
     
     //seed random generator (change time(nullptr) to number for a deterministic seed)
     srand(time(nullptr));
@@ -73,6 +75,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
 
 void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
 {
+    //get CPU time
     clock_t now = clock();
     //clear color & depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -80,6 +83,7 @@ void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
     
     //swap doublebuffers (doublebuffering prevents screen tearing)
     SDL_GL_SwapWindow(window);
+    //calculate draw time based on elapsed CPU time.  This is used to maintain constant playback rates when framerate changes.
     ElapsedMilliseconds = vfloat(clock() - now) / CLOCKS_PER_SEC;
 }
 
@@ -91,6 +95,7 @@ void MainGame_SDL::Update(Planet& planet, Player& player)
 
 void MainGame_SDL::HandleEvents(Planet& planet)
 {
+    //temporary keyboard control over rendering parameters.
     static const float rotationSpeedIncrement = planet.ROTATION_RATE*10;
     static const float seaLevelIncrement = planet.SeaLevel*0.025f;
     SDL_Event event;

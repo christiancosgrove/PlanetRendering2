@@ -26,13 +26,15 @@ out vec3 fragNormal;
 uniform float seaLevel=0.01;
 
 const vfloat waveAmplitude = 0.0000001;
-const float waveFrequency = 0.01;
+const float waveFrequency = 10.;
 const vfloat waveNumber = 100000.;
+uniform vvec3 origin;
+uniform float aspectRatio;
 
 
 void main()
 {
-    height = float(length(vertexPos))-1.;
+    height = float(length(vertexPos - origin))-1.;
     latitude = float(vertexPos.z);
     fragNormal = vec3(normal);
     vfloat mult =(1. + waveAmplitude * vfloat(cos(waveFrequency*time +float(waveNumber*(vertexPos.x + vertexPos.y + vertexPos.z)))));

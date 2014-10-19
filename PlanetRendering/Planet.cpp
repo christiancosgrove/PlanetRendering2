@@ -14,6 +14,7 @@
 #include <random>
 #include <time.h>
 #include "MainGame_SDL.h"
+#include <thread>
 
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
@@ -22,10 +23,12 @@ Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLMan
     
     generateBuffers();
     buildBaseMesh();
+    //create a separate thread in which updates occur
     std::thread t(&Planet::Update, this);
     t.detach();
 }
 
+//clear allocated memory and OpenGL objects
 Planet::~Planet()
 {
     closed = true;
@@ -51,7 +54,7 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
             return true;
         
         
-        
+        //face vertices
         vvec3 v1 = iterator->v1;
         vvec3 v2 = iterator->v2;
         vvec3 v3 = iterator->v3;
@@ -60,19 +63,20 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         vvec3 nv2 = glm::normalize(v2);
         vvec3 nv3 = glm::normalize(v3);
         
+        //lengths of face vertices
         vfloat l1 = glm::length(v1);
         vfloat l2 = glm::length(v2);
         vfloat l3 = glm::length(v3);
         
-        
+        //normalized midpoints of face vertices
         vvec3 m12 = glm::normalize((nv1 + nv2) * (vfloat)0.5f)*Radius;
         vvec3 m13 = glm::normalize((nv1 + nv3) * (vfloat)0.5f)*Radius;
         vvec3 m23 = glm::normalize((nv2 + nv3) * (vfloat)0.5f)*Radius;
         
-    
-        
-        
-        
+        //height scale of terrain
+        //proportional to 2^(-LOD) * nonlinear factor
+        //the nonlinear factor is LOD^(TERRAIN_REGULARITY)
+        //if the nonlinear factor is 1, the terrain is boring -- this is introduced to make higher-frequency noise more noticeable.
         vfloat fac =1./(vfloat)(1 << iterator->level)*std::pow((iterator->level+1), TERRAIN_REGULARITY);
         
         
@@ -83,7 +87,6 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         m12*=(l1 + l2)/2.;
         m13*=(l1 + l3)/2.;
         m23*=(l2 + l3)/2.;
-        
         
         Face* f0 = new Face(m13,m12,m23, iterator->level+1);
         Face* f1 = new Face(v3,m13,m23,iterator->level+1);
@@ -103,7 +106,6 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
 bool Planet::tryCombine(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
 {
     if (closed) return false;
-    //TODO: check for shared vertices.  If vertices are shared, combine four triangles.
     if (iterator==nullptr) return false;
     if (iterator->child0==nullptr || iterator->child1==nullptr || iterator->child2==nullptr || iterator->child3==nullptr) return false;
     if ((func(player, *iterator) || func(player, *iterator->child0)|| func(player, *iterator->child1) || func(player, *iterator->child2) || func(player, *iterator->child3)) && iterator->level>0)
@@ -144,37 +146,40 @@ void Planet::combineFace(Face* face)
         face->child3 = nullptr;
     }
 }
-
+//performed in background, manages terrain generation
 void Planet::Update()
 {
     if (closed) return;
     subdivided = false;
-        for (auto it = faces.begin();it!=faces.end();it++)
-        {
-            if (recursiveCombine(&(*it), player))
-                subdivided=true;
-            if (recursiveSubdivide(&(*it), player))
-                subdivided=true;
-        }
+    //iterate through faces and perform necessary generation checks
+    for (auto it = faces.begin();it!=faces.end();it++)
+    {
+        if (recursiveCombine(&(*it), player))
+            subdivided=true;
+        if (recursiveSubdivide(&(*it), player))
+            subdivided=true;
+    }
+    //update vertices if changes were made
     if (subdivided || vertices.size()==0) updateVBO(player);
     std::cout << "Height above earth surface: " << player.DistFromSurface * EARTH_DIAMETER << " m\n";
+    //repeat indefinitely (on separate thread)
     Update();
-    
 }
 
 void Planet::generateBuffers()
 {
-    
+    //generate vertex array object -- contains state data for other relevant OpenGL objects
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &IBO);
     
-    
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    //set up vertex attributes.  These contain position and normal data for each vertex.
+    //Use preprocessor conditionals to differentiate between two possible precisions
 #ifdef VERTEX_DOUBLE
     glVertexAttribLPointer(0, 3, GL_DOUBLE, sizeof(Vertex), (void*)__offsetof(Vertex, x));
     glVertexAttribLPointer(1, 3, GL_DOUBLE, sizeof(Vertex), (void*)__offsetof(Vertex, nx));
@@ -182,17 +187,19 @@ void Planet::generateBuffers()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),(void*)__offsetof(Vertex, x));
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),(void*)__offsetof(Vertex, nx));
 #endif
+    //unbind VAO
     glBindVertexArray(0);
-//    updateVBO();
 }
 
 void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index2, unsigned int index3, Player& player, std::vector<Vertex>& newVertices, std::vector<unsigned int>& newIndices)
 {
     if (closed) return;
-    renderMutex.lock();
-    vfloat dist = std::min(std::min(glm::length(-player.Camera.GetPosition() - face.v1),glm::length(-player.Camera.GetPosition() - face.v2)),glm::length(-player.Camera.GetPosition() - face.v3));
+    //Get player distance from face.  If temporary minimum, set player distance (this process naturally finds the player's minimum distance to the surface).
+    {
+        std::lock_guard<std::mutex> lock(renderMutex);
+        vfloat dist = std::min(std::min(glm::length(-player.Camera.GetPosition() - face.v1),glm::length(-player.Camera.GetPosition() - face.v2)),glm::length(-player.Camera.GetPosition() - face.v3));
         if (player.DistFromSurface > dist) player.DistFromSurface = dist;
-    renderMutex.unlock();
+    }
     //perform horizon culling
     if (face.level!=0 && (!inHorizon(face.v1) || !inHorizon(face.v2) || !inHorizon(face.v3))) return;
     if (face.child0!=nullptr && face.child1!=nullptr && face.child2!=nullptr && face.child3!=nullptr)
@@ -211,14 +218,15 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         }
         currIndex = newVertices.size();
         
+        vvec3 norm0 = face.child0->GetNormal();
         vvec3 norm1 = face.child1->GetNormal();
         vvec3 norm2 = face.child2->GetNormal();
         vvec3 norm3 = face.child3->GetNormal();
         
         
-        newVertices.push_back(Vertex(face.child0->v1, (norm1 + norm3)*static_cast<vfloat>(0.5)));
-        newVertices.push_back(Vertex(face.child0->v2, (norm1 + norm2)*static_cast<vfloat>(0.5)));
-        newVertices.push_back(Vertex(face.child0->v3, (norm2 + norm3)*static_cast<vfloat>(0.5)));
+        newVertices.push_back(Vertex(face.child0->v1, glm::normalize(norm0 + norm1 + norm3)));
+        newVertices.push_back(Vertex(face.child0->v2, glm::normalize(norm0 + norm1 + norm2)));
+        newVertices.push_back(Vertex(face.child0->v3, glm::normalize(norm0 + norm2 + norm3)));
         ni1 = currIndex + 0;
         ni2 = currIndex + 1;
         ni3 = currIndex + 2;
@@ -292,10 +300,9 @@ void Planet::updateVBO(Player& player)
         recursiveUpdate(f, 0, 0, 0, player, newVertices, newIndices);
     if (!closed)
     {
-        renderMutex.lock();
+        std::lock_guard<std::mutex> lock(renderMutex);
         vertices = newVertices;
         indices = newIndices;
-        renderMutex.unlock();
     }
 }
 
@@ -304,27 +311,29 @@ void Planet::buildBaseMesh()
 {
     vvec3 icosahedron[12];
     
+    //reference angle for icosahedron vertices in radians -- used to calculate Cartesian coordinates of vertices
     double theta = 26.56505117707799 * M_PI / 180.0;
     
     double sine = std::sin(theta);
     double cosine = std::cos(theta);
     
-    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f); //bottom vertex
+    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f) + Position; //bottom vertex
     //upper pentagon
     int i;
     double phi;
     for (i = 1, phi=M_PI/5.; i < 6; ++i,phi+=2.*M_PI/5.) {
-        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), -sine);
+        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), -sine) + Position;
     }
     
     //lower pentagon
     for (i = 6, phi=0.; i < 11; ++i, phi+=2.*M_PI/5.) {
-        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), sine);
+        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), sine) + Position;
         
     }
     
-    icosahedron[11] = vvec3(0.0, 0.0, 1.0); // top vertex
+    icosahedron[11] = vvec3(0.0, 0.0, 1.0) + Position; // top vertex
     
+    //generate 20 icosahedron vertices
     faces.push_back(Face(icosahedron[0], icosahedron[2], icosahedron[1]));
     faces.push_back(Face(icosahedron[0], icosahedron[3], icosahedron[2]));
     faces.push_back(Face(icosahedron[0], icosahedron[4], icosahedron[3]));
@@ -355,19 +364,17 @@ void Planet::Draw(Player& player, GLManager& glManager)
 {
     setUniforms();
     time+=MainGame_SDL::ElapsedMilliseconds;
-    renderMutex.lock();
     
-    renderMutex.unlock();
-    renderMutex.lock();
     if (prevVerticesSize!=vertices.size())
     {
+        std::lock_guard<std::mutex> lock(renderMutex);
         glBindBuffer(GL_ARRAY_BUFFER,VBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STREAM_DRAW);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STREAM_DRAW);
         prevVerticesSize=vertices.size();
     }
-    renderMutex.unlock();
+    //adjust opengl rendering mode according to CurrentRenderMode -- wireframe or solid
     switch (CurrentRenderMode)
     {
         case RenderMode::SOLID:
@@ -380,31 +387,26 @@ void Planet::Draw(Player& player, GLManager& glManager)
     
     
     
-    renderMutex.lock();
     if (vertices.size() >0)
     {
-        
+        std::lock_guard<std::mutex> lock(renderMutex);
         glBindVertexArray(VAO);
-        //glDrawArrays(GL_TRIANGLES, 0, vertices.size());
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
         glBindVertexArray(0);
     }
-    renderMutex.unlock();
 }
 void Planet::setUniforms()
 {
+    std::lock_guard<std::mutex> lock(renderMutex);
     glManager.Program.Use();
-#ifdef VERTEX_DOUBLE
-    glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-#else
-    glManager.Program.SetMatrix4fv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-#endif
+    glManager.Program.SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
     glManager.Program.SetFloat("time",time);
     glManager.Program.SetFloat("seaLevel", SeaLevel);
+    glManager.Program.SetVector3("origin", Position);
     
     float angle = (CurrentRotationMode == RotationMode::ROTATION ? 1 : -1) * time * ROTATION_RATE * M_PI / 180.;
-    glManager.Program.SetVector3fv("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
+    glManager.Program.SetVector3("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
     player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
 }

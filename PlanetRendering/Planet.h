@@ -82,7 +82,7 @@ public:
     };
     RenderMode CurrentRenderMode;
     //Position is defaulted to origin (shaders may not work if pos!=origin right now)
-    glm::vec3 Position;
+    vvec3 Position;
     //radius of planet in device coordinates (default 1)
     vfloat Radius;
     const vfloat EARTH_DIAMETER = 12756200.0;

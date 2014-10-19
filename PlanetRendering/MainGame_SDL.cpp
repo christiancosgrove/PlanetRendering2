@@ -12,6 +12,7 @@
 #include "GLManager.h"
 #include "Planet.h"
 #include <iostream>
+#include <algorithm>
 
 vfloat MainGame_SDL::ElapsedMilliseconds = 0.0f;
 
@@ -79,7 +80,7 @@ void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
     
     //swap doublebuffers (doublebuffering prevents screen tearing)
     SDL_GL_SwapWindow(window);
-    ElapsedMilliseconds = (vfloat)(clock_t() - now) / CLOCKS_PER_SEC;
+    ElapsedMilliseconds = vfloat(clock() - now) / CLOCKS_PER_SEC;
 }
 
 void MainGame_SDL::Update(Planet& planet, Player& player)
@@ -90,6 +91,7 @@ void MainGame_SDL::Update(Planet& planet, Player& player)
 
 void MainGame_SDL::HandleEvents(Planet& planet)
 {
+    static const float rotationSpeedIncrement = planet.ROTATION_RATE*10;
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -108,6 +110,16 @@ void MainGame_SDL::HandleEvents(Planet& planet)
                 if (planet.CurrentRenderMode==Planet::RenderMode::SOLID) planet.CurrentRenderMode=Planet::RenderMode::WIRE;
                 else planet.CurrentRenderMode=Planet::RenderMode::SOLID;
                 break;
+                case SDL_SCANCODE_R:
+                    if (planet.CurrentRotationMode==Planet::RotationMode::NO_ROTATION) planet.CurrentRotationMode = Planet::RotationMode::ROTATION;
+                    else planet.CurrentRotationMode = Planet::RotationMode::NO_ROTATION;
+                    break;
+                case SDL_SCANCODE_T:
+                    planet.ROTATION_RATE+=rotationSpeedIncrement;
+                    break;
+                case SDL_SCANCODE_G:
+                    planet.ROTATION_RATE-=rotationSpeedIncrement;
+                    break;
             }
                 break;
         }

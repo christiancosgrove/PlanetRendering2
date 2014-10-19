@@ -15,10 +15,9 @@
 #include <time.h>
 #include "MainGame_SDL.h"
 
-const float Planet::ROTATION_RATE=0.0001f;
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false)
+Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f)
 {
     
     generateBuffers();
@@ -41,6 +40,9 @@ Planet::~Planet()
 //This function accepts a boolean-valued function of displacement.  If the function is true, the function will divide the given face into four subfaces, each of which will be recursively subjected to the same subdivision scheme.  It is important that the input function terminates at a particular level of detail, or the program will crash.
 bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
 {
+    //perform horizon culling
+    if (iterator->level!=0 && (!inHorizon(iterator->v1) || !inHorizon(iterator->v3) || !inHorizon(iterator->v3))) return false;
+    
     if (closed) return false;
     
     if (func(player, *iterator))
@@ -71,7 +73,7 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         
         
         
-        double fac =1./(double)(1 << iterator->level)*std::cbrt((iterator->level+1));
+        double fac =1./(double)(1 << iterator->level)*std::pow((iterator->level+1), 1./TERRAIN_REGULARITY);
         
         
         m12*=1 + terrainNoise(m12) * fac;
@@ -88,11 +90,6 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         Face* f2 = new Face(m23,m12,v2,iterator->level+1);
         Face* f3 = new Face(m13,v1,m12,iterator->level+1);
         
-        //iterator=faces.erase(iterator);
-//        newFaces.push_back(f0);
-//        newFaces.push_back(f1);
-//        newFaces.push_back(f2);
-        //        newFaces.push_back(f3);
         iterator->child0 = f0;
         iterator->child1 = f1;
         iterator->child2 = f2;
@@ -100,7 +97,6 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         
         return true;
     }
-//    else { ++iterator; return false; }
     return false;
 }
 //Similarly to trySubdivide, this function combines four faces into a larger face if a boolean-valued function is statisfied.
@@ -151,7 +147,7 @@ void Planet::combineFace(Face* face)
 
 void Planet::Update()
 {
-    if (!closed) {
+    if (closed) return;
     subdivided = false;
         for (auto it = faces.begin();it!=faces.end();it++)
         {
@@ -161,8 +157,9 @@ void Planet::Update()
                 subdivided=true;
         }
     if (subdivided || vertices.size()==0) updateVBO(player);
+    std::cout << "Height above earth surface: " << player.DistFromSurface * EARTH_DIAMETER << " m\n";
     Update();
-    }
+    
 }
 
 void Planet::generateBuffers()
@@ -191,8 +188,13 @@ void Planet::generateBuffers()
 
 void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index2, unsigned int index3, Player& player, std::vector<Vertex>& newVertices, std::vector<unsigned int>& newIndices)
 {
-//    vfloat dist = std::min(std::min(glm::length(-player.Camera.Position - face.v1),glm::length(-player.Camera.Position - face.v2)),glm::length(-player.Camera.Position - face.v3));
-//    if (player.DistFromSurface > dist) player.DistFromSurface = dist;
+    if (closed) return;
+    renderMutex.lock();
+    vfloat dist = std::min(std::min(glm::length(-player.Camera.GetPosition() - face.v1),glm::length(-player.Camera.GetPosition() - face.v2)),glm::length(-player.Camera.GetPosition() - face.v3));
+        if (player.DistFromSurface > dist) player.DistFromSurface = dist;
+    renderMutex.unlock();
+    //perform horizon culling
+    if (face.level!=0 && (!inHorizon(face.v1) || !inHorizon(face.v2) || !inHorizon(face.v3))) return;
     if (face.child0!=nullptr && face.child1!=nullptr && face.child2!=nullptr && face.child3!=nullptr)
     {
         vvec3 norm = face.GetNormal();
@@ -225,23 +227,12 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         recursiveUpdate(*face.child1, index3, ni1, ni3, player,newVertices, newIndices);
         recursiveUpdate(*face.child2, ni3, ni2, index2, player,newVertices, newIndices);
         recursiveUpdate(*face.child3, ni1, index1,ni2, player,newVertices, newIndices);
-//        recursiveUpdate(*face.child1, index1, ni1, ni3,player,newVertices);
-//        recursiveUpdate(*face.child2, player,newVertices);
-//        recursiveUpdate(*face.child3, player,newVertices);
     }
     else
     {
-        //renderMutex.lock();
-        
         newIndices.push_back(index1);
         newIndices.push_back(index2);
         newIndices.push_back(index3);
-        
-        
-//        newVertices.push_back(Vertex(vvec4(face.v1,1.0),norm));
-//        newVertices.push_back(Vertex(vvec4(face.v2,1.0),norm));
-//        newVertices.push_back(Vertex(vvec4(face.v3,1.0),norm));
-        //renderMutex.unlock();
     }
 }
 
@@ -251,9 +242,9 @@ bool Planet::recursiveSubdivide(Face* face, Player& player)
     if (trySubdivide(face,
                      [this](Player& player, Face f)->bool {
                          return std::max(std::max(
-                                                  glm::length(-player.Camera.Position - f.v1),
-                                                  glm::length(-player.Camera.Position - f.v2)),
-                                         glm::length(-player.Camera.Position - f.v3))
+                                                  glm::length(-player.Camera.GetPosition() - f.v1),
+                                                  glm::length(-player.Camera.GetPosition() - f.v2)),
+                                         glm::length(-player.Camera.GetPosition() - f.v3))
                          < (float)(1 << LOD_MULTIPLIER) / ((float)(1 << (f.level))); }
                      , player))
     {
@@ -273,9 +264,9 @@ bool Planet::recursiveCombine(Face* face, Player& player)
     if (!tryCombine(face,
                     
                     [this](Player& player, Face f)->bool { return std::min(std::min(
-                                                                                    glm::length(-player.Camera.Position - f.v1),
-                                                                                    glm::length(-player.Camera.Position - f.v2)),
-                                                                           glm::length(-player.Camera.Position - f.v3))
+                                                                                    glm::length(-player.Camera.GetPosition() - f.v1),
+                                                                                    glm::length(-player.Camera.GetPosition() - f.v2)),
+                                                                           glm::length(-player.Camera.GetPosition() - f.v3))
                         >= (double)(1 << (LOD_MULTIPLIER)) / ((double)(1 << (f.level-1))); }
                     
                     , player))
@@ -293,7 +284,9 @@ bool Planet::recursiveCombine(Face* face, Player& player)
 void Planet::updateVBO(Player& player)
 {
     std::vector<Vertex> newVertices;
+    newVertices.reserve(vertices.size());
     std::vector<unsigned int> newIndices;
+    newIndices.reserve(indices.size());
     player.DistFromSurface=10.;
     for (Face& f : faces)
         recursiveUpdate(f, 0, 0, 0, player, newVertices, newIndices);
@@ -360,7 +353,7 @@ void Planet::buildBaseMesh()
 
 void Planet::Draw(Player& player, GLManager& glManager)
 {
-    time+=MainGame_SDL::ElapsedMilliseconds/10000000000000;
+    time+=MainGame_SDL::ElapsedMilliseconds;
     renderMutex.lock();
 #ifdef VERTEX_DOUBLE
     glManager.Program.SetMatrix4dv("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
@@ -392,12 +385,12 @@ void Planet::Draw(Player& player, GLManager& glManager)
     glManager.Program.Use();
     glUniform1f(1,(GLfloat)time);
     
-    float angle = time * ROTATION_RATE;
+    float angle = (CurrentRotationMode == RotationMode::ROTATION ? 1 : -1) * time * ROTATION_RATE * M_PI / 180.;
     glManager.Program.SetVector3fv("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
+    player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
     
     
     renderMutex.lock();
-    std::cout << vertices.size() << "\n\n";
     if (vertices.size() >0)
     {
         

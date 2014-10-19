@@ -20,12 +20,15 @@ public:
     //Combination of GetViewMatrix() and GetProjectionMatrix()
 	vmat4 GetTransformMatrix();
     //Used to calculate movement
-	vvec3 GetViewDirection();
-	vvec3 Position;
+    vvec3 GetViewDirection();
+    
+    inline vvec3 GetPosition();
+    vvec3 position;
     //XYZ Euler angles -- Y rotation currently not included
 	vfloat XRotation;
 	vfloat ZRotation;
     vfloat YRotation;
+    vfloat PlanetRotation;
     //FOV represents the angle the bounds of the camera's view subdtends in the scene
 	vfloat FieldOfView;
     //Currently does nothing
@@ -40,4 +43,8 @@ private:
     //calculated from window width&height
 	vfloat aspectRatio;
 };
+
+vvec3 Camera::GetPosition() {
+    return vmat3(glm::rotate(vmat4(), -PlanetRotation, vvec3(0.0,0.0,1.0)))*position;
+}
 

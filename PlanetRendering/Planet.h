@@ -15,6 +15,8 @@
 #include "GLManager.h"
 #include "typedefs.h"
 #include <thread>
+#include "glm/gtx/norm.hpp"
+
 //Representation of a triangular face on CPU side of program
 //represents a single node in the face tree
 struct Face
@@ -83,8 +85,24 @@ public:
     glm::vec3 Position;
     //radius of planet in device coordinates (default 1)
     vfloat Radius;
+    const vfloat EARTH_DIAMETER = 12756200.0;
+    //nonzero number reflecting how fractal-like the terrain is (smaller values lead to more variation at smaller scales)
+    const unsigned int TERRAIN_REGULARITY = 4;
+    
     //Number of levels of detail (impacts rendering performance)
-    const int LOD_MULTIPLIER=5;
+    //Multiplies average # of vertices by 4^N
+    const int LOD_MULTIPLIER=6;
+    
+    enum class RotationMode
+    {
+        NO_ROTATION,
+        ROTATION
+    };
+    
+    RotationMode CurrentRotationMode; // determines whether the planet rotates relative to the player or relative to the star
+    //Radians/tick rotation rate of sun around planet
+    float ROTATION_RATE;
+    
     //Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
     //Initialization of planet
@@ -115,6 +133,9 @@ private:
     Player& player;
     std::mutex renderMutex;
     
+    
+    inline bool inHorizon(vvec3 vertex);
+    
     //TODO: implement vertex indexing for faster rendering and less CPU-GPU communcation
     
     //This function, which accepts a face and a boolean-valued function of the player's position and that face, checks whether a face is ready to be subdivided (in this case, close enough to the camera) and performs the subdivision.  The function argument of this method makes it more modular; the function used to CHECK whether to subdivide the face is external.
@@ -144,12 +165,20 @@ private:
     void combineFace(Face* face);
     //number of ticks (executions of Update()) since start; used in rotation of sun
     float time;
-    //Radians/tick rotation rate of sun around planet
-    static const float ROTATION_RATE;
     bool closed;
     bool subdivided;
     unsigned int prevVerticesSize;
 };
+
+
+bool Planet::inHorizon(vvec3 vertex)
+{
+    vfloat playerHeight = glm::length(player.Camera.GetPosition())-1.0;
+    //refer to Wikipedia for formula for horizon distance
+    vfloat horizonDist2 = 2 * Radius * playerHeight + playerHeight * playerHeight;
+    vfloat dist2 = glm::length2(vertex - player.Camera.GetPosition());
+    return (horizonDist2 < dist2);
+}
 
 //TODO: need new, more efficent RNG
 vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)

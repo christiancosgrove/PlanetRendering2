@@ -25,8 +25,8 @@ GLProgram::GLProgram(std::string fragName, std::string vertName) : programID(glC
     glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
     std::vector<char> errorMessage(infoLogLength);
     glGetProgramInfoLog(programID, infoLogLength, NULL, &errorMessage[0]);
-//    glDeleteShader(vertexShader);
-//    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 }
 
 GLManager::GLManager(std::string fragName, std::string vertName) : Program(fragName, vertName)
@@ -43,7 +43,6 @@ void GLManager::initGL()
     glDepthRange(0.0, 1.0);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-//    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 //compile an OpenGL shader
 GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)

@@ -12,15 +12,16 @@
 #include <string>
 #include <OpenGL/gl3.h>
 #include "glm/gtc/type_ptr.hpp"
+#include <vector>
 //This class encapsulates OpenGL shader programs to simplify shader loading
 class GLProgram
 {
 public:
     GLuint fragmentShader, vertexShader, programID;
     
-    GLProgram(std::string fragName, std::string vertName);
+    GLProgram(const std::string& fragName, const std::string& vertName);
     //This function reads from a local file and compiles it into an OpenGL shader
-    static GLuint CompileShader(std::string shaderName, GLenum type);
+    static GLuint CompileShader(const std::string& shaderName, GLenum type);
     inline void Use();
     inline void SetMatrix4(std::string name, const GLfloat* value);
     inline void SetMatrix4(std::string name, const GLdouble* value);
@@ -70,8 +71,9 @@ void GLProgram::SetVector3(std::string name, const glm::dvec3& value)
 class GLManager
 {
 public:
-    GLProgram Program;
-    GLManager(std::string fragName, std::string vertName);
+    std::vector<GLProgram> Programs;
+    GLManager(const std::string& fragName, const std::string& vertName);
+    int AddProgram(const std::string& fragmentShaderName, const std::string& vertexShaderName);
 private:
     //some OpenGL configuration
     void initGL();

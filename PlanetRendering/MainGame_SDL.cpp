@@ -44,8 +44,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     
     //Initialize GLManager object - provides OOP abstraction of some OpenGL API features (shader programs)
     GLManager glManager(resourcePath() + "fragmentShader.glsl", resourcePath() + "vertexShader.glsl");
-    glManager.Program.Use();
-    glManager.Program.SetFloat("aspectRatio", (float)currentMode.w/currentMode.h);
+    glManager.AddProgram(resourcePath() + "atmosphericFrag.glsl", resourcePath() + "atmosphericFragOld.glsl");
     //Set background color and default depth buffer values
     glClearColor(0,0,0,1);
     glClearDepth(1.0);
@@ -54,7 +53,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     //print OpenGL version for reference
     std::cout << "gl_renderer:" << glGetString(GL_RENDERER) << std::endl;
     std::cout << "gl_context: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "gl_shading_lang_version: " << glGetString(GL_SHADING_LANGUAGE_VERSION);
+    std::cout << "gl_shading_lang_version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) <<std::endl;
     //initialize player object (contains camera functionality)
     Player player(currentMode.w, currentMode.h);
     
@@ -89,7 +88,6 @@ void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
 
 void MainGame_SDL::Update(Planet& planet, Player& player)
 {
-    //aplanet.Update(player);
     player.Update();
 }
 

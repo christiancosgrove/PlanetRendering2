@@ -11,7 +11,7 @@
 #include <vector>
 #include "typedefs.h"
 
-GLProgram::GLProgram(std::string fragName, std::string vertName) : programID(glCreateProgram()), fragmentShader(CompileShader(fragName, GL_FRAGMENT_SHADER)), vertexShader(CompileShader(vertName, GL_VERTEX_SHADER))
+GLProgram::GLProgram(const std::string& fragName, const std::string& vertName) : programID(glCreateProgram()), fragmentShader(CompileShader(fragName, GL_FRAGMENT_SHADER)), vertexShader(CompileShader(vertName, GL_VERTEX_SHADER))
 {
     //link program
     GLint result = GL_FALSE;
@@ -30,9 +30,9 @@ GLProgram::GLProgram(std::string fragName, std::string vertName) : programID(glC
     glDeleteShader(fragmentShader);
 }
 
-GLManager::GLManager(std::string fragName, std::string vertName) : Program(fragName, vertName)
+GLManager::GLManager(const std::string& fragName, const std::string& vertName)
 {
-    Program.Use();
+    AddProgram(fragName, vertName);
     initGL();
 }
 
@@ -46,7 +46,7 @@ void GLManager::initGL()
     glDepthFunc(GL_LEQUAL);
 }
 //compile an OpenGL shader
-GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)
+GLuint GLProgram::CompileShader(const std::string& shaderName, GLenum type)
 {
     GLuint shaderId = glCreateShader(type);
     
@@ -85,4 +85,12 @@ GLuint GLProgram::CompileShader(std::string shaderName, GLenum type)
     fprintf(stdout, "%s\n", &errorMessage[0]);
     
     return shaderId;
+}
+
+int GLManager::AddProgram(const std::string& fragmentShaderName, const std::string& vertexShaderName)
+{
+    int id = Programs.size();
+    fprintf(stdout, "Compiling program %i\n", id);
+    Programs.push_back(GLProgram(fragmentShaderName, vertexShaderName));
+    return id;
 }

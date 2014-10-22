@@ -18,7 +18,7 @@
 
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f), SeaLevel(0.001f)
+Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f), SeaLevel(0.001f), atmosphere(pos, radius*1.01)
 {
     
     generateBuffers();
@@ -44,7 +44,7 @@ Planet::~Planet()
 bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
 {
     //perform horizon culling
-    if (iterator->level!=0 && (!inHorizon(iterator->v1) || !inHorizon(iterator->v3) || !inHorizon(iterator->v3))) return false;
+    if (iterator->level!=0 && (!inHorizon(iterator->v1) && !inHorizon(iterator->v2) && !inHorizon(iterator->v3))) return false;
     
     if (closed) return false;
     
@@ -149,6 +149,7 @@ void Planet::combineFace(Face* face)
 //performed in background, manages terrain generation
 void Planet::Update()
 {
+    
     if (closed) return;
     subdivided = false;
     //iterate through faces and perform necessary generation checks
@@ -163,6 +164,7 @@ void Planet::Update()
     if (subdivided || vertices.size()==0) updateVBO(player);
     std::cout << "Height above earth surface: " << player.DistFromSurface * EARTH_DIAMETER << " m\n";
     //repeat indefinitely (on separate thread)
+    
     Update();
 }
 
@@ -201,7 +203,7 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         if (player.DistFromSurface > dist) player.DistFromSurface = dist;
     }
     //perform horizon culling
-    if (face.level!=0 && (!inHorizon(face.v1) || !inHorizon(face.v2) || !inHorizon(face.v3))) return;
+    if (face.level!=0 && (!inHorizon(face.v1) && !inHorizon(face.v2) && !inHorizon(face.v3))) return;
     if (face.child0!=nullptr && face.child1!=nullptr && face.child2!=nullptr && face.child3!=nullptr)
     {
         vvec3 norm = face.GetNormal();
@@ -384,11 +386,15 @@ void Planet::Draw(Player& player, GLManager& glManager)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         break;
     }
+    glDisable(GL_DEPTH_TEST);
+    glManager.Programs[1].Use();
+    atmosphere.Draw();
     
-    
-    
+    glDisable(GL_DEPTH_TEST);
+//
     if (vertices.size() >0)
     {
+        glManager.Programs[0].Use();
         std::lock_guard<std::mutex> lock(renderMutex);
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -400,13 +406,23 @@ void Planet::Draw(Player& player, GLManager& glManager)
 void Planet::setUniforms()
 {
     std::lock_guard<std::mutex> lock(renderMutex);
-    glManager.Program.Use();
-    glManager.Program.SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-    glManager.Program.SetFloat("time",time);
-    glManager.Program.SetFloat("seaLevel", SeaLevel);
-    glManager.Program.SetVector3("origin", Position);
-    
+    glManager.Programs[1].Use();
     float angle = (CurrentRotationMode == RotationMode::ROTATION ? 1 : -1) * time * ROTATION_RATE * M_PI / 180.;
-    glManager.Program.SetVector3("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
+    float len =glm::length(player.Camera.GetPosition());
+    glManager.Programs[1].SetFloat("fCameraHeight", len);
+    glManager.Programs[1].SetFloat("fCameraHeight2", len*len);
+    glManager.Programs[1].SetVector3("v3CameraPos", player.Camera.position);
+    
+    glManager.Programs[1].SetVector3("v3LightPos", glm::vec3(sin(angle), cos(angle),0.0));
+//    glManager.Programs[1].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+    glManager.Programs[1].SetMatrix4("modelViewMatrix", glm::value_ptr(player.Camera.GetViewMatrix()));
+    glManager.Programs[1].SetMatrix4("projectionMatrix", glm::value_ptr(player.Camera.GetProjectionMatrix()));
+    glManager.Programs[0].Use();
+    glManager.Programs[0].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+    glManager.Programs[0].SetFloat("time",time);
+    glManager.Programs[0].SetFloat("seaLevel", SeaLevel);
+    glManager.Programs[0].SetVector3("origin", Position);
+    
+    glManager.Programs[0].SetVector3("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
     player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
 }

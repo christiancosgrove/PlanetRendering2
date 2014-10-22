@@ -16,6 +16,7 @@
 #include "typedefs.h"
 #include <thread>
 #include "glm/gtx/norm.hpp"
+#include "PlanetAtmosphere.h"
 
 //Representation of a triangular face on CPU side of program
 //represents a single node in the face tree
@@ -135,6 +136,7 @@ private:
     Player& player;
     std::mutex renderMutex;
     
+    PlanetAtmosphere atmosphere;
     
     inline bool inHorizon(vvec3 vertex);
     
@@ -178,9 +180,9 @@ bool Planet::inHorizon(vvec3 vertex)
 {
     vfloat playerHeight = glm::length(player.Camera.GetPosition())-1.0;
     //refer to Wikipedia for formula for horizon distance
-    vfloat horizonDist2 = 2 * Radius * playerHeight + playerHeight * playerHeight;
-    vfloat dist2 = glm::length2(vertex - player.Camera.GetPosition());
-    return (horizonDist2 < dist2);
+    vfloat horizonDist2 = 2*Radius * playerHeight + playerHeight * playerHeight;
+    vfloat dist2 = glm::length2(vertex + player.Camera.GetPosition());
+    return (std::max(horizonDist2,static_cast<vfloat>(0.2)) > dist2);
 }
 
 //TODO: need new, more efficent RNG

@@ -41,5 +41,7 @@ void main()
     vfloat oceanInterp =clamp(10000.*(height-seaLevel), 0, 1);
     mult = mult - (mult - 1.)*oceanInterp;
     gl_Position = vec4(transformMatrix * (vec4(mult,mult,mult,1.0)*vec4(vertexPos,1.0)));
+    
+//    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 1. - 1.0;
 }
 

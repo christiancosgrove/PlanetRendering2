@@ -17,19 +17,20 @@
 #include <thread>
 #include "glm/gtx/norm.hpp"
 #include "PlanetAtmosphere.h"
+#include "PhysicsObject.h"
 
-//Representation of a triangular face on CPU side of program
-//represents a single node in the face tree
+///Representation of a triangular face on CPU side of program,
+///represents a single node in the face tree
 struct Face
 {
-    //vertices of triangle
+    ///vertices of triangle
     vvec3 v1,v2,v3;
-    //pointers to children in tree structure
+    ///pointers to children in tree structure
     Face* child0;
     Face* child1;
     Face* child2;
     Face* child3;
-    //depth in tree
+    ///depth in tree
     unsigned int level;
     Face() : level(0) {}
     ~Face()
@@ -44,19 +45,19 @@ struct Face
     {
         
     }
-    //copy constructor
+    ///copy constructor
     Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3), level(face.level), child0(face.child0), child1(face.child1), child2(face.child2),child3(face.child3)  {}
-    //returns the normal vector of the face (used for lighting calculations)
+    ///returns the normal vector of the face (used for lighting calculations)
     inline vvec3 GetNormal()
     {
         return glm::normalize(glm::cross(v1 - v2, v1 - v3));
     }
     
 };
-//Representation of a single vertex for communication with GPU
-//recursiveUpdate function interops between two representations of vertex data (convenient Face & rendering Vertex representations)
-//Contains position as well as normal vectors
-//Due to the number of vertices, would like to implement vertex indexing (essentially ignoring duplicated vertices)
+///Representation of a single vertex for communication with GPU
+///recursiveUpdate function interops between two representations of vertex data (convenient Face & rendering Vertex representations)
+///Contains position as well as normal vectors
+///Due to the number of vertices, would like to implement vertex indexing (essentially ignoring duplicated vertices)
 struct Vertex
 {
     vfloat x,y,z;
@@ -72,8 +73,8 @@ struct Vertex
 //http://www.donhavey.com/blog/tutorials/tutorial-3-the-icosahedron-sphere/
 
 
-//This class contains functionality for rendering and generating the procedural planet
-class Planet
+///This class contains functionality for rendering and generating the procedural planet
+class Planet : public PhysicsObject
 {
 public:
     enum class RenderMode
@@ -82,16 +83,16 @@ public:
         WIRE,
     };
     RenderMode CurrentRenderMode;
-    //Position is defaulted to origin (shaders may not work if pos!=origin right now)
-    vvec3 Position;
-    //radius of planet in device coordinates (default 1)
+    ///Position is defaulted to origin (shaders may not work if pos!=origin right now)
+    
+    ///radius of planet in device coordinates (default 1)
     vfloat Radius;
     const vfloat EARTH_DIAMETER = 12756200.0;
-    //number in [0,1] reflecting how fractal-like the terrain is (larger values lead to more variation at smaller scales)
+    ///number in [0,1] reflecting how fractal-like the terrain is (larger values lead to more variation at smaller scales)
     const float TERRAIN_REGULARITY = 0.33;
     
-    //Number of levels of detail (impacts rendering performance)
-    //Multiplies average # of vertices by 4^N
+    ///Number of levels of detail (impacts rendering performance)
+    ///Multiplies average # of vertices by 4^N
     const int LOD_MULTIPLIER=6;
     
     float SeaLevel;
@@ -103,20 +104,20 @@ public:
     };
     
     RotationMode CurrentRotationMode; // determines whether the planet rotates relative to the player or relative to the star
-    //Radians/tick rotation rate of sun around planet
+    ///Radians/tick rotation rate of sun around planet
     float ROTATION_RATE;
     
-    //Seed used for random number generator (RNG needs to be updates)
+    ///Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
-    //Initialization of planet
+    ///Initialization of planet
     Planet(glm::vec3 pos, vfloat radius, vfloat seed,Player& _player, GLManager& _glManager);
     //De-initialization of planet (destruction of GL objects)
     ~Planet();
-    //Perform subdivisions/combinations accordingly, update vertex buffers
+    ///Perform subdivisions/combinations accordingly, update vertex buffers
     void Update();
-    //Render planet with Vertex Buffer Object/Vertex Array Object
-    void Draw(Player& player, GLManager& glManager);
-    //Terrain generation function in cartesion coordinates (spherically-symmetric)
+    ///Render planet with Vertex Buffer Object/Vertex Array Object
+    void Draw();
+    ///Terrain generation function in cartesion coordinates (spherically-symmetric)
     inline vfloat terrainNoise(vfloat x, vfloat y, vfloat z);
     inline vfloat terrainNoise(vvec3 v);
 private:
@@ -142,46 +143,62 @@ private:
     
     //TODO: implement vertex indexing for faster rendering and less CPU-GPU communcation
     
-    //This function, which accepts a face and a boolean-valued function of the player's position and that face, checks whether a face is ready to be subdivided (in this case, close enough to the camera) and performs the subdivision.  The function argument of this method makes it more modular; the function used to CHECK whether to subdivide the face is external.
-    //takes a function of the player information and the current face
+    ///This function, which accepts a face and a boolean-valued function of the player's position and that face, checks whether a face is ready to be subdivided (in this case, close enough to the camera) and performs the subdivision.  The function argument of this method makes it more modular; the function used to CHECK whether to subdivide the face is external.
+    ///takes a function of the player information and the current face
     bool trySubdivide(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
-    //Like trySubdivide, this function accepts a face and a function of the face and the player.  Instead of subdividing the face if it meets the function's criteria, it instead COMBINES the face's children.  Also like trySubdivide, this function is heavily reliant on the tree structure of the faces (one may now see why it was chosen over a one-dimensional resizeable array).
+    ///Like trySubdivide, this function accepts a face and a function of the face and the player.  Instead of subdividing the face if it meets the function's criteria, it instead COMBINES the face's children.  Also like trySubdivide, this function is heavily reliant on the tree structure of the faces (one may now see why it was chosen over a one-dimensional resizeable array).
     bool tryCombine(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
-    //This function is a pseudorandom number generator of two arguments (in this case the polar and azimuthal angles of the vertex in spherical coordinates)
+    ///This function is a pseudorandom number generator of two arguments (in this case the polar and azimuthal angles of the vertex in spherical coordinates)
     inline vfloat randvfloat(vfloat seedx, vfloat seedy);
     inline vfloat randvfloat(vvec2 vec);
-    //converts a Cartesian vector to a two-dimesnional polar-azimuthal vector (ignores radius)
+    ///converts a Cartesian vector to a two-dimesnional polar-azimuthal vector (ignores radius)
     inline glm::dvec2 sphericalCoordinates(vvec3 pos);
-    //construct base icosahedron
+    ///construct base icosahedron
     void buildBaseMesh();
-    //initialize VBO and VAO
+    ///initialize VBO and VAO
     void generateBuffers();
-    //Reconstruct vertex array and send vertices to GPU
+    ///Reconstruct vertex array and send vertices to GPU
     void updateVBO(Player& player);
-    //Append vertices deepest in the tree to vertex array to be sent to GPU
-    //also calculates the player's minimum distance to the planet surface
+    ///Append vertices deepest in the tree to vertex array to be sent to GPU
+    ///also calculates the player's minimum distance to the planet surface
     void recursiveUpdate(Face& face, unsigned int index1, unsigned int index2, unsigned int index3, Player& player, std::vector<Vertex>& newVertices, std::vector<unsigned int>& newIndices);
-    //Perform trySubdivide by recursively traversing tree
+    ///Perform trySubdivide by recursively traversing tree
     bool recursiveSubdivide(Face* face, Player& player);
-    //Perform tryCombine by recursively traversing tree
+    ///Perform tryCombine by recursively traversing tree
     bool recursiveCombine(Face* face, Player& player);
     //Simple function which deletes children vertices in order to combine the face.
     void combineFace(Face* face);
     void setUniforms();
-    //number of ticks (executions of Update()) since start; used in rotation of sun
+    ///number of ticks (executions of Update()) since start; used in rotation of sun
     float time;
     bool closed;
     bool subdivided;
     unsigned int prevVerticesSize;
+    
+    inline vvec3 GetPlayerDisplacement();
+    
+    inline void GetIndicesVerticesSizes(unsigned int& indsize, unsigned int& vertsize);
 };
 
+vvec3 Planet::GetPlayerDisplacement()
+{
+//    std::lock_guard<std::mutex> lock(player.PlayerMutex);
+    return player.Camera.position - static_cast<vvec3>(Position);
+}
+
+void Planet::GetIndicesVerticesSizes(unsigned int& indsize, unsigned int& vertsize)
+{
+    std::lock_guard<std::mutex> lock(renderMutex);
+    vertsize = vertices.size();
+    indsize = indices.size();
+}
 
 bool Planet::inHorizon(vvec3 vertex)
 {
-    vfloat playerHeight = glm::length(player.Camera.GetPosition())-1.0;
+    vfloat playerHeight = glm::length(GetPlayerDisplacement())-1.0;
     //refer to Wikipedia for formula for horizon distance
     vfloat horizonDist2 = 2*Radius * playerHeight + playerHeight * playerHeight;
-    vfloat dist2 = glm::length2(vertex + player.Camera.GetPosition());
+    vfloat dist2 = glm::length2(GetPlayerDisplacement() - vertex);
     return (std::max(horizonDist2,static_cast<vfloat>(0.2)) > dist2);
 }
 

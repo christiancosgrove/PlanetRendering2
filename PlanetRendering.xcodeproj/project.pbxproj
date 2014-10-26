@@ -19,9 +19,12 @@
 		AA68DB7419D8408A00B073C6 /* vertexShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA68DB7319D8408A00B073C6 /* vertexShader.glsl */; };
 		AACC3ED319DCE87500FEDC84 /* MainGame_SDL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */; };
 		AACC3ED519DCE8B700FEDC84 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACC3ED419DCE8B700FEDC84 /* SDL2.framework */; };
+		CA50C52819F960FC00FACF98 /* PhysicsObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CA50C52619F960FC00FACF98 /* PhysicsObject.cpp */; };
 		CA80FD3F19F6B79D009AA760 /* PlanetAtmosphere.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CA80FD3D19F6B79D009AA760 /* PlanetAtmosphere.cpp */; };
 		CA80FD4119F6BB22009AA760 /* atmosphericVert.glsl in Resources */ = {isa = PBXBuildFile; fileRef = CA80FD4019F6BB22009AA760 /* atmosphericVert.glsl */; };
 		CA80FD4319F6BB2E009AA760 /* atmosphericFrag.glsl in Resources */ = {isa = PBXBuildFile; fileRef = CA80FD4219F6BB2E009AA760 /* atmosphericFrag.glsl */; };
+		CA87706D19F9BED7006F9708 /* PhysicalSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CA87706B19F9BED7006F9708 /* PhysicalSystem.cpp */; };
+		CA87707019F9CC37006F9708 /* SolarSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CA87706E19F9CC37006F9708 /* SolarSystem.cpp */; };
 		CAB9F7F319E6E5B90043C313 /* atmosphericFragOld.glsl in Resources */ = {isa = PBXBuildFile; fileRef = CAB9F7F219E6E5B90043C313 /* atmosphericFragOld.glsl */; };
 /* End PBXBuildFile section */
 
@@ -47,10 +50,16 @@
 		AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MainGame_SDL.cpp; sourceTree = "<group>"; };
 		AACC3ED219DCE87500FEDC84 /* MainGame_SDL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainGame_SDL.h; sourceTree = "<group>"; };
 		AACC3ED419DCE8B700FEDC84 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
+		CA50C52619F960FC00FACF98 /* PhysicsObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PhysicsObject.cpp; sourceTree = "<group>"; };
+		CA50C52719F960FC00FACF98 /* PhysicsObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PhysicsObject.h; sourceTree = "<group>"; };
 		CA80FD3D19F6B79D009AA760 /* PlanetAtmosphere.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlanetAtmosphere.cpp; sourceTree = "<group>"; };
 		CA80FD3E19F6B79D009AA760 /* PlanetAtmosphere.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlanetAtmosphere.h; sourceTree = "<group>"; };
 		CA80FD4019F6BB22009AA760 /* atmosphericVert.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmosphericVert.glsl; sourceTree = "<group>"; };
 		CA80FD4219F6BB2E009AA760 /* atmosphericFrag.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmosphericFrag.glsl; sourceTree = "<group>"; };
+		CA87706B19F9BED7006F9708 /* PhysicalSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PhysicalSystem.cpp; sourceTree = "<group>"; };
+		CA87706C19F9BED7006F9708 /* PhysicalSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PhysicalSystem.h; sourceTree = "<group>"; };
+		CA87706E19F9CC37006F9708 /* SolarSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SolarSystem.cpp; sourceTree = "<group>"; };
+		CA87706F19F9CC37006F9708 /* SolarSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SolarSystem.h; sourceTree = "<group>"; };
 		CAB9F7F219E6E5B90043C313 /* atmosphericFragOld.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmosphericFragOld.glsl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -107,6 +116,12 @@
 				AA073A9E19EB2CB10048B9BE /* typedefs.h */,
 				CA80FD3D19F6B79D009AA760 /* PlanetAtmosphere.cpp */,
 				CA80FD3E19F6B79D009AA760 /* PlanetAtmosphere.h */,
+				CA50C52619F960FC00FACF98 /* PhysicsObject.cpp */,
+				CA50C52719F960FC00FACF98 /* PhysicsObject.h */,
+				CA87706B19F9BED7006F9708 /* PhysicalSystem.cpp */,
+				CA87706C19F9BED7006F9708 /* PhysicalSystem.h */,
+				CA87706E19F9CC37006F9708 /* SolarSystem.cpp */,
+				CA87706F19F9CC37006F9708 /* SolarSystem.h */,
 			);
 			path = PlanetRendering;
 			sourceTree = "<group>";
@@ -221,11 +236,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA68DB6C19D83B5700B073C6 /* GLManager.cpp in Sources */,
+				CA50C52819F960FC00FACF98 /* PhysicsObject.cpp in Sources */,
 				CA80FD3F19F6B79D009AA760 /* PlanetAtmosphere.cpp in Sources */,
+				CA87707019F9CC37006F9708 /* SolarSystem.cpp in Sources */,
 				AACC3ED319DCE87500FEDC84 /* MainGame_SDL.cpp in Sources */,
 				AA4BABDA19DA08450022C8BC /* Camera.cpp in Sources */,
 				AA623B3C19D8709000C31816 /* Player.cpp in Sources */,
 				AA68DB5819D8384600B073C6 /* main.cpp in Sources */,
+				CA87706D19F9BED7006F9708 /* PhysicalSystem.cpp in Sources */,
 				AA68DB5519D8384600B073C6 /* ResourcePath.mm in Sources */,
 				AA0DFC4319D8598E0042C627 /* Planet.cpp in Sources */,
 			);

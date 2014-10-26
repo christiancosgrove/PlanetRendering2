@@ -1,10 +1,11 @@
 #include "Camera.h"
 
 Camera::Camera(int windowWidth, int windowHeight) : 
-	position(1.1f, 0.0f, 0.0f),
+	position(20.1f, 10.0f, 10.0f),
 	aspectRatio(((float)windowWidth)/(float)windowHeight),
-	FieldOfView(60.), XRotation(0.0f), ZRotation(0.0f), YRotation(0.0f),PlanetRotation(0.0),
-NEAR_PLANE(std::numeric_limits<float>::epsilon()), FAR_PLANE(200.0f)
+	FieldOfView(60.), XRotation(0.0f), ZRotation(90.0f), YRotation(0.0f),PlanetRotation(0.0),
+NEAR_PLANE(std::numeric_limits<float>::epsilon()),
+FAR_PLANE(200.0f)
 {
 }
 
@@ -12,7 +13,7 @@ Camera::~Camera() {}
 
 vmat4 Camera::GetViewMatrix()
 {
-    return glm::eulerAngleXZ(XRotation, ZRotation) * glm::translate(position) * glm::rotate(vmat4(), PlanetRotation, vvec3(0.0,0.0,1.0));
+    return glm::eulerAngleXZ(XRotation, ZRotation) * glm::translate(-position) * glm::rotate(vmat4(), PlanetRotation, vvec3(0.0,0.0,1.0));
 }
 
 void Camera::ResizedWindow(int windowWidth, int windowHeight)

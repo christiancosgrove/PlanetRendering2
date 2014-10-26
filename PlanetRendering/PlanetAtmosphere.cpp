@@ -7,7 +7,8 @@
 //
 
 #include "PlanetAtmosphere.h"
-
+#include "GLManager.h"
+#include "Planet.h"
 PlanetAtmosphere::PlanetAtmosphere(glm::vec3 position, float radius) : Position(position), RADIUS(radius)
 {
     generateBuffers();
@@ -65,4 +66,44 @@ void PlanetAtmosphere::Draw()
     glBindVertexArray(sphereVAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
     glBindVertexArray(0);
+}
+void PlanetAtmosphere::SetUniforms(GLManager& glManager, Planet& planet)
+{
+    glManager.Programs[1].Use();
+//    uniform vec3 v3CameraPos;		// The camera's current position
+//    uniform vec3 v3LightPos = vec3(0,1,0);		// The direction vector to the light source
+//    uniform vec3 v3InvWavelength = vec3(100.,100.,1000.);	// 1 / pow(wavelength, 4) for the red, green, and blue channels
+    glManager.Programs[1].SetVector3("v3InvWavelength", glm::vec3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131
+));
+//    uniform float fCameraHeight;	// The camera's current height
+//    uniform float fCameraHeight2;	// fCameraHeight^2
+//    uniform float fOuterRadius = 1.01;		// The outer (atmosphere) radius
+    glManager.Programs[1].SetFloat("fOuterRadius", RADIUS);
+    //    uniform float fOuterRadius2 = 1.01*1.01;	// fOuterRadius^2
+    glManager.Programs[1].SetFloat("fOuterRadius2", RADIUS*RADIUS);
+    //    uniform float fInnerRadius = 1.;		// The inner (planetary) radius
+    glManager.Programs[1].SetFloat("fInnerRadius", planet.Radius);
+    //    uniform float fInnerRadius2 = 1.;	// fInnerRadius^2
+    glManager.Programs[1].SetFloat("fInnerRadius2", planet.Radius*planet.Radius);
+    float fKrESun = 0.025f;
+    float fKmESun = 0.025f;
+    //    uniform float fKrESun = 10.;			// Kr * ESun
+    glManager.Programs[1].SetFloat("fKrESun", fKrESun);
+    //    uniform float fKmESun = 10.;			// Km * ESun
+    glManager.Programs[1].SetFloat("fKmESun", fKmESun);
+    glManager.Programs[1].SetFloat("fKr4PI", fKrESun * 4 * M_PI);
+    glManager.Programs[1].SetFloat("fKm4PI", fKrESun * 4 * M_PI);
+    float fScale =1./(RADIUS - planet.Radius);
+    float fScaleDepth =1.+(RADIUS - planet.Radius)/2.;
+    glManager.Programs[1].SetFloat("fScale", fScale);
+    glManager.Programs[1].SetFloat("fScaleDepth", fScaleDepth);
+    glManager.Programs[1].SetFloat("fScaleOverScaleDepth", fScale/fScaleDepth);
+    
+//    uniform float fScale = 1./(1.001-1.);			// 1 / (fOuterRadius - fInnerRadius)
+//    uniform float fScaleDepth = 1.005;		// The scale depth (i.e. the altitude at which the atmosphere's average density is found)
+//    uniform float fScaleOverScaleDepth = 10./1.005;	// fScale / fScaleDepth
+//    uniform vec3	lightDir = vec3(0,-1,0);
+//    uniform vec3	earthCenter = vec3(0,0,0);
+    
+
 }

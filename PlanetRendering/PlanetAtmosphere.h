@@ -10,7 +10,10 @@
 #include <OpenGL/gl3.h>
 #include "glm/glm.hpp"
 #include <vector>
+#include "PhysicsObject.h"
 
+class GLManager;
+class Planet;
 class PlanetAtmosphere
 {
 public:
@@ -24,6 +27,7 @@ public:
     glm::vec3 Position;
     const float RADIUS;
     void Draw();
+    void SetUniforms(GLManager& glManager, Planet& planet);
 private:
     GLuint sphereVBO;
     GLuint sphereIBO;

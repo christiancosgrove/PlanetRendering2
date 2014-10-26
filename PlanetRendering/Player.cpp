@@ -13,8 +13,8 @@
 #include "MainGame_SDL.h"
 
 #include <SDL2/SDL.h>
-Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0){}
-Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0) {}
+Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0), PhysicsObject(glm::dvec3(20.1, 10.0, 10.0), 1.) {}
+Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0), PhysicsObject(glm::dvec3(20.1, 10.0, 10.0), 0.001) {}
 
 //void Player::Update() // SFML implementation (original)
 //{
@@ -54,28 +54,29 @@ void Player::Update() //SDL implementation -- updated
 {
     bool mouseFocus = true;
     //vfloat len =glm::length(Camera.GetPosition())-1.0;
-    vfloat playerSpeed = 0.001 * MainGame_SDL::ElapsedMilliseconds;// std::min((std::exp2(len)-1.)/100.0,0.0025);
+    vfloat playerSpeed = 0.0001;// * MainGame_SDL::ElapsedMilliseconds;// std::min((std::exp2(len)-1.)/100.0,0.0025);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
-    vfloat shiftSpeedFactor = state[SDL_SCANCODE_LSHIFT] ? 200.0 : 1.0;
+    vfloat shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT] ? 200.0 : 1.0) * (state[SDL_SCANCODE_LALT] ? 100. : 1.);
     if (state[SDL_SCANCODE_W])
     {
-        Camera.position+=Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor;
+        Velocity+=(static_cast<glm::dvec3>(-Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor));
     }
     if (state[SDL_SCANCODE_S])
     {
-        Camera.position-=Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor;
+        Velocity+=(static_cast<glm::dvec3>(Camera.GetViewDirection() * playerSpeed * shiftSpeedFactor));
     }
     if (state[SDL_SCANCODE_A])
     {
-        Camera.position+=vvec3(vvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+        Velocity+=(static_cast<glm::dvec3>(-vvec3(vvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor));
     }
     if (state[SDL_SCANCODE_D])
     {
-        Camera.position-=vvec3(vvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+        Velocity+=(static_cast<glm::dvec3>(vvec3(vvec4(1.0, 0.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor));
     }
     if (state[SDL_SCANCODE_SPACE])
     {
-        Camera.position-=vvec3(vvec4(0.0, 1.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor;
+        Velocity/=1.05;
+//        Velocity+=(static_cast<glm::dvec3>(vvec3(vvec4(0.0, 1.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor));
     }
     if (state[SDL_SCANCODE_Q])
     {
@@ -85,6 +86,7 @@ void Player::Update() //SDL implementation -- updated
     {
         Camera.YRotation-=0.5;
     }
+    Camera.position = static_cast<vvec3>(Position);
     
     if (mouseFocus)
     {

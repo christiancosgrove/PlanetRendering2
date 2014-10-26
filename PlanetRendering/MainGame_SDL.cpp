@@ -13,6 +13,8 @@
 #include "Planet.h"
 #include <iostream>
 #include <algorithm>
+#include "PhysicalSystem.h"
+
 
 vfloat MainGame_SDL::ElapsedMilliseconds = 0.0f;
 
@@ -59,43 +61,46 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     
     //seed random generator (change time(nullptr) to number for a deterministic seed)
     srand(time(nullptr));
-    Planet planet(glm::vec3(0,0,0), 1, (vfloat)rand()/RAND_MAX, player, glManager);
+    
+    SolarSystem solarSystem(player, glManager);
+    
     std::cout << "GL error: " << glGetError() << std::endl;
     
     //Main loop
     while (gameState!=GameState::EXIT)
     {
-        HandleEvents(planet);
-        Draw(planet, player,glManager);
-        Update(planet, player);
+        HandleEvents(solarSystem);
+        Draw(solarSystem,player,glManager);
+        //swap doublebuffers (doublebuffering prevents screen tearing)
+        SDL_GL_SwapWindow(window);
+        Update(solarSystem, player);
     }
     
 }
 
-void MainGame_SDL::Draw(Planet& planet, Player& player, GLManager& glManager)
+void MainGame_SDL::Draw(SolarSystem& solarSystem, Player& player, GLManager& glManager)
 {
     //get CPU time
     clock_t now = clock();
     //clear color & depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    planet.Draw(player, glManager);
+    solarSystem.Draw();
     
-    //swap doublebuffers (doublebuffering prevents screen tearing)
-    SDL_GL_SwapWindow(window);
     //calculate draw time based on elapsed CPU time.  This is used to maintain constant playback rates when framerate changes.
     ElapsedMilliseconds = vfloat(clock() - now) / CLOCKS_PER_SEC;
 }
 
-void MainGame_SDL::Update(Planet& planet, Player& player)
+void MainGame_SDL::Update(SolarSystem& solarSystem, Player& player)
 {
     player.Update();
+    solarSystem.Update();
 }
 
-void MainGame_SDL::HandleEvents(Planet& planet)
+void MainGame_SDL::HandleEvents(SolarSystem& solarSystem)
 {
     //temporary keyboard control over rendering parameters.
-    static const float rotationSpeedIncrement = planet.ROTATION_RATE*10;
-    static const float seaLevelIncrement = planet.SeaLevel*0.025f;
+//    static const float rotationSpeedIncrement = planet.ROTATION_RATE*10;
+//    static const float seaLevelIncrement = planet.SeaLevel*0.025f;
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -110,26 +115,33 @@ void MainGame_SDL::HandleEvents(Planet& planet)
                 case SDL_SCANCODE_ESCAPE:
                     gameState = GameState::EXIT;
                     break;
-                case SDL_SCANCODE_TAB:
-                if (planet.CurrentRenderMode==Planet::RenderMode::SOLID) planet.CurrentRenderMode=Planet::RenderMode::WIRE;
-                else planet.CurrentRenderMode=Planet::RenderMode::SOLID;
-                break;
-                case SDL_SCANCODE_R:
-                    if (planet.CurrentRotationMode==Planet::RotationMode::NO_ROTATION) planet.CurrentRotationMode = Planet::RotationMode::ROTATION;
-                    else planet.CurrentRotationMode = Planet::RotationMode::NO_ROTATION;
+//                case SDL_SCANCODE_TAB:
+//                if (planet.CurrentRenderMode==Planet::RenderMode::SOLID) planet.CurrentRenderMode=Planet::RenderMode::WIRE;
+//                else planet.CurrentRenderMode=Planet::RenderMode::SOLID;
+//                break;
+//                case SDL_SCANCODE_R:
+//                    if (planet.CurrentRotationMode==Planet::RotationMode::NO_ROTATION) planet.CurrentRotationMode = Planet::RotationMode::ROTATION;
+//                    else planet.CurrentRotationMode = Planet::RotationMode::NO_ROTATION;
+//                    break;
+//                case SDL_SCANCODE_T:
+//                    planet.ROTATION_RATE+=rotationSpeedIncrement;
+//                    break;
+//                case SDL_SCANCODE_G:
+//                    planet.ROTATION_RATE-=rotationSpeedIncrement;
+//                    break;
+//                case SDL_SCANCODE_UP:
+//                    planet.SeaLevel+=seaLevelIncrement;
+//                    break;
+//                case SDL_SCANCODE_DOWN:
+//                    planet.SeaLevel-=seaLevelIncrement;
+                    //                    break;
+                case SDL_SCANCODE_LEFT:
+                    solarSystem.PrevTrackTarget();
                     break;
-                case SDL_SCANCODE_T:
-                    planet.ROTATION_RATE+=rotationSpeedIncrement;
+                case SDL_SCANCODE_RIGHT:
+                    solarSystem.NextTrackTarget();
                     break;
-                case SDL_SCANCODE_G:
-                    planet.ROTATION_RATE-=rotationSpeedIncrement;
-                    break;
-                case SDL_SCANCODE_UP:
-                    planet.SeaLevel+=seaLevelIncrement;
-                    break;
-                case SDL_SCANCODE_DOWN:
-                    planet.SeaLevel-=seaLevelIncrement;
-                    break;
+                    
                 default:
                     break;
             }

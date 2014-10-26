@@ -11,8 +11,10 @@
 #include "glm/glm.hpp"
 #include "Camera.h"
 #include "typedefs.h"
+#include "PhysicsObject.h"
+#include <thread>
 //This class contains functions for controlling the camera using the mouse and keyboard.
-class Player
+class Player : public PhysicsObject
 {
 public:
     Player(int windowWidth, int windowHeight);
@@ -20,6 +22,7 @@ public:
     void Update();
     Camera Camera;
     vfloat DistFromSurface;
+    std::mutex PlayerMutex;
 private:
 };
 

@@ -18,7 +18,8 @@
 
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Position(pos), Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f), SeaLevel(0.001f), atmosphere(pos, radius*1.01)
+Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f), SeaLevel(0.001f), atmosphere(pos, radius*1.01),
+PhysicsObject(static_cast<glm::dvec3>(pos), 5.972E24)
 {
     
     generateBuffers();
@@ -88,11 +89,18 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         m13*=(l1 + l3)/2.;
         m23*=(l2 + l3)/2.;
         
-        Face* f0 = new Face(m13,m12,m23, iterator->level+1);
-        Face* f1 = new Face(v3,m13,m23,iterator->level+1);
-        Face* f2 = new Face(m23,m12,v2,iterator->level+1);
-        Face* f3 = new Face(m13,v1,m12,iterator->level+1);
+//        m12+=Position;
+//        m13+=Position;
+//        m23+=Position;
+        Face *f0,*f1,*f2,*f3;
         
+        {
+            std::lock_guard<std::mutex> lock(renderMutex);
+            f0 = new Face(m13,m12,m23, iterator->level+1);
+            f1 = new Face(v3,m13,m23,iterator->level+1);
+            f2 = new Face(m23,m12,v2,iterator->level+1);
+            f3 = new Face(m13,v1,m12,iterator->level+1);
+        }
         iterator->child0 = f0;
         iterator->child1 = f1;
         iterator->child2 = f2;
@@ -161,8 +169,11 @@ void Planet::Update()
             subdivided=true;
     }
     //update vertices if changes were made
-    if (subdivided || vertices.size()==0) updateVBO(player);
-    std::cout << "Height above earth surface: " << player.DistFromSurface * EARTH_DIAMETER << " m\n";
+    
+    unsigned int indsize, vertsize;
+    GetIndicesVerticesSizes(indsize, vertsize);
+    if (subdivided || vertsize==0) updateVBO(player);
+//    std::cout << "Height above earth surface: " << player.DistFromSurface * EARTH_DIAMETER << " m\n";
     //repeat indefinitely (on separate thread)
     
     Update();
@@ -199,7 +210,7 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
     //Get player distance from face.  If temporary minimum, set player distance (this process naturally finds the player's minimum distance to the surface).
     {
         std::lock_guard<std::mutex> lock(renderMutex);
-        vfloat dist = std::min(std::min(glm::length(-player.Camera.GetPosition() - face.v1),glm::length(-player.Camera.GetPosition() - face.v2)),glm::length(-player.Camera.GetPosition() - face.v3));
+        vfloat dist = std::min(std::min(glm::length(GetPlayerDisplacement() - face.v1),glm::length(GetPlayerDisplacement() - face.v2)),glm::length(GetPlayerDisplacement()- face.v3));
         if (player.DistFromSurface > dist) player.DistFromSurface = dist;
     }
     //perform horizon culling
@@ -252,9 +263,9 @@ bool Planet::recursiveSubdivide(Face* face, Player& player)
     if (trySubdivide(face,
                      [this](Player& player, Face f)->bool {
                          return std::max(std::max(
-                                                  glm::length(-player.Camera.GetPosition() - f.v1),
-                                                  glm::length(-player.Camera.GetPosition() - f.v2)),
-                                         glm::length(-player.Camera.GetPosition() - f.v3))
+                                                  glm::length(GetPlayerDisplacement() - f.v1),
+                                                  glm::length(GetPlayerDisplacement() - f.v2)),
+                                         glm::length(GetPlayerDisplacement() - f.v3))
                          < (float)(1 << LOD_MULTIPLIER) / ((float)(1 << (f.level))); }
                      , player))
     {
@@ -274,9 +285,9 @@ bool Planet::recursiveCombine(Face* face, Player& player)
     if (!tryCombine(face,
                     
                     [this](Player& player, Face f)->bool { return std::min(std::min(
-                                                                                    glm::length(-player.Camera.GetPosition() - f.v1),
-                                                                                    glm::length(-player.Camera.GetPosition() - f.v2)),
-                                                                           glm::length(-player.Camera.GetPosition() - f.v3))
+                                                                                    glm::length(GetPlayerDisplacement() - f.v1),
+                                                                                    glm::length(GetPlayerDisplacement() - f.v2)),
+                                                                           glm::length(GetPlayerDisplacement() - f.v3 - static_cast<vvec3>(Position)))
                         >= (double)(1 << (LOD_MULTIPLIER)) / ((double)(1 << (f.level-1))); }
                     
                     , player))
@@ -293,10 +304,12 @@ bool Planet::recursiveCombine(Face* face, Player& player)
 
 void Planet::updateVBO(Player& player)
 {
+    unsigned int indsize, vertsize;
+    GetIndicesVerticesSizes(indsize, vertsize);
     std::vector<Vertex> newVertices;
-    newVertices.reserve(vertices.size());
+    newVertices.reserve(vertsize);
     std::vector<unsigned int> newIndices;
-    newIndices.reserve(indices.size());
+    newIndices.reserve(indsize);
     player.DistFromSurface=10.;
     for (Face& f : faces)
         recursiveUpdate(f, 0, 0, 0, player, newVertices, newIndices);
@@ -311,6 +324,8 @@ void Planet::updateVBO(Player& player)
 
 void Planet::buildBaseMesh()
 {
+    //The first part of this function, which generates a list of coordinates of icosahedron vertices, is not mine.
+    //I used code on a forum or website (unfortunately cannot find it again)
     vvec3 icosahedron[12];
     
     //reference angle for icosahedron vertices in radians -- used to calculate Cartesian coordinates of vertices
@@ -319,21 +334,21 @@ void Planet::buildBaseMesh()
     double sine = std::sin(theta);
     double cosine = std::cos(theta);
     
-    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f) + Position; //bottom vertex
+    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f); //bottom vertex
     //upper pentagon
     int i;
     double phi;
     for (i = 1, phi=M_PI/5.; i < 6; ++i,phi+=2.*M_PI/5.) {
-        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), -sine) + Position;
+        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), -sine);
     }
     
     //lower pentagon
     for (i = 6, phi=0.; i < 11; ++i, phi+=2.*M_PI/5.) {
-        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), sine) + Position;
+        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), sine);
         
     }
     
-    icosahedron[11] = vvec3(0.0, 0.0, 1.0) + Position; // top vertex
+    icosahedron[11] = vvec3(0.0, 0.0, 1.0); // top vertex
     
     //generate 20 icosahedron vertices
     faces.push_back(Face(icosahedron[0], icosahedron[2], icosahedron[1]));
@@ -362,37 +377,40 @@ void Planet::buildBaseMesh()
     
 }
 
-void Planet::Draw(Player& player, GLManager& glManager)
+void Planet::Draw()
 {
+    
+    atmosphere.Position = static_cast<glm::vec3>(Position);
     setUniforms();
     time+=MainGame_SDL::ElapsedMilliseconds;
     
-    if (prevVerticesSize!=vertices.size())
+    //adjust opengl rendering mode according to CurrentRenderMode -- wireframe or solid
+    switch (CurrentRenderMode)
+    {
+        case RenderMode::SOLID:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            break;
+        case RenderMode::WIRE:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            break;
+    }
+    unsigned int indsize, vertsize;
+    GetIndicesVerticesSizes(indsize, vertsize);
+    if (prevVerticesSize!=vertsize)
     {
         std::lock_guard<std::mutex> lock(renderMutex);
         glBindBuffer(GL_ARRAY_BUFFER,VBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STREAM_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STREAM_DRAW);
-        prevVerticesSize=vertices.size();
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indsize, &indices[0], GL_STREAM_DRAW);
+        prevVerticesSize=vertsize;
     }
-    //adjust opengl rendering mode according to CurrentRenderMode -- wireframe or solid
-    switch (CurrentRenderMode)
-    {
-        case RenderMode::SOLID:
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        break;
-        case RenderMode::WIRE:
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        break;
-    }
-    glDisable(GL_DEPTH_TEST);
-    glManager.Programs[1].Use();
-    atmosphere.Draw();
+//    glDisable(GL_DEPTH_TEST);
+//    glManager.Programs[1].Use();
+//    atmosphere.Draw();
     
-    glDisable(GL_DEPTH_TEST);
 //
-    if (vertices.size() >0)
+    if (vertsize >0 || vertsize > 64)
     {
         glManager.Programs[0].Use();
         std::lock_guard<std::mutex> lock(renderMutex);
@@ -407,18 +425,20 @@ void Planet::setUniforms()
 {
     std::lock_guard<std::mutex> lock(renderMutex);
     glManager.Programs[1].Use();
+    atmosphere.SetUniforms(glManager, *this);
+    
     float angle = (CurrentRotationMode == RotationMode::ROTATION ? 1 : -1) * time * ROTATION_RATE * M_PI / 180.;
-    float len =glm::length(player.Camera.GetPosition());
+    float len =glm::length(GetPlayerDisplacement())-1;
     glManager.Programs[1].SetFloat("fCameraHeight", len);
     glManager.Programs[1].SetFloat("fCameraHeight2", len*len);
-    glManager.Programs[1].SetVector3("v3CameraPos", player.Camera.position);
+    glManager.Programs[1].SetVector3("v3CameraPos", GetPlayerDisplacement());
     
-    glManager.Programs[1].SetVector3("v3LightPos", glm::vec3(sin(angle), cos(angle),0.0));
+    glManager.Programs[1].SetVector3("v3LightPos", glm::vec3(10*sin(angle), 10*cos(angle),0.0));
 //    glManager.Programs[1].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
     glManager.Programs[1].SetMatrix4("modelViewMatrix", glm::value_ptr(player.Camera.GetViewMatrix()));
     glManager.Programs[1].SetMatrix4("projectionMatrix", glm::value_ptr(player.Camera.GetProjectionMatrix()));
     glManager.Programs[0].Use();
-    glManager.Programs[0].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+    glManager.Programs[0].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()*glm::translate(vmat4(), static_cast<vvec3>(Position))));
     glManager.Programs[0].SetFloat("time",time);
     glManager.Programs[0].SetFloat("seaLevel", SeaLevel);
     glManager.Programs[0].SetVector3("origin", Position);

@@ -12,21 +12,21 @@ uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
 uniform vec3 v3CameraPos;		// The camera's current position
-uniform vec3 v3LightPos = vec3(0,1,0);		// The direction vector to the light source
-uniform vec3 v3InvWavelength = vec3(100.,100.,1000.);	// 1 / pow(wavelength, 4) for the red, green, and blue channels
+uniform vec3 v3LightPos;		// The direction vector to the light source
+uniform vec3 v3InvWavelength;	// 1 / pow(wavelength, 4) for the red, green, and blue channels
 uniform float fCameraHeight;	// The camera's current height
 uniform float fCameraHeight2;	// fCameraHeight^2
-uniform float fOuterRadius = 1.01;		// The outer (atmosphere) radius
-uniform float fOuterRadius2 = 1.01*1.01;	// fOuterRadius^2
+uniform float fOuterRadius;		// The outer (atmosphere) radius
+uniform float fOuterRadius2;	// fOuterRadius^2
 uniform float fInnerRadius = 1.;		// The inner (planetary) radius
 uniform float fInnerRadius2 = 1.;	// fInnerRadius^2
-uniform float fKrESun = 10.;			// Kr * ESun
-uniform float fKmESun = 10.;			// Km * ESun
-uniform float fKr4PI = 3.141415*4*10.;			// Kr * 4 * PI
-uniform float fKm4PI = 3.141415*4*10.;			// Km * 4 * PI
-uniform float fScale = 1./(1.001-1.);			// 1 / (fOuterRadius - fInnerRadius)
-uniform float fScaleDepth = 1.005;		// The scale depth (i.e. the altitude at which the atmosphere's average density is found)
-uniform float fScaleOverScaleDepth = 10./1.005;	// fScale / fScaleDepth
+uniform float fKrESun;			// Kr * ESun
+uniform float fKmESun;			// Km * ESun
+uniform float fKr4PI;		// Kr * 4 * PI
+uniform float fKm4PI;			// Km * 4 * PI
+uniform float fScale;			// 1 / (fOuterRadius - fInnerRadius)
+uniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the atmosphere's average density is found)
+uniform float fScaleOverScaleDepth;	// fScale / fScaleDepth
 uniform vec3	lightDir = vec3(0,-1,0);
 uniform vec3	earthCenter = vec3(0,0,0);
 
@@ -74,7 +74,7 @@ void main(void)
 	{
 		float fHeight = length(v3SamplePoint-earthCenter);
 		float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));
-		float fScatter = fDepth*fTemp - fCameraOffset;
+		float fScatter = 0.00000000000000000000001*(fDepth*fTemp - fCameraOffset);
 		v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));
 		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);
 		v3SamplePoint += v3SampleRay;
@@ -85,5 +85,5 @@ void main(void)
 	// Calculate the attenuation factor for the ground
 	secondaryColor.rgb = v3Attenuate;
     
-	gl_Position = rojectionMatrix * modelViewMatrix * vec4(vertex,1.0);
+	gl_Position = projectionMatrix * modelViewMatrix * vec4(vertex,1.0);
 }

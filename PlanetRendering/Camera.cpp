@@ -1,10 +1,10 @@
 #include "Camera.h"
 
 Camera::Camera(int windowWidth, int windowHeight) : 
-	position(20.1f, 10.0f, 10.0f),
+	position(10.1f, 10.0f, 0.0f),
 	aspectRatio(((float)windowWidth)/(float)windowHeight),
-	FieldOfView(60.), XRotation(0.0f), ZRotation(90.0f), YRotation(0.0f),PlanetRotation(0.0),
-NEAR_PLANE(std::numeric_limits<float>::epsilon()),
+	FieldOfView(70), XRotation(0.0f), ZRotation(90.0f), YRotation(0.0f),PlanetRotation(0.0),
+NEAR_PLANE(0),//std::numeric_limits<float>::epsilon()),
 FAR_PLANE(200.0f)
 {
 }

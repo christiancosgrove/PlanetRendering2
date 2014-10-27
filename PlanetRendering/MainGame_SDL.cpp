@@ -46,10 +46,9 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     
     //Initialize GLManager object - provides OOP abstraction of some OpenGL API features (shader programs)
     GLManager glManager(resourcePath() + "fragmentShader.glsl", resourcePath() + "vertexShader.glsl");
-    glManager.AddProgram(resourcePath() + "atmosphericFrag.glsl", resourcePath() + "atmosphericFragOld.glsl");
+    glManager.AddProgram(resourcePath() + "atmosphericFrag.glsl", resourcePath() + "atmosphericVert.glsl");
     //Set background color and default depth buffer values
     glClearColor(0,0,0,1);
-    glClearDepth(1.0);
     
     
     //print OpenGL version for reference
@@ -83,6 +82,7 @@ void MainGame_SDL::Draw(SolarSystem& solarSystem, Player& player, GLManager& glM
     //get CPU time
     clock_t now = clock();
     //clear color & depth buffers
+    glClearDepth(0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     solarSystem.Draw();
     
@@ -135,12 +135,6 @@ void MainGame_SDL::HandleEvents(SolarSystem& solarSystem)
 //                case SDL_SCANCODE_DOWN:
 //                    planet.SeaLevel-=seaLevelIncrement;
                     //                    break;
-                case SDL_SCANCODE_LEFT:
-                    solarSystem.PrevTrackTarget();
-                    break;
-                case SDL_SCANCODE_RIGHT:
-                    solarSystem.NextTrackTarget();
-                    break;
                     
                 default:
                     break;

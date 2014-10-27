@@ -89,7 +89,7 @@ public:
     vfloat Radius;
     const vfloat EARTH_DIAMETER = 12756200.0;
     ///number in [0,1] reflecting how fractal-like the terrain is (larger values lead to more variation at smaller scales)
-    const float TERRAIN_REGULARITY = 0.33;
+    const float TERRAIN_REGULARITY = 0.5;
     
     ///Number of levels of detail (impacts rendering performance)
     ///Multiplies average # of vertices by 4^N
@@ -110,7 +110,7 @@ public:
     ///Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
     ///Initialization of planet
-    Planet(glm::vec3 pos, vfloat radius, vfloat seed,Player& _player, GLManager& _glManager);
+    Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager);
     //De-initialization of planet (destruction of GL objects)
     ~Planet();
     ///Perform subdivisions/combinations accordingly, update vertex buffers

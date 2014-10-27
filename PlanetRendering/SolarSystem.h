@@ -8,6 +8,7 @@
 #pragma once
 #include "PhysicalSystem.h"
 #include "Planet.h"
+#include <array>
 class SolarSystem : public PhysicalSystem
 {
 public:
@@ -15,15 +16,9 @@ public:
     ~SolarSystem();
     void Update();
     void Draw();
-    void NextTrackTarget();
-    void PrevTrackTarget();
 private:
     Player& player;
     GLManager& glManager;
-    int currTrackTargetIndex;
-    Planet planet;
-    Planet planet2;
     std::vector<Planet*> planets;
-//    std::vector<Planet*> planets;
     void addPlanet(Planet* p);
 };

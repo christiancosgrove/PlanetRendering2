@@ -35,7 +35,7 @@ void main()
     interp*=interp*interp*interp*interp*interp*10000.;
     //color = color - (color - vec4(1,1,1,1))*interp;WD
     float lightness = clamp(dot(sunDir, fragNormal),0,1);
-    color*=lightness + specularity * pow(lightness,20);//vec4(fragNormal,1.0);
+    color*=0.5 + 0.5 * (lightness + specularity * pow(lightness,20));//vec4(fragNormal,1.0);
     
 //    float t = 100000.*(coord.x*coord.y*coord.z*coord.x*coord.y) + 0/100.;
 //    color = vec4(sin(t),sin(t+1.),sin(t+2.),1.0);

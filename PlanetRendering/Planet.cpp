@@ -18,8 +18,8 @@
 
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, vfloat seed, Player& _player, GLManager& _glManager) : Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f), SeaLevel(0.001f), atmosphere(pos, radius*1.01),
-PhysicsObject(static_cast<glm::dvec3>(pos), 5.972E24)
+Planet::Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager) : Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f), SeaLevel(0.001f), atmosphere(pos, radius*1.01),
+PhysicsObject(static_cast<glm::dvec3>(pos), mass)//5.972E24)
 {
     
     generateBuffers();
@@ -65,14 +65,14 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         vvec3 nv3 = glm::normalize(v3);
         
         //lengths of face vertices
-        vfloat l1 = glm::length(v1);
-        vfloat l2 = glm::length(v2);
-        vfloat l3 = glm::length(v3);
+        vfloat l1 = glm::length(v1)/Radius;
+        vfloat l2 = glm::length(v2)/Radius;
+        vfloat l3 = glm::length(v3)/Radius;
         
         //normalized midpoints of face vertices
-        vvec3 m12 = glm::normalize((nv1 + nv2) * (vfloat)0.5f)*Radius;
-        vvec3 m13 = glm::normalize((nv1 + nv3) * (vfloat)0.5f)*Radius;
-        vvec3 m23 = glm::normalize((nv2 + nv3) * (vfloat)0.5f)*Radius;
+        vvec3 m12 = glm::normalize((nv1 + nv2) * (vfloat)0.5f);
+        vvec3 m13 = glm::normalize((nv1 + nv3) * (vfloat)0.5f);
+        vvec3 m23 = glm::normalize((nv2 + nv3) * (vfloat)0.5f);
         
         //height scale of terrain
         //proportional to 2^(-LOD) * nonlinear factor
@@ -85,9 +85,9 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         m13*=1 + terrainNoise(m13) * fac;
         m23*=1 + terrainNoise(m23) * fac;
         
-        m12*=(l1 + l2)/2.;
-        m13*=(l1 + l3)/2.;
-        m23*=(l2 + l3)/2.;
+        m12*=(l1 + l2)/2.*Radius;
+        m13*=(l1 + l3)/2.*Radius;
+        m23*=(l2 + l3)/2.*Radius;
         
 //        m12+=Position;
 //        m13+=Position;
@@ -334,21 +334,21 @@ void Planet::buildBaseMesh()
     double sine = std::sin(theta);
     double cosine = std::cos(theta);
     
-    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f); //bottom vertex
+    icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f)*Radius; //bottom vertex
     //upper pentagon
     int i;
     double phi;
     for (i = 1, phi=M_PI/5.; i < 6; ++i,phi+=2.*M_PI/5.) {
-        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), -sine);
+        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), -sine)*Radius;
     }
     
     //lower pentagon
     for (i = 6, phi=0.; i < 11; ++i, phi+=2.*M_PI/5.) {
-        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), sine);
+        icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), sine)*Radius;
         
     }
     
-    icosahedron[11] = vvec3(0.0, 0.0, 1.0); // top vertex
+    icosahedron[11] = vvec3(0.0, 0.0, 1.0)*Radius; // top vertex
     
     //generate 20 icosahedron vertices
     faces.push_back(Face(icosahedron[0], icosahedron[2], icosahedron[1]));
@@ -394,6 +394,7 @@ void Planet::Draw()
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             break;
     }
+    
     unsigned int indsize, vertsize;
     GetIndicesVerticesSizes(indsize, vertsize);
     if (prevVerticesSize!=vertsize)

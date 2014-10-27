@@ -14,7 +14,7 @@
 
 #include <SDL2/SDL.h>
 Player::Player(int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0), PhysicsObject(glm::dvec3(20.1, 10.0, 10.0), 1.) {}
-Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0), PhysicsObject(glm::dvec3(20.1, 10.0, 10.0), 0.001) {}
+Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(windowWidth, windowHeight), DistFromSurface(10.0), PhysicsObject(glm::dvec3(20.1, 10.0, 10.0), 0.00001) {}
 
 //void Player::Update() // SFML implementation (original)
 //{

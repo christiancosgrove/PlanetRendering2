@@ -19,7 +19,7 @@ void PhysicsObject::UpdatePhysics(double timeStep)
     //perform Velocity Verlet integration
     //see http://en.wikipedia.org/wiki/Verlet_integration#Velocity_Verlet
     auto currAcceleration = NetForce / Mass;
-    auto newPos = Position + Velocity * timeStep + NetForce * currAcceleration * timeStep * timeStep;
+    auto newPos = Position + Velocity * timeStep + 0.5 * currAcceleration * timeStep * timeStep;
     auto newAcceleration = NextNetForce * (1./Mass);
     auto newVelocity = Velocity + 0.5 * timeStep * (currAcceleration + newAcceleration);
     Velocity = newVelocity;

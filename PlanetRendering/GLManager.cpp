@@ -42,8 +42,8 @@ void GLManager::initGL()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-//    glDisable(GL_DEPTH_CLAMP);
+    glDepthFunc(GL_GREATER);
+//    glDepthRange(-1,1);
 }
 //compile an OpenGL shader
 GLuint GLProgram::CompileShader(const std::string& shaderName, GLenum type)

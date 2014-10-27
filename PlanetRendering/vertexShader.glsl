@@ -40,8 +40,11 @@ void main()
     vfloat mult =(1. + waveAmplitude * vfloat(cos(waveFrequency*time +float(waveNumber*(vertexPos.x + vertexPos.y + vertexPos.z)))));
     vfloat oceanInterp =clamp(10000.*(height-seaLevel), 0, 1);
     mult = mult - (mult - 1.)*oceanInterp;
-    gl_Position = vec4(transformMatrix * (vec4(mult,mult,mult,1.0)*vec4(vertexPos,1.0)));
+    vec4 posvec =vec4(transformMatrix * (vec4(mult,mult,mult,1.0)*vec4(vertexPos,1.0)));
+    posvec.z = log2(posvec.z/128+1);
     
-//    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 1. - 1.0;
+    gl_Position = posvec;
+    
+//    gl_Position.z = gl_Position.z;//log2(max(1e-6, 1.0 + gl_Position.z)) * 1.1;
 }
 

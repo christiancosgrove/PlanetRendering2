@@ -17,24 +17,33 @@
 layout (location = 0) in vvec3 vertexPos;
 layout (location = 1) in vvec3 normal;
 
-uniform vmat4 transformMatrix;
+layout(packed) uniform planet_info
+{
+    vec4 coldWaterColor;
+    vec4 warmWaterColor;
+    vec4 deepWaterColor;
+    vec4 landColor;
+    vec4 beachColor;
+    vmat4 transformMatrix;
+    float seaLevel;
+    float specularity;
+    float radius;
+};
+
 uniform float time;
 
 out float height;
 out float latitude;
 out vec3 fragNormal;
-uniform float seaLevel=0.01;
 
 const vfloat waveAmplitude = 0.0000001;
 const float waveFrequency = 10.;
 const vfloat waveNumber = 100000.;
-uniform vvec3 origin;
 uniform float aspectRatio;
-
 
 void main()
 {
-    height = float(length(vertexPos - origin))-1.;
+    height = float(length(vertexPos))-radius;
     latitude = float(vertexPos.z);
     fragNormal = vec3(normal);
     vfloat mult =(1. + waveAmplitude * vfloat(cos(waveFrequency*time +float(waveNumber*(vertexPos.x + vertexPos.y + vertexPos.z)))));

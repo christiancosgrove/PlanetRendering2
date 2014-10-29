@@ -50,11 +50,11 @@ Player::Player(glm::vec3 pos, int windowWidth, int windowHeight) : Camera(window
 //        sf::Mouse::setPosition(sf::Vector2<int>(960,540));
 //    }
 //}
-void Player::Update() //SDL implementation -- updated
+void Player::Update(double timeStep) //SDL implementation -- updated
 {
     bool mouseFocus = true;
     //vfloat len =glm::length(Camera.GetPosition())-1.0;
-    vfloat playerSpeed = 0.0001;// * MainGame_SDL::ElapsedMilliseconds;// std::min((std::exp2(len)-1.)/100.0,0.0025);
+    vfloat playerSpeed = 0.0000001/timeStep;// * MainGame_SDL::ElapsedMilliseconds;// std::min((std::exp2(len)-1.)/100.0,0.0025);
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     vfloat shiftSpeedFactor = (state[SDL_SCANCODE_LSHIFT] ? 200.0 : 1.0) * (state[SDL_SCANCODE_LALT] ? 100. : 1.);
     if (state[SDL_SCANCODE_W])

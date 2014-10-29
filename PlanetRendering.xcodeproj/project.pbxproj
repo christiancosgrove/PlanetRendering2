@@ -45,7 +45,7 @@
 		AA68DB6A19D83B5700B073C6 /* GLManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GLManager.cpp; sourceTree = "<group>"; };
 		AA68DB6B19D83B5700B073C6 /* GLManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLManager.h; sourceTree = "<group>"; };
 		AA68DB6D19D8404F00B073C6 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
-		AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = fragmentShader.glsl; sourceTree = "<group>"; };
+		AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = fragmentShader.glsl; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
 		AA68DB7319D8408A00B073C6 /* vertexShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vertexShader.glsl; sourceTree = "<group>"; };
 		AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MainGame_SDL.cpp; sourceTree = "<group>"; };
 		AACC3ED219DCE87500FEDC84 /* MainGame_SDL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainGame_SDL.h; sourceTree = "<group>"; };
@@ -61,6 +61,7 @@
 		CA87706E19F9CC37006F9708 /* SolarSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SolarSystem.cpp; sourceTree = "<group>"; };
 		CA87706F19F9CC37006F9708 /* SolarSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SolarSystem.h; sourceTree = "<group>"; };
 		CAB9F7F219E6E5B90043C313 /* atmosphericFragOld.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmosphericFragOld.glsl; sourceTree = "<group>"; };
+		CAD1F5EC1A0147B400D08943 /* RandomUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RandomUtil.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +123,7 @@
 				CA87706C19F9BED7006F9708 /* PhysicalSystem.h */,
 				CA87706E19F9CC37006F9708 /* SolarSystem.cpp */,
 				CA87706F19F9CC37006F9708 /* SolarSystem.h */,
+				CAD1F5EC1A0147B400D08943 /* RandomUtil.h */,
 			);
 			path = PlanetRendering;
 			sourceTree = "<group>";

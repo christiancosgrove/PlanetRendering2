@@ -13,6 +13,7 @@
 #include <OpenGL/gl3.h>
 #include "glm/gtc/type_ptr.hpp"
 #include <vector>
+#include <unordered_map>
 //This class encapsulates OpenGL shader programs to simplify shader loading
 class GLProgram
 {
@@ -73,8 +74,11 @@ class GLManager
 public:
     std::vector<GLProgram> Programs;
     GLManager(const std::string& fragName, const std::string& vertName);
-    int AddProgram(const std::string& fragmentShaderName, const std::string& vertexShaderName);
+    int AddProgram(const std::string fragmentShaderName, const std::string& vertexShaderName);
+    void AddUniformBuffer(const std::string& name, std::size_t size, std::initializer_list<GLuint> programs);
+    void UpdateBuffer(const std::string& name, const void* value, std::size_t size);
 private:
+    std::unordered_map<std::string, GLuint> uniformBuffers;
     //some OpenGL configuration
     void initGL();
 };

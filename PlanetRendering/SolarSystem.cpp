@@ -7,12 +7,12 @@
 //
 
 #include "SolarSystem.h"
-#include <iostream>
+#include "RandomUtil.h"
 SolarSystem::SolarSystem(Player& _player, GLManager& _glManager) : player(_player), glManager(_glManager),
-    PhysicalSystem(8.,0.01), planets{
-        new Planet(glm::vec3(0,-2,0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager),
-        new Planet(glm::vec3(0,2, 0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager),
-        new Planet(glm::vec3(0,20,0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager)}
+    PhysicalSystem(8.,0.001), planets{
+        new Planet(glm::vec3(0,-2,0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager, 0.5*randFloat()),
+        new Planet(glm::vec3(0,2, 0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager, 0.5*randFloat()),
+        new Planet(glm::vec3(0,20,0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager, 0.5*randFloat())}
 {
     for (auto& p : planets) objects.push_back(p);
     planets[1]->Velocity=glm::dvec3(0,0,-10);

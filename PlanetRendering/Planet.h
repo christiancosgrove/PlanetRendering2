@@ -82,6 +82,20 @@ public:
         SOLID,
         WIRE,
     };
+    
+    struct PlanetInfo
+    {
+        glm::vec4 coldWaterColor;
+        glm::vec4 warmWaterColor;
+        glm::vec4 deepWaterColor;
+        glm::vec4 landColor;
+        glm::vec4 beachColor;
+        vmat4 transformMatrix;
+        float SeaLevel;
+        float specularity;
+        float Radius;
+    } PlanetInfo;
+    
     RenderMode CurrentRenderMode;
     ///Position is defaulted to origin (shaders may not work if pos!=origin right now)
     
@@ -89,13 +103,11 @@ public:
     vfloat Radius;
     const vfloat EARTH_DIAMETER = 12756200.0;
     ///number in [0,1] reflecting how fractal-like the terrain is (larger values lead to more variation at smaller scales)
-    const float TERRAIN_REGULARITY = 0.5;
+    const float TERRAIN_REGULARITY;
     
     ///Number of levels of detail (impacts rendering performance)
     ///Multiplies average # of vertices by 4^N
     const int LOD_MULTIPLIER=6;
-    
-    float SeaLevel;
     
     enum class RotationMode
     {
@@ -110,7 +122,7 @@ public:
     ///Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
     ///Initialization of planet
-    Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager);
+    Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity);
     //De-initialization of planet (destruction of GL objects)
     ~Planet();
     ///Perform subdivisions/combinations accordingly, update vertex buffers
@@ -126,6 +138,7 @@ private:
     //Array of vertices.  This array is generated every time the geometry is updated (perhaps this can be optimized) and is copied directly to the GPU.
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+    std::thread updateThread;
     
     //VBO=Vertex Buffer Object.  This OpenGL API object contains functionality for sending arrays of vertices (with arbitrary attributes) to the GPU.  The attributes of each vertex can be referenced in the vertex shader.
     GLuint VBO;

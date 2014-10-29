@@ -87,10 +87,43 @@ GLuint GLProgram::CompileShader(const std::string& shaderName, GLenum type)
     return shaderId;
 }
 
-int GLManager::AddProgram(const std::string& fragmentShaderName, const std::string& vertexShaderName)
+int GLManager::AddProgram(const std::string fragmentShaderName, const std::string& vertexShaderName)
 {
     int id = Programs.size();
     fprintf(stdout, "Compiling program %i\n", id);
     Programs.push_back(GLProgram(fragmentShaderName, vertexShaderName));
     return id;
+}
+#include <iostream>
+void GLManager::AddUniformBuffer(const std::string& name, std::size_t size, std::initializer_list<GLuint> programs)
+{
+    GLuint ubo;
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+    for (auto programIdx : programs)
+    {
+        GLuint program = Programs[programIdx].programID;
+        glUseProgram(program);
+        GLint index = glGetUniformBlockIndex(program, name.c_str());
+        
+        std::cout << index << std::endl;
+        GLuint bindingPoint = 0;
+        glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, ubo);
+        glUniformBlockBinding(program, index, bindingPoint);
+    }
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    uniformBuffers[name]=ubo;
+}
+
+void GLManager::UpdateBuffer(const std::string& name, const void *value, std::size_t size)
+{
+    if (uniformBuffers.find(name)==uniformBuffers.end()) throw std::out_of_range("Bad access.");
+    GLuint ubo = uniformBuffers[name];
+    
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+//    GLvoid* location = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+//    memcpy(location, value, size);
+//    glUnmapBuffer(GL_UNIFORM_BUFFER);
+    glBufferData(GL_UNIFORM_BUFFER, size, value, GL_DYNAMIC_DRAW);
 }

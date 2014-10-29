@@ -46,6 +46,8 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     
     //Initialize GLManager object - provides OOP abstraction of some OpenGL API features (shader programs)
     GLManager glManager(resourcePath() + "fragmentShader.glsl", resourcePath() + "vertexShader.glsl");
+    std::cout << glGetError() << std::endl;
+    glManager.AddUniformBuffer("planet_info", sizeof(float), {0});
     glManager.AddProgram(resourcePath() + "atmosphericFrag.glsl", resourcePath() + "atmosphericVert.glsl");
     //Set background color and default depth buffer values
     glClearColor(0,0,0,1);
@@ -92,7 +94,7 @@ void MainGame_SDL::Draw(SolarSystem& solarSystem, Player& player, GLManager& glM
 
 void MainGame_SDL::Update(SolarSystem& solarSystem, Player& player)
 {
-    player.Update();
+    player.Update(solarSystem.TimeStep);
     solarSystem.Update();
 }
 
@@ -101,6 +103,7 @@ void MainGame_SDL::HandleEvents(SolarSystem& solarSystem)
     //temporary keyboard control over rendering parameters.
 //    static const float rotationSpeedIncrement = planet.ROTATION_RATE*10;
 //    static const float seaLevelIncrement = planet.SeaLevel*0.025f;
+    static const double timeStepIncrement=0.0001;
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -114,6 +117,14 @@ void MainGame_SDL::HandleEvents(SolarSystem& solarSystem)
             {
                 case SDL_SCANCODE_ESCAPE:
                     gameState = GameState::EXIT;
+                    break;
+                case SDL_SCANCODE_UP:
+                    solarSystem.TimeStep+=timeStepIncrement;
+                    std::cout << "Current time step: " << solarSystem.TimeStep << std::endl;
+                    break;
+                case SDL_SCANCODE_DOWN:
+                    solarSystem.TimeStep-=timeStepIncrement;
+                    std::cout << "Current time step: " << solarSystem.TimeStep << std::endl;
                     break;
 //                case SDL_SCANCODE_TAB:
 //                if (planet.CurrentRenderMode==Planet::RenderMode::SOLID) planet.CurrentRenderMode=Planet::RenderMode::WIRE;

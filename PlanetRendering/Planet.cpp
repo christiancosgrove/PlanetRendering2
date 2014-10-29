@@ -15,18 +15,43 @@
 #include <time.h>
 #include "MainGame_SDL.h"
 #include <thread>
-
+#include "RandomUtil.h"
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager) : Radius(radius), time(0), SEED(seed), CurrentRenderMode(RenderMode::SOLID), player(_player), glManager(_glManager), closed(false), CurrentRotationMode(RotationMode::NO_ROTATION), ROTATION_RATE(0.005f), SeaLevel(0.001f), atmosphere(pos, radius*1.01),
-PhysicsObject(static_cast<glm::dvec3>(pos), mass)//5.972E24)
+Planet::Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity)
+: Radius(radius),
+time(0),
+SEED(seed),
+CurrentRenderMode(RenderMode::SOLID),
+player(_player),
+glManager(_glManager),
+closed(false),
+CurrentRotationMode(RotationMode::NO_ROTATION),
+ROTATION_RATE(0.005f),
+atmosphere(pos, radius*1.01),
+PlanetInfo{
+//    glm::vec4(0.0945,0.2011,0.45,1.),
+//    glm::vec4(0.0867,0.3336,0.51,1.),
+//    glm::vec4(0.0513,0.0768,0.27,1.),
+//    glm::vec4(0.1438, 0.22, 0.0814,1.),
+    //    glm::vec4(0.8, 0.760784, 0.470588,1.),
+    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
+    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
+    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
+    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
+    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
+    vmat4(),
+    0.001f,
+    0.5},
+PhysicsObject(static_cast<glm::dvec3>(pos), mass),
+TERRAIN_REGULARITY(terrainRegularity)//5.972E24)
 {
-    
     generateBuffers();
     buildBaseMesh();
     //create a separate thread in which updates occur
     std::thread t(&Planet::Update, this);
-    t.detach();
+    updateThread.swap(t);
+    
 }
 
 //clear allocated memory and OpenGL objects
@@ -38,6 +63,7 @@ Planet::~Planet()
     {
         it = faces.erase(it);
     }
+    updateThread.join();
 }
 
 
@@ -425,25 +451,26 @@ void Planet::Draw()
 void Planet::setUniforms()
 {
     std::lock_guard<std::mutex> lock(renderMutex);
-    glManager.Programs[1].Use();
-    atmosphere.SetUniforms(glManager, *this);
-    
+//    glManager.Programs[1].Use();
+//    atmosphere.SetUniforms(glManager, *this);
+//    
     float angle = (CurrentRotationMode == RotationMode::ROTATION ? 1 : -1) * time * ROTATION_RATE * M_PI / 180.;
     float len =glm::length(GetPlayerDisplacement())-1;
-    glManager.Programs[1].SetFloat("fCameraHeight", len);
-    glManager.Programs[1].SetFloat("fCameraHeight2", len*len);
-    glManager.Programs[1].SetVector3("v3CameraPos", GetPlayerDisplacement());
-    
-    glManager.Programs[1].SetVector3("v3LightPos", glm::vec3(10*sin(angle), 10*cos(angle),0.0));
-//    glManager.Programs[1].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
-    glManager.Programs[1].SetMatrix4("modelViewMatrix", glm::value_ptr(player.Camera.GetViewMatrix()));
-    glManager.Programs[1].SetMatrix4("projectionMatrix", glm::value_ptr(player.Camera.GetProjectionMatrix()));
+//    glManager.Programs[1].SetFloat("fCameraHeight", len);
+//    glManager.Programs[1].SetFloat("fCameraHeight2", len*len);
+//    glManager.Programs[1].SetVector3("v3CameraPos", GetPlayerDisplacement());
+//    
+//    glManager.Programs[1].SetVector3("v3LightPos", glm::vec3(10*sin(angle), 10*cos(angle),0.0));
+////    glManager.Programs[1].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+//    glManager.Programs[1].SetMatrix4("modelViewMatrix", glm::value_ptr(player.Camera.GetViewMatrix()));
+//    glManager.Programs[1].SetMatrix4("projectionMatrix", glm::value_ptr(player.Camera.GetProjectionMatrix()));
     glManager.Programs[0].Use();
-    glManager.Programs[0].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()*glm::translate(vmat4(), static_cast<vvec3>(Position))));
     glManager.Programs[0].SetFloat("time",time);
-    glManager.Programs[0].SetFloat("seaLevel", SeaLevel);
-    glManager.Programs[0].SetVector3("origin", Position);
-    
+//    SeaLevel=-1;
+//    SeaLevel=0.01;
+    PlanetInfo.Radius = static_cast<float>(Radius);
+    PlanetInfo.transformMatrix = player.Camera.GetTransformMatrix()*glm::translate(vmat4(), static_cast<vvec3>(Position));
+    glManager.UpdateBuffer("planet_info", &PlanetInfo, sizeof(PlanetInfo));
     glManager.Programs[0].SetVector3("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
     player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
 }

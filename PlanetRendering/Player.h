@@ -19,7 +19,7 @@ class Player : public PhysicsObject
 public:
     Player(int windowWidth, int windowHeight);
     Player(glm::vec3 pos, int windowWidth, int windowHeight);
-    void Update();
+    void Update(double timeStep);
     Camera Camera;
     vfloat DistFromSurface;
     std::mutex PlayerMutex;

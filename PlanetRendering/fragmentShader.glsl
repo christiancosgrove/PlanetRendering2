@@ -60,7 +60,7 @@ void main()
     //color = color - (color - vec4(1,1,1,1))*interp;WD
     float lightness = clamp(dot(sunDir, fragNormal),0,1);
     color*=0.05 + 0.95 * (lightness + (1-newSpec) * pow(lightness,20));//vec4(fragNormal,1.0);
-
+//    gl_FragDepth =  log2(gl_FragCoord.z/256+1);
 //    float t = 100000.*(coord.x*coord.y*coord.z*coord.x*coord.y) + 0/100.;
 //    color = vec4(sin(t),sin(t+1.),sin(t+2.),1.0);
 }

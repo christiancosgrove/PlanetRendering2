@@ -45,6 +45,6 @@ private:
 };
 
 vvec3 Camera::GetPosition() {
-    return vmat3(glm::rotate(vmat4(), -PlanetRotation, vvec3(0.0,0.0,1.0)))*position;
+    return position;
 }
 

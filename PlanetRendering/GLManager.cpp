@@ -42,8 +42,8 @@ void GLManager::initGL()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_GREATER);
-//    glDepthRange(-1,1);
+    glDepthFunc(GL_LEQUAL);
+    glDepthRange(-1,1);
 }
 //compile an OpenGL shader
 GLuint GLProgram::CompileShader(const std::string& shaderName, GLenum type)
@@ -60,7 +60,7 @@ GLuint GLProgram::CompileShader(const std::string& shaderName, GLenum type)
         {
             code+="\n"+line;
 #ifdef VERTEX_DOUBLE
-            if (type==GL_VERTEX_SHADER && line.substr(0,8)=="#version")
+            if (type==GL_VERTEX_SHADER || type==GL_FRAGMENT_SHADER && line.substr(0,8)=="#version")
             {
                 code+="\n#define VERTEX_DOUBLE";
             }

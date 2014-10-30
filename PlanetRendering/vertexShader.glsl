@@ -50,7 +50,10 @@ void main()
     vfloat oceanInterp =clamp(10000.*(height-seaLevel), 0, 1);
     mult = mult - (mult - 1.)*oceanInterp;
     vec4 posvec =vec4(transformMatrix * (vec4(mult,mult,mult,1.0)*vec4(vertexPos,1.0)));
-    posvec.z = log2(posvec.z/128+1);
+//    posvec.z = log2(posvec.z/256+1);
+    
+    const float C = 0.01;
+    posvec.z = (2 * log2(C*posvec.w + 1)) / log(C * 200. + 1) * posvec.w;
     
     gl_Position = posvec;
     

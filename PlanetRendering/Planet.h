@@ -53,6 +53,11 @@ struct Face
         return glm::normalize(glm::cross(v1 - v2, v1 - v3));
     }
     
+    inline vvec3 GetCenter()
+    {
+        return (v1 + v2 + v3)/(static_cast<vfloat>(3));
+    }
+    
 };
 ///Representation of a single vertex for communication with GPU
 ///recursiveUpdate function interops between two representations of vertex data (convenient Face & rendering Vertex representations)
@@ -117,10 +122,13 @@ public:
     
     RotationMode CurrentRotationMode; // determines whether the planet rotates relative to the player or relative to the star
     ///Radians/tick rotation rate of sun around planet
-    float ROTATION_RATE;
+    vvec3 AngularVelocity;
+    vfloat Angle;
+    vmat4 RotationMatrix;
+    vmat4 RotationMatrixInv;
     
     ///Seed used for random number generator (RNG needs to be updates)
-    const vfloat SEED;
+    const int SEED;
     ///Initialization of planet
     Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity);
     //De-initialization of planet (destruction of GL objects)
@@ -132,6 +140,7 @@ public:
     ///Terrain generation function in cartesion coordinates (spherically-symmetric)
     inline vfloat terrainNoise(vfloat x, vfloat y, vfloat z);
     inline vfloat terrainNoise(vvec3 v);
+    void UpdatePhysics(double timeStep);
 private:
     //Planet faces.  This array only contains the base icosahedron vertices, and deeper faces are stored on the heap (in a tree structure).  These are not directly transferred to the GPU
     std::vector<Face> faces;
@@ -153,6 +162,7 @@ private:
     PlanetAtmosphere atmosphere;
     
     inline bool inHorizon(vvec3 vertex);
+    inline bool inHorizon(Face& face);
     
     //TODO: implement vertex indexing for faster rendering and less CPU-GPU communcation
     
@@ -188,6 +198,7 @@ private:
     bool subdivided;
     unsigned int prevVerticesSize;
     
+    
     inline vvec3 GetPlayerDisplacement();
     
     inline void GetIndicesVerticesSizes(unsigned int& indsize, unsigned int& vertsize);
@@ -196,7 +207,7 @@ private:
 vvec3 Planet::GetPlayerDisplacement()
 {
 //    std::lock_guard<std::mutex> lock(player.PlayerMutex);
-    return player.Camera.position - static_cast<vvec3>(Position);
+    return vmat3(RotationMatrixInv) * (player.Camera.position- static_cast<vvec3>(Position));//*glm::inverse(vmat3(RotationMatrix));
 }
 
 void Planet::GetIndicesVerticesSizes(unsigned int& indsize, unsigned int& vertsize)
@@ -212,16 +223,39 @@ bool Planet::inHorizon(vvec3 vertex)
     //refer to Wikipedia for formula for horizon distance
     vfloat horizonDist2 = 2*Radius * playerHeight + playerHeight * playerHeight;
     vfloat dist2 = glm::length2(GetPlayerDisplacement() - vertex);
-    return (std::max(horizonDist2,static_cast<vfloat>(0.2)) > dist2);
+    return (std::max(horizonDist2, static_cast<vfloat>(0.05)) > dist2);
 }
+
+bool Planet::inHorizon(Face& face)
+{
+    return inHorizon(face.v1) || inHorizon(face.v2) || inHorizon(face.v3) || inHorizon(face.GetCenter());
+}
+
+//inline int xorshift (int x)
+//{
+//    return x ^ (x << 4);
+//}
+//
+///*Simple combine hash function obtained from
+// http://stackoverflow.com/questions/7222143/unordered-map-hash-function-c
+// */
+//template <class T>
+//inline void hash_combine(std::size_t & seed, const T & v)
+//{
+//    std::hash<T> hasher;
+//    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+//}
 
 //TODO: need new, more efficent RNG
 vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)
 {
     vfloat fract;
     return std::modf(sin((12.9898 * (seedx+SEED) + 78.233 * (seedy+SEED))*437586142312314.5453), &fract);
-    
-    
+//    std::size_t size = 0;
+//    hash_combine(size, seedx);
+//    hash_combine(size, seedy);
+//    srand(size+SEED);
+//    return ((vfloat)rand() / RAND_MAX)*2-1;
 }
 vfloat Planet::randvfloat(vvec2 vec)
 {
@@ -232,6 +266,7 @@ glm::dvec2 Planet::sphericalCoordinates(vvec3 pos)
 {
     return glm::dvec2(std::atan2(pos.y, pos.x), std::atan2(pos.z, sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z)));
 }
+
 
 vfloat Planet::terrainNoise(vfloat x, vfloat y, vfloat z)
 {

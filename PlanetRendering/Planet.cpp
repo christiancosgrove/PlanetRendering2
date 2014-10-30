@@ -27,7 +27,6 @@ player(_player),
 glManager(_glManager),
 closed(false),
 CurrentRotationMode(RotationMode::NO_ROTATION),
-ROTATION_RATE(0.005f),
 atmosphere(pos, radius*1.01),
 PlanetInfo{
 //    glm::vec4(0.0945,0.2011,0.45,1.),
@@ -35,16 +34,19 @@ PlanetInfo{
 //    glm::vec4(0.0513,0.0768,0.27,1.),
 //    glm::vec4(0.1438, 0.22, 0.0814,1.),
     //    glm::vec4(0.8, 0.760784, 0.470588,1.),
-    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
-    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
-    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
-    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
-    glm::vec4(randFloat(),randFloat(),randFloat(),1.),
+    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
+    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
+    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
+    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
+    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
     vmat4(),
     0.001f,
     0.5},
 PhysicsObject(static_cast<glm::dvec3>(pos), mass),
-TERRAIN_REGULARITY(terrainRegularity)//5.972E24)
+TERRAIN_REGULARITY(terrainRegularity),
+Angle(0),
+AngularVelocity(100.,0.0,0)
+//5.972E24)
 {
     generateBuffers();
     buildBaseMesh();
@@ -71,7 +73,7 @@ Planet::~Planet()
 bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
 {
     //perform horizon culling
-    if (iterator->level!=0 && (!inHorizon(iterator->v1) && !inHorizon(iterator->v2) && !inHorizon(iterator->v3))) return false;
+    if (iterator->level!=0 && !inHorizon(*iterator)) return false;
     
     if (closed) return false;
     
@@ -240,7 +242,7 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         if (player.DistFromSurface > dist) player.DistFromSurface = dist;
     }
     //perform horizon culling
-    if (face.level!=0 && (!inHorizon(face.v1) && !inHorizon(face.v2) && !inHorizon(face.v3))) return;
+    if (face.level!=0 && !inHorizon(face)) return;
     if (face.child0!=nullptr && face.child1!=nullptr && face.child2!=nullptr && face.child3!=nullptr)
     {
         vvec3 norm = face.GetNormal();
@@ -448,14 +450,22 @@ void Planet::Draw()
         glBindVertexArray(0);
     }
 }
+
+void Planet::UpdatePhysics(double timeStep)
+{
+    PhysicsObject::UpdatePhysics(timeStep);
+    RotationMatrix=glm::rotate(vmat4(), Angle, glm::normalize(AngularVelocity));
+    RotationMatrixInv=glm::rotate(vmat4(), -Angle, glm::normalize(AngularVelocity));
+    Angle+=static_cast<vfloat>(timeStep) * glm::length(AngularVelocity);
+    player.Camera.PlanetRotation=Angle;
+}
+
 void Planet::setUniforms()
 {
     std::lock_guard<std::mutex> lock(renderMutex);
 //    glManager.Programs[1].Use();
 //    atmosphere.SetUniforms(glManager, *this);
-//    
-    float angle = (CurrentRotationMode == RotationMode::ROTATION ? 1 : -1) * time * ROTATION_RATE * M_PI / 180.;
-    float len =glm::length(GetPlayerDisplacement())-1;
+//
 //    glManager.Programs[1].SetFloat("fCameraHeight", len);
 //    glManager.Programs[1].SetFloat("fCameraHeight2", len*len);
 //    glManager.Programs[1].SetVector3("v3CameraPos", GetPlayerDisplacement());
@@ -469,8 +479,8 @@ void Planet::setUniforms()
 //    SeaLevel=-1;
 //    SeaLevel=0.01;
     PlanetInfo.Radius = static_cast<float>(Radius);
-    PlanetInfo.transformMatrix = player.Camera.GetTransformMatrix()*glm::translate(vmat4(), static_cast<vvec3>(Position));
+    PlanetInfo.transformMatrix = player.Camera.GetTransformMatrix()*glm::translate(vmat4(), static_cast<vvec3>(Position))*RotationMatrix;
     glManager.UpdateBuffer("planet_info", &PlanetInfo, sizeof(PlanetInfo));
-    glManager.Programs[0].SetVector3("sunDir", glm::vec3(sin(angle), cos(angle),0.0));
-    player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
+    glManager.Programs[0].SetVector3("sunDir", glm::vec3(sin(0), cos(0),0.0));
+//    player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
 }

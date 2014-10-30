@@ -23,7 +23,7 @@ public:
     glm::dvec3 NextNetForce;
     double Mass;
     
-    void UpdatePhysics(double timeStep);
+    virtual void UpdatePhysics(double timeStep);
     void ApplyForce(glm::dvec3 force, glm::dvec3 nextNetForce);
     void ApplyForce(glm::dvec3 force);
 private:

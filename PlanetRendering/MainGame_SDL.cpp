@@ -70,7 +70,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     //Main loop
     while (gameState!=GameState::EXIT)
     {
-        HandleEvents(solarSystem);
+        HandleEvents(solarSystem, player);
         Draw(solarSystem,player,glManager);
         //swap doublebuffers (doublebuffering prevents screen tearing)
         SDL_GL_SwapWindow(window);
@@ -84,7 +84,7 @@ void MainGame_SDL::Draw(SolarSystem& solarSystem, Player& player, GLManager& glM
     //get CPU time
     clock_t now = clock();
     //clear color & depth buffers
-    glClearDepth(0);
+    glClearDepth(1.);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     solarSystem.Draw();
     
@@ -98,7 +98,7 @@ void MainGame_SDL::Update(SolarSystem& solarSystem, Player& player)
     solarSystem.Update();
 }
 
-void MainGame_SDL::HandleEvents(SolarSystem& solarSystem)
+void MainGame_SDL::HandleEvents(SolarSystem& solarSystem, Player& player)
 {
     //temporary keyboard control over rendering parameters.
 //    static const float rotationSpeedIncrement = planet.ROTATION_RATE*10;
@@ -120,10 +120,12 @@ void MainGame_SDL::HandleEvents(SolarSystem& solarSystem)
                     break;
                 case SDL_SCANCODE_UP:
                     solarSystem.TimeStep+=timeStepIncrement;
+                    player.Velocity = glm::dvec3();
                     std::cout << "Current time step: " << solarSystem.TimeStep << std::endl;
                     break;
                 case SDL_SCANCODE_DOWN:
                     solarSystem.TimeStep-=timeStepIncrement;
+                    player.Velocity = glm::dvec3();
                     std::cout << "Current time step: " << solarSystem.TimeStep << std::endl;
                     break;
 //                case SDL_SCANCODE_TAB:

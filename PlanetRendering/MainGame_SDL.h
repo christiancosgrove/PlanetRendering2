@@ -30,7 +30,7 @@ public:
     ///All terrain subdivision and player movement here
     void Update(SolarSystem& solarSystem, Player& player);
     ///handles keyboard events -- e.g. close window
-    void HandleEvents(SolarSystem& solarSystem);
+    void HandleEvents(SolarSystem& solarSystem, Player& player);
     static vfloat ElapsedMilliseconds;
 private:
     ///SDL window for program

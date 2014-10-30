@@ -12,10 +12,10 @@
 class SolarSystem : public PhysicalSystem
 {
 public:
-    SolarSystem(Player& _player, GLManager& _glManager);
+    SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight);
     ~SolarSystem();
     void Update();
-    void Draw();
+    void Draw(int windowWidth, int windowHeight);
 private:
     Player& player;
     GLManager& glManager;
@@ -25,5 +25,5 @@ private:
     GLuint screenVBO;
     GLuint screenVAO;
     GLuint texLocation;
-    void generateRenderTexture();
+    void generateRenderTexture(int windowWidth, int windowHeight);
 };

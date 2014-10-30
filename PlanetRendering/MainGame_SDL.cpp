@@ -40,6 +40,10 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     SDL_DisplayMode currentMode;
     SDL_GetCurrentDisplayMode(0, &currentMode);
     window = SDL_CreateWindow("Planet Rendering", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentMode.w, currentMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP);
+    
+    WINDOW_WIDTH = currentMode.w;
+    WINDOW_HEIGHT = currentMode.h;
+    
     SDL_SetRelativeMouseMode(SDL_TRUE);
     if (window==nullptr) throw std::logic_error("Window failed to be initialized");
     SDL_GLContext context = SDL_GL_CreateContext(window);
@@ -66,7 +70,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     //seed random generator (change time(nullptr) to number for a deterministic seed)
     srand(time(nullptr));
     
-    SolarSystem solarSystem(player, glManager);
+    SolarSystem solarSystem(player, glManager, WINDOW_WIDTH, WINDOW_HEIGHT);
     
     std::cout << "GL error: " << glGetError() << std::endl;
     
@@ -90,7 +94,7 @@ void MainGame_SDL::Draw(SolarSystem& solarSystem, Player& player, GLManager& glM
     //clear color & depth buffers
     glClearDepth(1.);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    solarSystem.Draw();
+    solarSystem.Draw(WINDOW_WIDTH, WINDOW_HEIGHT);
     
     //calculate draw time based on elapsed CPU time.  This is used to maintain constant playback rates when framerate changes.
     ElapsedMilliseconds = vfloat(clock() - now) / CLOCKS_PER_SEC;

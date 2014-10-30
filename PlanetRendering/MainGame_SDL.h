@@ -21,8 +21,8 @@ public:
     {
         PLAY, EXIT,
     };
-    static const int WINDOW_WIDTH = 1200;
-    static const int WINDOW_HEIGHT = 900;
+    int WINDOW_WIDTH;
+    int WINDOW_HEIGHT;
     ///Initialization of SDL Window, GL, and planet
     MainGame_SDL();
     ///All rendering takes place in here

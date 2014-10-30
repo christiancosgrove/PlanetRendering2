@@ -44,6 +44,7 @@ void GLManager::initGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glDepthRange(-1,1);
+//    glEnable(GL_MULTISAMPLE);
 }
 //compile an OpenGL shader
 GLuint GLProgram::CompileShader(const std::string& shaderName, GLenum type)

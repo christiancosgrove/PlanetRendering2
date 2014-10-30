@@ -31,6 +31,8 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+//    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+//    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetSwapInterval(1);
     
     
@@ -49,6 +51,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     std::cout << glGetError() << std::endl;
     glManager.AddUniformBuffer("planet_info", sizeof(float), {0});
     glManager.AddProgram(resourcePath() + "atmosphericFrag.glsl", resourcePath() + "atmosphericVert.glsl");
+    glManager.AddProgram(resourcePath() + "postFragmentShader.glsl", resourcePath() + "postVertexShader.glsl");
     //Set background color and default depth buffer values
     glClearColor(0,0,0,1);
     
@@ -72,6 +75,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     {
         HandleEvents(solarSystem, player);
         Draw(solarSystem,player,glManager);
+        
         //swap doublebuffers (doublebuffering prevents screen tearing)
         SDL_GL_SwapWindow(window);
         Update(solarSystem, player);

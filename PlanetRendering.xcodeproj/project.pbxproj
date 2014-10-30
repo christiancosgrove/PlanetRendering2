@@ -19,6 +19,8 @@
 		AA68DB7419D8408A00B073C6 /* vertexShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA68DB7319D8408A00B073C6 /* vertexShader.glsl */; };
 		AACC3ED319DCE87500FEDC84 /* MainGame_SDL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */; };
 		AACC3ED519DCE8B700FEDC84 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACC3ED419DCE8B700FEDC84 /* SDL2.framework */; };
+		AAE3CF771A01D434004D10E5 /* postFragmentShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AAE3CF761A01D434004D10E5 /* postFragmentShader.glsl */; };
+		AAE3CF791A01D441004D10E5 /* postVertexShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AAE3CF781A01D441004D10E5 /* postVertexShader.glsl */; };
 		CA50C52819F960FC00FACF98 /* PhysicsObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CA50C52619F960FC00FACF98 /* PhysicsObject.cpp */; };
 		CA80FD3F19F6B79D009AA760 /* PlanetAtmosphere.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CA80FD3D19F6B79D009AA760 /* PlanetAtmosphere.cpp */; };
 		CA80FD4119F6BB22009AA760 /* atmosphericVert.glsl in Resources */ = {isa = PBXBuildFile; fileRef = CA80FD4019F6BB22009AA760 /* atmosphericVert.glsl */; };
@@ -50,6 +52,8 @@
 		AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MainGame_SDL.cpp; sourceTree = "<group>"; };
 		AACC3ED219DCE87500FEDC84 /* MainGame_SDL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainGame_SDL.h; sourceTree = "<group>"; };
 		AACC3ED419DCE8B700FEDC84 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
+		AAE3CF761A01D434004D10E5 /* postFragmentShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = postFragmentShader.glsl; sourceTree = "<group>"; };
+		AAE3CF781A01D441004D10E5 /* postVertexShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = postVertexShader.glsl; sourceTree = "<group>"; };
 		CA50C52619F960FC00FACF98 /* PhysicsObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PhysicsObject.cpp; sourceTree = "<group>"; };
 		CA50C52719F960FC00FACF98 /* PhysicsObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PhysicsObject.h; sourceTree = "<group>"; };
 		CA80FD3D19F6B79D009AA760 /* PlanetAtmosphere.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlanetAtmosphere.cpp; sourceTree = "<group>"; };
@@ -144,6 +148,8 @@
 				AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */,
 				AA68DB7319D8408A00B073C6 /* vertexShader.glsl */,
 				CAB9F7F219E6E5B90043C313 /* atmosphericFragOld.glsl */,
+				AAE3CF761A01D434004D10E5 /* postFragmentShader.glsl */,
+				AAE3CF781A01D441004D10E5 /* postVertexShader.glsl */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -205,11 +211,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AAE3CF791A01D441004D10E5 /* postVertexShader.glsl in Resources */,
 				CA80FD4319F6BB2E009AA760 /* atmosphericFrag.glsl in Resources */,
 				AA4BABD719DA04B10022C8BC /* glm in Resources */,
 				AA68DB7119D8407700B073C6 /* fragmentShader.glsl in Resources */,
 				AA68DB7419D8408A00B073C6 /* vertexShader.glsl in Resources */,
 				CAB9F7F319E6E5B90043C313 /* atmosphericFragOld.glsl in Resources */,
+				AAE3CF771A01D434004D10E5 /* postFragmentShader.glsl in Resources */,
 				CA80FD4119F6BB22009AA760 /* atmosphericVert.glsl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

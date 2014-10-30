@@ -21,4 +21,9 @@ private:
     GLManager& glManager;
     std::vector<Planet*> planets;
     void addPlanet(Planet* p);
+    GLuint framebuffer;
+    GLuint screenVBO;
+    GLuint screenVAO;
+    GLuint texLocation;
+    void generateRenderTexture();
 };

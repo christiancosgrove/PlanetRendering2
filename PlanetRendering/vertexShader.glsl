@@ -24,6 +24,7 @@ layout(packed) uniform planet_info
     vec4 deepWaterColor;
     vec4 landColor;
     vec4 beachColor;
+    vec4 mountainColor;
     vmat4 transformMatrix;
     float seaLevel;
     float specularity;
@@ -36,9 +37,9 @@ out float height;
 out float latitude;
 out vec3 fragNormal;
 
-const vfloat waveAmplitude = 0.0000001;
+const vfloat waveAmplitude = 0.00001;
 const float waveFrequency = 10.;
-const vfloat waveNumber = 100000.;
+const vfloat waveNumber = 10000.;
 uniform float aspectRatio;
 
 void main()

@@ -39,6 +39,7 @@ PlanetInfo{
     glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
     glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
     glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
+    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
     vmat4(),
     0.001f,
     0.5},
@@ -410,7 +411,7 @@ void Planet::Draw()
     
     atmosphere.Position = static_cast<glm::vec3>(Position);
     setUniforms();
-    time+=MainGame_SDL::ElapsedMilliseconds;
+    time+=MainGame_SDL::ElapsedMilliseconds/10.;
     
     //adjust opengl rendering mode according to CurrentRenderMode -- wireframe or solid
     switch (CurrentRenderMode)

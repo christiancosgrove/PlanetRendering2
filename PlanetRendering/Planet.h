@@ -95,6 +95,7 @@ public:
         glm::vec4 deepWaterColor;
         glm::vec4 landColor;
         glm::vec4 beachColor;
+        glm::vec4 mountainColor;
         vmat4 transformMatrix;
         float SeaLevel;
         float specularity;
@@ -231,31 +232,12 @@ bool Planet::inHorizon(Face& face)
     return inHorizon(face.v1) || inHorizon(face.v2) || inHorizon(face.v3) || inHorizon(face.GetCenter());
 }
 
-//inline int xorshift (int x)
-//{
-//    return x ^ (x << 4);
-//}
-//
-///*Simple combine hash function obtained from
-// http://stackoverflow.com/questions/7222143/unordered-map-hash-function-c
-// */
-//template <class T>
-//inline void hash_combine(std::size_t & seed, const T & v)
-//{
-//    std::hash<T> hasher;
-//    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-//}
 
 //TODO: need new, more efficent RNG
 vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)
 {
     vfloat fract;
     return std::modf(sin((12.9898 * (seedx+SEED) + 78.233 * (seedy+SEED))*437586142312314.5453), &fract);
-//    std::size_t size = 0;
-//    hash_combine(size, seedx);
-//    hash_combine(size, seedy);
-//    srand(size+SEED);
-//    return ((vfloat)rand() / RAND_MAX)*2-1;
 }
 vfloat Planet::randvfloat(vvec2 vec)
 {

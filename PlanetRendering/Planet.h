@@ -113,7 +113,7 @@ public:
     
     ///Number of levels of detail (impacts rendering performance)
     ///Multiplies average # of vertices by 4^N
-    const int LOD_MULTIPLIER=6;
+    const int LOD_MULTIPLIER=7;
     
     enum class RotationMode
     {

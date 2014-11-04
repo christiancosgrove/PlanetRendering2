@@ -12,10 +12,11 @@
 class SolarSystem : public PhysicalSystem
 {
 public:
-    SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight);
+    SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight, const std::string& resourcePath);
     ~SolarSystem();
     void Update();
     void Draw(int windowWidth, int windowHeight);
+    void NextRenderMode();
 private:
     Player& player;
     GLManager& glManager;
@@ -25,5 +26,6 @@ private:
     GLuint screenVBO;
     GLuint screenVAO;
     GLuint texLocation;
+    Planet::RenderMode currentRenderMode;
     void generateRenderTexture(int windowWidth, int windowHeight);
 };

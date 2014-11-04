@@ -37,7 +37,7 @@ layout(packed) uniform planet_info
 //const float seaLevel=0.415;//225;
 
 uniform vec3 sunDir = vec3(1.0,0.0,0.0);
-const float ambientLight=0.05;
+const float ambientLight=0.1;
 
 
 void main()

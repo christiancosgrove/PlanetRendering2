@@ -21,11 +21,13 @@ public:
     glm::dvec3 Velocity;
     glm::dvec3 NetForce;
     glm::dvec3 NextNetForce;
+    double Energy;
     double Mass;
     
     virtual void UpdatePhysics(double timeStep);
     void ApplyForce(glm::dvec3 force, glm::dvec3 nextNetForce);
     void ApplyForce(glm::dvec3 force);
+    
 private:
     
 };

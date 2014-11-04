@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Christian. All rights reserved.
 //
 #include "PhysicsObject.h"
-
+#include "glm/gtx/norm.hpp"
 
 PhysicsObject::PhysicsObject(glm::dvec3 position, double mass) : Position(position), Mass(mass), Velocity(glm::vec3(0.01,0.0,0.0))
 {}
@@ -26,6 +26,8 @@ void PhysicsObject::UpdatePhysics(double timeStep)
     Position = newPos;
     NetForce=glm::dvec3();
     NextNetForce=glm::dvec3();
+    
+    Energy = glm::length2(Velocity) * Mass * 0.5;
 }
 
 void PhysicsObject::ApplyForce(glm::dvec3 force, glm::dvec3 nextForce)

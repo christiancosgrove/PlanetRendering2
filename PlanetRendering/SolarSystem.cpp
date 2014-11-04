@@ -8,8 +8,8 @@
 
 #include "SolarSystem.h"
 #include "RandomUtil.h"
-SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight) : player(_player), glManager(_glManager),
-    PhysicalSystem(8.,0.001), planets{
+SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight, const std::string& resourcePath) : player(_player), glManager(_glManager),
+    PhysicalSystem(8.,0.001, resourcePath), planets{
         new Planet(glm::vec3(0,-2,0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager, 0.5*randFloat()),
         new Planet(glm::vec3(0,2, 0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager, 0.5*randFloat()),
         new Planet(glm::vec3(0,20,0), 1, 100, (vfloat)rand()/RAND_MAX, _player, _glManager, 0.5*randFloat())}
@@ -38,6 +38,7 @@ void SolarSystem::Draw(int windowWidth, int windowHeight)
     for (auto p : planets)
         p->Draw();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glManager.Programs[2].Use();
     glBindVertexArray(screenVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -93,10 +94,19 @@ void SolarSystem::generateRenderTexture(int windowWidth, int windowHeight)
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 0, (void*)0);
-    
     glBindVertexArray(0);
     
     glManager.Programs[2].Use();
     glManager.Programs[2].SetVector2("resolution", glm::vec2(windowWidth,windowHeight));
     glUseProgram(0);
+}
+
+void SolarSystem::NextRenderMode()
+{
+    if (currentRenderMode==Planet::RenderMode::WIRE) currentRenderMode=Planet::RenderMode::SOLID;
+    else currentRenderMode=Planet::RenderMode::WIRE;
+    for (Planet* p : planets)
+    {
+        p->CurrentRenderMode=currentRenderMode;
+    }
 }

@@ -8,8 +8,8 @@
 
 #include "SolarSystem.h"
 #include "RandomUtils.h"
-SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight) : player(_player), glManager(_glManager),
-    PhysicalSystem(8.,0.001), planets{
+SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight, const std::string& resourcePath) : player(_player), glManager(_glManager),
+    PhysicalSystem(8.,0.001, resourcePath), planets{
         new Planet(glm::vec3(0,-2,0), 1, 100, RandomUtils::Uniform<vfloat>(-1e2f,1e2f), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f)),
         new Planet(glm::vec3(0,2, 0), 1, 100, RandomUtils::Uniform<vfloat>(-1e2f,1e2f), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f)),
         new Planet(glm::vec3(0,20,0), 1, 100, RandomUtils::Uniform<vfloat>(-1e2f,1e2f), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f))}
@@ -99,7 +99,7 @@ void SolarSystem::generateRenderTexture(int windowWidth, int windowHeight)
     glManager.Programs[2].Use();
     glManager.Programs[2].SetVector2("resolution", glm::vec2(windowWidth,windowHeight));
     glUseProgram(0);
-
+}
 void SolarSystem::NextRenderMode()
 {
     if (currentRenderMode==Planet::RenderMode::WIRE) currentRenderMode=Planet::RenderMode::SOLID;
@@ -108,4 +108,4 @@ void SolarSystem::NextRenderMode()
     {
         p->CurrentRenderMode=currentRenderMode;
     }
-}}
+}

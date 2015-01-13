@@ -27,6 +27,7 @@ layout(packed) uniform planet_info
     vec4 deepWaterColor;
     vec4 landColor;
     vec4 beachColor;
+    vec4 mountainColor;
     vmat4 transformMatrix;
     float seaLevel;
     float specularity;
@@ -36,7 +37,7 @@ layout(packed) uniform planet_info
 //const float seaLevel=0.415;//225;
 
 uniform vec3 sunDir = vec3(1.0,0.0,0.0);
-
+const float ambientLight=0.1;
 
 
 void main()
@@ -48,18 +49,20 @@ void main()
     vec4 deepWaterColor = waterColor/2.;
     float newSpec = specularity;
     
-    interp = clamp(100000.*(height-seaLevel), 0, 1);
+    interp = clamp(10000.*(height-seaLevel), 0, 1);
     color = waterColor - (waterColor - beachColor)*interp;
     interp = clamp((seaLevel - height)*100.0, 0, 1);
     color = color - (color - deepWaterColor) * interp;
+    interp = clamp((height-seaLevel)*100., 0, 1);
+    vec4 interpLand = landColor - (landColor-mountainColor)*interp;
     interp = clamp(2000.*(height-seaLevel),0,1);
-    color = color - (color - landColor)*interp;
+    color = color - (color - interpLand)*interp;
     newSpec*=interp;
     interp = clamp(10.*(height-seaLevel),0,1);
     interp*=interp*interp*interp*interp*interp*10000.;
     //color = color - (color - vec4(1,1,1,1))*interp;WD
     float lightness = clamp(dot(sunDir, fragNormal),0,1);
-    color*=0.05 + 0.95 * (lightness + (1-newSpec) * pow(lightness,20));//vec4(fragNormal,1.0);
+    color*=ambientLight + (1-ambientLight) * (lightness + (1-newSpec) * pow(lightness,20));//vec4(fragNormal,1.0);
 //    gl_FragDepth =  log2(gl_FragCoord.z/256+1);
 //    float t = 100000.*(coord.x*coord.y*coord.z*coord.x*coord.y) + 0/100.;
 //    color = vec4(sin(t),sin(t+1.),sin(t+2.),1.0);

@@ -70,7 +70,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     //seed random generator (change time(nullptr) to number for a deterministic seed)
     srand(time(nullptr));
     
-    SolarSystem solarSystem(player, glManager, WINDOW_WIDTH, WINDOW_HEIGHT);
+    SolarSystem solarSystem(player, glManager, WINDOW_WIDTH, WINDOW_HEIGHT, resourcePath());
     
     std::cout << "GL error: " << glGetError() << std::endl;
     
@@ -135,6 +135,9 @@ void MainGame_SDL::HandleEvents(SolarSystem& solarSystem, Player& player)
                     solarSystem.TimeStep-=timeStepIncrement;
                     player.Velocity = glm::dvec3();
                     std::cout << "Current time step: " << solarSystem.TimeStep << std::endl;
+                    break;
+                case SDL_SCANCODE_V:
+                    solarSystem.NextRenderMode();
                     break;
 //                case SDL_SCANCODE_TAB:
 //                if (planet.CurrentRenderMode==Planet::RenderMode::SOLID) planet.CurrentRenderMode=Planet::RenderMode::WIRE;

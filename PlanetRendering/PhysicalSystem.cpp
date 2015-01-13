@@ -8,16 +8,17 @@
 
 #include "PhysicalSystem.h"
 #include "glm/glm.hpp"
-
-PhysicalSystem::PhysicalSystem(double g, double timeStep) : GRAVITATIONAL_CONSTANT(g), TimeStep(timeStep)
+#include <fstream>
+PhysicalSystem::PhysicalSystem(double g, double timeStep, const std::string& resourcePath) : GRAVITATIONAL_CONSTANT(g), TimeStep(timeStep), RESOURCE_PATH(resourcePath)
 {
-    
+    std::ofstream ostream(resourcePath + "energy.csv", std::ios::out);
 }
 #include <iostream>
 void PhysicalSystem::Update()
 {
     //Calculate forces before integration
     //This prevents order of objects from affecting physics.
+    double totalEnergy = 0;
     for (PhysicsObject* object : objects)
     {
         glm::dvec3 force;
@@ -37,10 +38,21 @@ void PhysicalSystem::Update()
             //Apply Newton's Law of Gravitation to net force.
             force -= GRAVITATIONAL_CONSTANT * object->Mass * object2->Mass / (r * r * r) * disp;
             force2 -= GRAVITATIONAL_CONSTANT * object->Mass * object2->Mass / (r2 * r2 * r2) * disp2;
+            object->Energy-=GRAVITATIONAL_CONSTANT * object->Mass *object2->Mass/ r;
         }
         object->ApplyForce(force, force2);
     }
+    time+=TimeStep;
+    if (steps%ENERGY_POLLING_INTERVAL==0) logInCSV(std::to_string(time) + "," + std::to_string(totalEnergy));
     //Perform Verlet integration for each body
     for (int i = 0; i<objects.size();++i)
         objects[i]->UpdatePhysics(TimeStep);
+    
+    steps++;
+}
+
+void PhysicalSystem::logInCSV(const std::string& output)
+{
+    std::ofstream ostream(RESOURCE_PATH + "energy.csv", std::ios::out | std::ios::app);
+    ostream << output << std::endl;
 }

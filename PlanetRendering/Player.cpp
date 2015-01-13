@@ -78,6 +78,8 @@ void Player::Update(double timeStep) //SDL implementation -- updated
         Velocity/=1.1;
 //        Velocity+=(static_cast<glm::dvec3>(vvec3(vvec4(0.0, 1.0, 0.0, 1.0) * glm::eulerAngleXZ(Camera.XRotation, Camera.ZRotation)) * playerSpeed * shiftSpeedFactor));
     }
+    if (state[SDL_SCANCODE_R])
+        Velocity=glm::dvec3();
     if (state[SDL_SCANCODE_Q])
     {
         Camera.YRotation+=0.5;

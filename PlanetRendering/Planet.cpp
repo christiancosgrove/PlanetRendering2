@@ -15,7 +15,7 @@
 #include <time.h>
 #include "MainGame_SDL.h"
 #include <thread>
-#include "RandomUtil.h"
+#include "RandomUtils.h"
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
 Planet::Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity)
@@ -34,11 +34,11 @@ PlanetInfo{
 //    glm::vec4(0.0513,0.0768,0.27,1.),
 //    glm::vec4(0.1438, 0.22, 0.0814,1.),
     //    glm::vec4(0.8, 0.760784, 0.470588,1.),
-    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
-    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
-    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
-    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
-    glm::vec4(randFloat()*0.9,randFloat()*0.9,randFloat()*0.9,1.),
+    glm::vec4(RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),1.),
+    glm::vec4(RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),1.),
+    glm::vec4(RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),1.),
+    glm::vec4(RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),1.),
+    glm::vec4(RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),1.),
     vmat4(),
     0.001f,
     0.5},
@@ -74,12 +74,13 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
 {
     //perform horizon culling
     if (iterator->level!=0 && !inHorizon(*iterator)) return false;
+    if (iterator->level>MAX_LOD) return false;
     
     if (closed) return false;
     
     if (func(player, *iterator))
     {
-        if (iterator->child0!=nullptr || iterator->child1!=nullptr || iterator->child2!=nullptr || iterator->child3!=nullptr)
+        if (!iterator->AllChildrenNull())
             return true;
         
         
@@ -98,24 +99,24 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         vfloat l3 = glm::length(v3)/Radius;
         
         //normalized midpoints of face vertices
-        vvec3 m12 = glm::normalize((nv1 + nv2) * (vfloat)0.5f);
-        vvec3 m13 = glm::normalize((nv1 + nv3) * (vfloat)0.5f);
-        vvec3 m23 = glm::normalize((nv2 + nv3) * (vfloat)0.5f);
+        vvec3 m12 = glm::normalize((nv1 + nv2) * static_cast<vfloat>(0.5));
+        vvec3 m13 = glm::normalize((nv1 + nv3) * static_cast<vfloat>(0.5));
+        vvec3 m23 = glm::normalize((nv2 + nv3) * static_cast<vfloat>(0.5));
         
         //height scale of terrain
         //proportional to 2^(-LOD) * nonlinear factor
         //the nonlinear factor is LOD^(TERRAIN_REGULARITY)
         //if the nonlinear factor is 1, the terrain is boring -- this is introduced to make higher-frequency noise more noticeable.
-        vfloat fac =1./(vfloat)(1 << iterator->level)*std::pow((iterator->level+1), TERRAIN_REGULARITY);
+        vfloat fac =static_cast<vfloat>(3.)/static_cast<vfloat>(1 << iterator->level)*std::pow(static_cast<vfloat>(iterator->level+1), TERRAIN_REGULARITY);
         
         
         m12*=1 + terrainNoise(m12) * fac;
         m13*=1 + terrainNoise(m13) * fac;
         m23*=1 + terrainNoise(m23) * fac;
         
-        m12*=(l1 + l2)/2.*Radius;
-        m13*=(l1 + l3)/2.*Radius;
-        m23*=(l2 + l3)/2.*Radius;
+        m12*=(l1 + l2)/static_cast<vfloat>(2.)*Radius;
+        m13*=(l1 + l3)/static_cast<vfloat>(2.)*Radius;
+        m23*=(l2 + l3)/static_cast<vfloat>(2.)*Radius;
         
 //        m12+=Position;
 //        m13+=Position;
@@ -129,10 +130,7 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
             f2 = new Face(m23,m12,v2,iterator->level+1);
             f3 = new Face(m13,v1,m12,iterator->level+1);
         }
-        iterator->child0 = f0;
-        iterator->child1 = f1;
-        iterator->child2 = f2;
-        iterator->child3 = f3;
+        iterator->children = {f0, f1, f2, f3};
         
         return true;
     }
@@ -143,8 +141,8 @@ bool Planet::tryCombine(Face* iterator, const std::function<bool (Player&, const
 {
     if (closed) return false;
     if (iterator==nullptr) return false;
-    if (iterator->child0==nullptr || iterator->child1==nullptr || iterator->child2==nullptr || iterator->child3==nullptr) return false;
-    if ((func(player, *iterator) || func(player, *iterator->child0)|| func(player, *iterator->child1) || func(player, *iterator->child2) || func(player, *iterator->child3)) && iterator->level>0)
+    if (iterator->AnyChildrenNull()) return false;
+    if ((func(player, *iterator) || func(player, *iterator->children[0])|| func(player, *iterator->children[1]) || func(player, *iterator->children[2]) || func(player, *iterator->children[3])) && iterator->level>0)
     {
         combineFace(iterator);
         
@@ -157,30 +155,13 @@ void Planet::combineFace(Face* face)
 {
     if (closed) return;
     if (face->level==0) return;
-    if (face->child0!=nullptr)
-    {
-        combineFace(face->child0);
-        delete face->child0;
-        face->child0 = nullptr;
-    }
-    if (face->child1!=nullptr)
-    {
-        combineFace(face->child1);
-        delete face->child1;
-        face->child1 = nullptr;
-    }
-    if (face->child2!=nullptr)
-    {
-        combineFace(face->child2);
-        delete face->child2;
-        face->child2 = nullptr;
-    }
-    if (face->child3!=nullptr)
-    {
-        combineFace(face->child3);
-        delete face->child3;
-        face->child3 = nullptr;
-    }
+    for (Face*& f : face->children)
+        if (f!=nullptr)
+        {
+            combineFace(f);
+            delete f;
+            f = nullptr;
+        }
 }
 //performed in background, manages terrain generation
 void Planet::Update()
@@ -243,7 +224,7 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
     }
     //perform horizon culling
     if (face.level!=0 && !inHorizon(face)) return;
-    if (face.child0!=nullptr && face.child1!=nullptr && face.child2!=nullptr && face.child3!=nullptr)
+    if (!face.AnyChildrenNull())
     {
         vvec3 norm = face.GetNormal();
         unsigned int ni1,ni2,ni3; //new indices
@@ -259,23 +240,23 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         }
         currIndex = newVertices.size();
         
-        vvec3 norm0 = face.child0->GetNormal();
-        vvec3 norm1 = face.child1->GetNormal();
-        vvec3 norm2 = face.child2->GetNormal();
-        vvec3 norm3 = face.child3->GetNormal();
+        vvec3 norm0 = face.children[0]->GetNormal();
+        vvec3 norm1 = face.children[1]->GetNormal();
+        vvec3 norm2 = face.children[2]->GetNormal();
+        vvec3 norm3 = face.children[3]->GetNormal();
         
         
-        newVertices.push_back(Vertex(face.child0->v1, glm::normalize(norm0 + norm1 + norm3)));
-        newVertices.push_back(Vertex(face.child0->v2, glm::normalize(norm0 + norm1 + norm2)));
-        newVertices.push_back(Vertex(face.child0->v3, glm::normalize(norm0 + norm2 + norm3)));
+        newVertices.push_back(Vertex(face.children[0]->v1, glm::normalize(norm0 + norm1 + norm3)));
+        newVertices.push_back(Vertex(face.children[0]->v2, glm::normalize(norm0 + norm1 + norm2)));
+        newVertices.push_back(Vertex(face.children[0]->v3, glm::normalize(norm0 + norm2 + norm3)));
         ni1 = currIndex + 0;
         ni2 = currIndex + 1;
         ni3 = currIndex + 2;
         
-        recursiveUpdate(*face.child0, ni1, ni2, ni3, player, newVertices, newIndices);
-        recursiveUpdate(*face.child1, index3, ni1, ni3, player,newVertices, newIndices);
-        recursiveUpdate(*face.child2, ni3, ni2, index2, player,newVertices, newIndices);
-        recursiveUpdate(*face.child3, ni1, index1,ni2, player,newVertices, newIndices);
+        recursiveUpdate(*face.children[0], ni1, ni2, ni3, player, newVertices, newIndices);
+        recursiveUpdate(*face.children[1], index3, ni1, ni3, player,newVertices, newIndices);
+        recursiveUpdate(*face.children[2], ni3, ni2, index2, player,newVertices, newIndices);
+        recursiveUpdate(*face.children[3], ni1, index1,ni2, player,newVertices, newIndices);
     }
     else
     {
@@ -297,10 +278,10 @@ bool Planet::recursiveSubdivide(Face* face, Player& player)
                          < (float)(1 << LOD_MULTIPLIER) / ((float)(1 << (f.level))); }
                      , player))
     {
-        recursiveSubdivide(face->child0,player);
-        recursiveSubdivide(face->child1,player);
-        recursiveSubdivide(face->child2,player);
-        recursiveSubdivide(face->child3,player);
+        recursiveSubdivide(face->children[0],player);
+        recursiveSubdivide(face->children[1],player);
+        recursiveSubdivide(face->children[2],player);
+        recursiveSubdivide(face->children[3],player);
         return true;
     }
     return false;
@@ -321,10 +302,10 @@ bool Planet::recursiveCombine(Face* face, Player& player)
                     , player))
     {
         
-        recursiveCombine(face->child0, player) ||
-                recursiveCombine(face->child1, player) ||
-                recursiveCombine(face->child2, player) ||
-        recursiveCombine(face->child3, player);
+        recursiveCombine(face->children[0], player) ||
+                recursiveCombine(face->children[1], player) ||
+                recursiveCombine(face->children[2], player) ||
+                recursiveCombine(face->children[3], player);
         return false;
     }
     else return true;
@@ -455,7 +436,7 @@ void Planet::UpdatePhysics(double timeStep)
 {
     PhysicsObject::UpdatePhysics(timeStep);
     RotationMatrix=glm::rotate(vmat4(), Angle, glm::normalize(AngularVelocity));
-    RotationMatrixInv=glm::rotate(vmat4(), -Angle, glm::normalize(AngularVelocity));
+    RotationMatrixInv=glm::inverse(RotationMatrix);//glm::rotate(vmat4(), -Angle, glm::normalize(AngularVelocity));
     Angle+=static_cast<vfloat>(timeStep) * glm::length(AngularVelocity);
     player.Camera.PlanetRotation=Angle;
 }
@@ -481,6 +462,6 @@ void Planet::setUniforms()
     PlanetInfo.Radius = static_cast<float>(Radius);
     PlanetInfo.transformMatrix = player.Camera.GetTransformMatrix()*glm::translate(vmat4(), static_cast<vvec3>(Position))*RotationMatrix;
     glManager.UpdateBuffer("planet_info", &PlanetInfo, sizeof(PlanetInfo));
-    glManager.Programs[0].SetVector3("sunDir", glm::vec3(sin(0), cos(0),0.0));
+    glManager.Programs[0].SetVector3("sunDir", glm::vec3(RotationMatrixInv * glm::vec4(sin(0), cos(0),0.0,1.0)));
 //    player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
 }

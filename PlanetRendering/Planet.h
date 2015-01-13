@@ -18,6 +18,7 @@
 #include "glm/gtx/norm.hpp"
 #include "PlanetAtmosphere.h"
 #include "PhysicsObject.h"
+#include <array>
 
 ///Representation of a triangular face on CPU side of program,
 ///represents a single node in the face tree
@@ -26,10 +27,10 @@ struct Face
     ///vertices of triangle
     vvec3 v1,v2,v3;
     ///pointers to children in tree structure
-    Face* child0;
-    Face* child1;
-    Face* child2;
-    Face* child3;
+    std::array<Face*, 4> children;
+    inline bool AllChildrenNull() { return children[0]==nullptr && children[1]==nullptr && children[2]==nullptr && children[3]==nullptr; }
+    inline bool AnyChildrenNull() { return children[0]==nullptr || children[1]==nullptr || children[2]==nullptr || children[3]==nullptr; }
+    
     ///depth in tree
     unsigned int level;
     Face() : level(0) {}
@@ -37,16 +38,16 @@ struct Face
     {
     }
     
-    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), child0(nullptr),child1(nullptr), child2(nullptr), child3(nullptr)
+    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), children{nullptr,nullptr,nullptr,nullptr}
     {
         
     }
-    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level),child0(nullptr), child1(nullptr), child2(nullptr), child3(nullptr)
+    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level), children{nullptr,nullptr,nullptr,nullptr}
     {
         
     }
     ///copy constructor
-    Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3), level(face.level), child0(face.child0), child1(face.child1), child2(face.child2),child3(face.child3)  {}
+    Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3), level(face.level), children(face.children)  {}
     ///returns the normal vector of the face (used for lighting calculations)
     inline vvec3 GetNormal()
     {
@@ -113,6 +114,7 @@ public:
     ///Number of levels of detail (impacts rendering performance)
     ///Multiplies average # of vertices by 4^N
     const int LOD_MULTIPLIER=6;
+    const int MAX_LOD = 21;
     
     enum class RotationMode
     {
@@ -128,7 +130,7 @@ public:
     vmat4 RotationMatrixInv;
     
     ///Seed used for random number generator (RNG needs to be updates)
-    const int SEED;
+    const vfloat SEED;
     ///Initialization of planet
     Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity);
     //De-initialization of planet (destruction of GL objects)
@@ -270,7 +272,9 @@ glm::dvec2 Planet::sphericalCoordinates(vvec3 pos)
 
 vfloat Planet::terrainNoise(vfloat x, vfloat y, vfloat z)
 {
-    return 0.01*randvfloat(sphericalCoordinates(vvec3(x,y,z)));//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
+    float h = 0.01*randvfloat(sphericalCoordinates(vvec3(x,y,z)));
+    if (h<PlanetInfo.SeaLevel) h=0.7*(h-PlanetInfo.SeaLevel) + PlanetInfo.SeaLevel;
+    return h;//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
 }
 
 vfloat Planet::terrainNoise(vvec3 v)

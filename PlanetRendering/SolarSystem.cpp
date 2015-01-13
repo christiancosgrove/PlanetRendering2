@@ -99,7 +99,6 @@ void SolarSystem::generateRenderTexture(int windowWidth, int windowHeight)
     glManager.Programs[2].Use();
     glManager.Programs[2].SetVector2("resolution", glm::vec2(windowWidth,windowHeight));
     glUseProgram(0);
-}
 
 void SolarSystem::NextRenderMode()
 {
@@ -109,4 +108,4 @@ void SolarSystem::NextRenderMode()
     {
         p->CurrentRenderMode=currentRenderMode;
     }
-}
+}}

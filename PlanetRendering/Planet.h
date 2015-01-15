@@ -25,7 +25,13 @@
 struct Face
 {
     ///vertices of triangle
-    vvec3 v1,v2,v3;
+    std::array<vvec3, 3> vertices;
+    //For position comparisons
+    std::array<vvec2, 3> polarCoords;
+    
+    
+    std::array<int,3> indices;
+    
     ///pointers to children in tree structure
     std::array<Face*, 4> children;
     inline bool AllChildrenNull() { return children[0]==nullptr && children[1]==nullptr && children[2]==nullptr && children[3]==nullptr; }
@@ -38,25 +44,25 @@ struct Face
     {
     }
     
-    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3) : v1(_v1), v2(_v2), v3(_v3), level(0), children{nullptr,nullptr,nullptr,nullptr}
+    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) : vertices{_v1,_v2,_v3}, polarCoords{p1,p2,p3}, indices{-1,-1,-1},level(0), children{nullptr,nullptr,nullptr,nullptr}
     {
         
     }
-    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3, unsigned int _level) : v1(_v1), v2(_v2), v3(_v3), level(_level), children{nullptr,nullptr,nullptr,nullptr}
+    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, unsigned int _level) : vertices{_v1,_v2,_v3}, polarCoords{p1,p2,p3}, indices{-1,-1,-1}, level(_level), children{nullptr,nullptr,nullptr,nullptr}
     {
         
     }
     ///copy constructor
-    Face(const Face& face) : v1(face.v1), v2(face.v2), v3(face.v3), level(face.level), children(face.children)  {}
+    Face(const Face& face) : vertices(face.vertices), indices(face.indices), level(face.level), children(face.children)  {}
     ///returns the normal vector of the face (used for lighting calculations)
     inline vvec3 GetNormal()
     {
-        return glm::normalize(glm::cross(v1 - v2, v1 - v3));
+        return glm::normalize(glm::cross(vertices[0]-vertices[1], vertices[0]-vertices[2]));
     }
     
     inline vvec3 GetCenter()
     {
-        return (v1 + v2 + v3)/(static_cast<vfloat>(3));
+        return (vertices[0] + vertices[1] + vertices[2])/(static_cast<vfloat>(3));
     }
     
 };
@@ -68,9 +74,14 @@ struct Vertex
 {
     vfloat x,y,z;
     vfloat nx, ny, nz;
+    
     Vertex(vvec3 pos, vvec3 normal) : x(pos.x), y(pos.y), z(pos.z),
     nx(normal.x), ny(normal.y), nz(normal.z)
     {}
+    
+    inline void SetNormal(const vvec3& normal) { nx = normal.x; ny = normal.y; nz = normal.z; }
+    inline void SetPosition(const vvec3& position) { x = position.x; y = position.y; z = position.z; }
+    inline vvec3 GetPosition() { return vvec3(x,y,z); }
 };
 
 //TODO: implement vertex indexing
@@ -145,6 +156,12 @@ public:
     inline vfloat terrainNoise(vvec3 v);
     void UpdatePhysics(double timeStep);
 private:
+    
+    
+    void recursiveGetRootFaces(std::vector<Face*>& rootFaces, Face* f);
+    void getRootFaces(std::vector<Face*>& rootFaces);
+    
+    
     //Planet faces.  This array only contains the base icosahedron vertices, and deeper faces are stored on the heap (in a tree structure).  These are not directly transferred to the GPU
     std::vector<Face> faces;
     //Array of vertices.  This array is generated every time the geometry is updated (perhaps this can be optimized) and is copied directly to the GPU.
@@ -231,7 +248,7 @@ bool Planet::inHorizon(vvec3 vertex)
 
 bool Planet::inHorizon(Face& face)
 {
-    return inHorizon(face.v1) || inHorizon(face.v2) || inHorizon(face.v3) || inHorizon(face.GetCenter());
+    return inHorizon(face.vertices[0]) || inHorizon(face.vertices[1]) || inHorizon(face.vertices[2]) || inHorizon(face.GetCenter());
 }
 
 

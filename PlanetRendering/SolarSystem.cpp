@@ -10,9 +10,9 @@
 #include "RandomUtils.h"
 SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight, const std::string& resourcePath) : player(_player), glManager(_glManager),
     PhysicalSystem(8.,0.001, resourcePath), planets{
-        new Planet(glm::vec3(0,-2,0), 1, 100, RandomUtils::Uniform<vfloat>(-1e2f,1e2f), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f)),
-        new Planet(glm::vec3(0,2, 0), 1, 100, RandomUtils::Uniform<vfloat>(-1e2f,1e2f), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f)),
-        new Planet(glm::vec3(0,20,0), 1, 100, RandomUtils::Uniform<vfloat>(-1e2f,1e2f), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f))}
+        new Planet(glm::vec3(0,-2,0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f)),
+        new Planet(glm::vec3(0,2, 0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f)),
+        new Planet(glm::vec3(0,20,0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f))}
 {
     generateRenderTexture(windowWidth,windowHeight);
     for (auto& p : planets) objects.push_back(p);

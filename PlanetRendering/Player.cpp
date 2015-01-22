@@ -81,13 +81,10 @@ void Player::Update(double timeStep) //SDL implementation -- updated
     if (state[SDL_SCANCODE_R])
         Velocity=glm::dvec3();
     if (state[SDL_SCANCODE_Q])
-    {
-        Camera.YRotation+=0.5;
-    }
+        Camera.YRotation+=0.01;
     if (state[SDL_SCANCODE_E])
-    {
-        Camera.YRotation-=0.5;
-    }
+        Camera.YRotation-=0.01;
+    
     Camera.position = static_cast<vvec3>(Position);
     
     if (mouseFocus)
@@ -100,5 +97,6 @@ void Player::Update(double timeStep) //SDL implementation -- updated
         if (Camera.XRotation<-M_PI) Camera.XRotation=-M_PI;
         Camera.ZRotation+=(float)(x)/200;
     }
+    previousPosition=Position;
     
 }

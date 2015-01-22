@@ -13,7 +13,7 @@ Camera::~Camera() {}
 
 vmat4 Camera::GetViewMatrix()
 {
-    return glm::eulerAngleXZ(XRotation, ZRotation) * glm::translate(-position);
+    return glm::rotate(glm::mat4(), glm::degrees(XRotation), glm::vec3(1,0,0)) * glm::rotate(glm::mat4(), glm::degrees(ZRotation), glm::vec3(0,0,1)) * glm::translate(-position);
 }
 
 void Camera::ResizedWindow(int windowWidth, int windowHeight)
@@ -33,7 +33,8 @@ vmat4 Camera::GetProjectionMatrix()
 
 vmat4 Camera::GetTransformMatrix()
 {
-    return glm::rotate(GetProjectionMatrix() , static_cast<vfloat>(0.0), vvec3(0,0,1))* GetViewMatrix();
+//    return GetViewMatrix();//
+    return GetProjectionMatrix() * GetViewMatrix();
 }
 
 vvec3 Camera::GetViewDirection()

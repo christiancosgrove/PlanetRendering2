@@ -29,6 +29,12 @@
 		CA80FD4319F6BB2E009AA760 /* atmosphericFrag.glsl in Resources */ = {isa = PBXBuildFile; fileRef = CA80FD4219F6BB2E009AA760 /* atmosphericFrag.glsl */; };
 		CA87706D19F9BED7006F9708 /* PhysicalSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CA87706B19F9BED7006F9708 /* PhysicalSystem.cpp */; };
 		CA87707019F9CC37006F9708 /* SolarSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CA87706E19F9CC37006F9708 /* SolarSystem.cpp */; };
+		CAA2A9001A700B48003003EA /* AABB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CAA2A8FE1A700B48003003EA /* AABB.cpp */; };
+		CAADD5481A6D320A00EBC4CD /* picopng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CAADD5461A6D320A00EBC4CD /* picopng.cpp */; };
+		CAADD54B1A6D324400EBC4CD /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CAADD5491A6D324400EBC4CD /* Image.cpp */; };
+		CAADD54E1A6D330900EBC4CD /* TextureManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CAADD54C1A6D330900EBC4CD /* TextureManager.cpp */; };
+		CAADD5581A6D593200EBC4CD /* dirt.png in Resources */ = {isa = PBXBuildFile; fileRef = CAADD5571A6D593200EBC4CD /* dirt.png */; };
+		CAADD55A1A6D59ED00EBC4CD /* normal_dirt.png in Resources */ = {isa = PBXBuildFile; fileRef = CAADD5591A6D59ED00EBC4CD /* normal_dirt.png */; };
 		CAB5BAAB1A095A6E004DB029 /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = AACC3ED419DCE8B700FEDC84 /* SDL2.framework */; };
 		CAB9F7F319E6E5B90043C313 /* atmosphericFragOld.glsl in Resources */ = {isa = PBXBuildFile; fileRef = CAB9F7F219E6E5B90043C313 /* atmosphericFragOld.glsl */; };
 /* End PBXBuildFile section */
@@ -82,6 +88,16 @@
 		CA87706C19F9BED7006F9708 /* PhysicalSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PhysicalSystem.h; sourceTree = "<group>"; };
 		CA87706E19F9CC37006F9708 /* SolarSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SolarSystem.cpp; sourceTree = "<group>"; };
 		CA87706F19F9CC37006F9708 /* SolarSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SolarSystem.h; sourceTree = "<group>"; };
+		CAA2A8FE1A700B48003003EA /* AABB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AABB.cpp; sourceTree = "<group>"; };
+		CAA2A8FF1A700B48003003EA /* AABB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AABB.h; sourceTree = "<group>"; };
+		CAADD5461A6D320A00EBC4CD /* picopng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = picopng.cpp; sourceTree = "<group>"; };
+		CAADD5471A6D320A00EBC4CD /* picopng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = picopng.h; sourceTree = "<group>"; };
+		CAADD5491A6D324400EBC4CD /* Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Image.cpp; sourceTree = "<group>"; };
+		CAADD54A1A6D324400EBC4CD /* Image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Image.h; sourceTree = "<group>"; };
+		CAADD54C1A6D330900EBC4CD /* TextureManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextureManager.cpp; sourceTree = "<group>"; };
+		CAADD54D1A6D330900EBC4CD /* TextureManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextureManager.h; sourceTree = "<group>"; };
+		CAADD5571A6D593200EBC4CD /* dirt.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dirt.png; sourceTree = "<group>"; };
+		CAADD5591A6D59ED00EBC4CD /* normal_dirt.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = normal_dirt.png; sourceTree = "<group>"; };
 		CAB9F7F219E6E5B90043C313 /* atmosphericFragOld.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmosphericFragOld.glsl; sourceTree = "<group>"; };
 		CAD1F5EC1A0147B400D08943 /* RandomUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RandomUtils.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -120,6 +136,10 @@
 		AA68DB5119D8384600B073C6 /* PlanetRendering */ = {
 			isa = PBXGroup;
 			children = (
+				CAADD5491A6D324400EBC4CD /* Image.cpp */,
+				CAADD54A1A6D324400EBC4CD /* Image.h */,
+				CAADD5461A6D320A00EBC4CD /* picopng.cpp */,
+				CAADD5471A6D320A00EBC4CD /* picopng.h */,
 				AA4BABD819DA08450022C8BC /* Camera.cpp */,
 				AA4BABD919DA08450022C8BC /* Camera.h */,
 				AA4BABD619DA04B10022C8BC /* glm */,
@@ -147,6 +167,10 @@
 				CA87706F19F9CC37006F9708 /* SolarSystem.h */,
 				CAD1F5EC1A0147B400D08943 /* RandomUtils.h */,
 				AA852B2B1A64BC200048A87C /* RandomUtils.cpp */,
+				CAADD54C1A6D330900EBC4CD /* TextureManager.cpp */,
+				CAADD54D1A6D330900EBC4CD /* TextureManager.h */,
+				CAA2A8FE1A700B48003003EA /* AABB.cpp */,
+				CAA2A8FF1A700B48003003EA /* AABB.h */,
 			);
 			path = PlanetRendering;
 			sourceTree = "<group>";
@@ -162,6 +186,8 @@
 		AA68DB5919D8384600B073C6 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				CAADD5591A6D59ED00EBC4CD /* normal_dirt.png */,
+				CAADD5571A6D593200EBC4CD /* dirt.png */,
 				CA80FD4219F6BB2E009AA760 /* atmosphericFrag.glsl */,
 				CA80FD4019F6BB22009AA760 /* atmosphericVert.glsl */,
 				AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */,
@@ -238,6 +264,8 @@
 				AA4BABD719DA04B10022C8BC /* glm in Resources */,
 				AA68DB7119D8407700B073C6 /* fragmentShader.glsl in Resources */,
 				AA68DB7419D8408A00B073C6 /* vertexShader.glsl in Resources */,
+				CAADD55A1A6D59ED00EBC4CD /* normal_dirt.png in Resources */,
+				CAADD5581A6D593200EBC4CD /* dirt.png in Resources */,
 				CAB9F7F319E6E5B90043C313 /* atmosphericFragOld.glsl in Resources */,
 				AAE3CF771A01D434004D10E5 /* postFragmentShader.glsl in Resources */,
 				CA80FD4119F6BB22009AA760 /* atmosphericVert.glsl in Resources */,
@@ -275,10 +303,14 @@
 				AA4BABDA19DA08450022C8BC /* Camera.cpp in Sources */,
 				AA623B3C19D8709000C31816 /* Player.cpp in Sources */,
 				AA68DB5819D8384600B073C6 /* main.cpp in Sources */,
+				CAADD5481A6D320A00EBC4CD /* picopng.cpp in Sources */,
 				CA87706D19F9BED7006F9708 /* PhysicalSystem.cpp in Sources */,
 				AA68DB5519D8384600B073C6 /* ResourcePath.mm in Sources */,
+				CAADD54B1A6D324400EBC4CD /* Image.cpp in Sources */,
 				AA852B2C1A64BC200048A87C /* RandomUtils.cpp in Sources */,
 				AA0DFC4319D8598E0042C627 /* Planet.cpp in Sources */,
+				CAADD54E1A6D330900EBC4CD /* TextureManager.cpp in Sources */,
+				CAA2A9001A700B48003003EA /* AABB.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

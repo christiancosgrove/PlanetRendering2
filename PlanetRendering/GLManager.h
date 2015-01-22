@@ -5,10 +5,7 @@
 //  Created by Christian on 9/28/14.
 //  Copyright (c) 2014 Christian. All rights reserved.
 //
-
-#ifndef __PlanetRendering__GLManager__
-#define __PlanetRendering__GLManager__
-
+#pragma once
 #include <string>
 #include <OpenGL/gl3.h>
 #include "glm/gtc/type_ptr.hpp"
@@ -33,6 +30,7 @@ public:
     inline void SetVector3(const std::string& name, const glm::dvec3& value);
     inline void SetVector2(const std::string& name, const glm::ivec2& value);
     inline void SetVector2(const std::string& name, const glm::vec2& value);
+    inline void SetTexture(const std::string& name, GLuint texture); //for sampler2D object
 };
 
 void GLProgram::Use()
@@ -75,6 +73,10 @@ void GLProgram::SetVector2(const std::string &name, const glm::vec2 &value)
 {
     glUniform2fv(glGetUniformLocation(programID, name.c_str()),1,  glm::value_ptr(value));
 }
+void GLProgram::SetTexture(const std::string &name, GLuint texture)
+{
+    glUniform1i(glGetUniformLocation(programID, name.c_str()), texture);
+}
 
 
 //this class further abstracts the GLProgram class, allowing for additional OpenGL configuration
@@ -92,4 +94,3 @@ private:
     void initGL();
 };
 
-#endif /* defined(__PlanetRendering__GLManager__) */

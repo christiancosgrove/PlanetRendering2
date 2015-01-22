@@ -6,16 +6,19 @@
 #define vmat3 dmat3
 #define vvec4 dvec4
 #define vvec3 dvec3
+#define vvec2 dvec2
 #else
 #define vfloat float
 #define vmat4 mat4
 #define vmat3 mat3
 #define vvec4 vec4
 #define vvec3 vec3
+#define vvec2 vec2
 #endif
 
 layout (location = 0) in vvec3 vertexPos;
-layout (location = 1) in vvec3 normal;
+layout (location = 1) in vvec2 textureCoord;
+layout (location = 2) in vvec3 normal;
 
 layout(packed) uniform planet_info
 {
@@ -36,6 +39,7 @@ uniform float time;
 out float height;
 out float latitude;
 out vec3 fragNormal;
+out vec2 uv;
 
 const vfloat waveAmplitude = 0.00001;
 const float waveFrequency = 10.;
@@ -52,7 +56,7 @@ void main()
     mult = mult - (mult - 1.)*oceanInterp;
     vec4 posvec =vec4(transformMatrix * (vec4(mult,mult,mult,1.0)*vec4(vertexPos,1.0)));
 //    posvec.z = log2(posvec.z/256+1);
-    
+    uv = textureCoord;
     const float C = 0.01;
     posvec.z = (2 * log2(C*posvec.w + 1)) / log(C * 200. + 1) * posvec.w;
     

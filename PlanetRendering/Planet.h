@@ -19,6 +19,7 @@
 #include "PlanetAtmosphere.h"
 #include "PhysicsObject.h"
 #include <array>
+#include "RandomUtils.h"
 
 ///Representation of a triangular face on CPU side of program,
 ///represents a single node in the face tree
@@ -27,13 +28,17 @@ struct Face
     ///vertices of triangle
     std::array<vvec3, 3> vertices;
     //For position comparisons
-    std::array<vvec2, 3> polarCoords;
+    //Polar coordinates are stored in double precision for better floating point comparisons (this should be temporary)
+    std::array<glm::dvec2, 3> polarCoords;
     
     
     std::array<int,3> indices;
     
     ///pointers to children in tree structure
     std::array<Face*, 4> children;
+    
+    Face* parent;
+    
     inline bool AllChildrenNull() { return children[0]==nullptr && children[1]==nullptr && children[2]==nullptr && children[3]==nullptr; }
     inline bool AnyChildrenNull() { return children[0]==nullptr || children[1]==nullptr || children[2]==nullptr || children[3]==nullptr; }
     
@@ -44,16 +49,16 @@ struct Face
     {
     }
     
-    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) : vertices{_v1,_v2,_v3}, polarCoords{p1,p2,p3}, indices{-1,-1,-1},level(0), children{nullptr,nullptr,nullptr,nullptr}
+    Face(Face* _parent, vvec3 _v1, vvec3 _v2, vvec3 _v3, glm::dvec2 p1, glm::dvec2 p2, glm::dvec2 p3) : parent(_parent), vertices{_v1,_v2,_v3}, polarCoords{p1,p2,p3}, indices{-1,-1,-1},level(0), children{nullptr,nullptr,nullptr,nullptr}
     {
         
     }
-    Face(vvec3 _v1, vvec3 _v2, vvec3 _v3, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, unsigned int _level) : vertices{_v1,_v2,_v3}, polarCoords{p1,p2,p3}, indices{-1,-1,-1}, level(_level), children{nullptr,nullptr,nullptr,nullptr}
+    Face(Face* _parent, vvec3 _v1, vvec3 _v2, vvec3 _v3, glm::dvec2 p1, glm::dvec2 p2, glm::dvec2 p3, unsigned int _level) : parent(_parent), vertices{_v1,_v2,_v3}, polarCoords{p1,p2,p3}, indices{-1,-1,-1}, level(_level), children{nullptr,nullptr,nullptr,nullptr}
     {
         
     }
     ///copy constructor
-    Face(const Face& face) : vertices(face.vertices), indices(face.indices), level(face.level), children(face.children)  {}
+    Face(const Face& face) : vertices(face.vertices), indices(face.indices), parent(face.parent), level(face.level), children(face.children)  {}
     ///returns the normal vector of the face (used for lighting calculations)
     inline vvec3 GetNormal()
     {
@@ -73,9 +78,10 @@ struct Face
 struct Vertex
 {
     vfloat x,y,z;
+    vfloat tx,ty; // texture coordinates
     vfloat nx, ny, nz;
     
-    Vertex(vvec3 pos, vvec3 normal) : x(pos.x), y(pos.y), z(pos.z),
+    Vertex(vvec3 pos, vvec2 uv, vvec3 normal) : x(pos.x), y(pos.y), z(pos.z), tx(uv.x), ty(uv.y),
     nx(normal.x), ny(normal.y), nz(normal.z)
     {}
     
@@ -126,7 +132,7 @@ public:
     ///Number of levels of detail (impacts rendering performance)
     ///Multiplies average # of vertices by 4^N
     const int LOD_MULTIPLIER=6;
-    const int MAX_LOD = 21;
+    const int MAX_LOD = 25;
     
     enum class RotationMode
     {
@@ -144,7 +150,7 @@ public:
     ///Seed used for random number generator (RNG needs to be updates)
     const vfloat SEED;
     ///Initialization of planet
-    Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity);
+    Planet(int planetIndex, glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity);
     //De-initialization of planet (destruction of GL objects)
     ~Planet();
     ///Perform subdivisions/combinations accordingly, update vertex buffers
@@ -152,14 +158,19 @@ public:
     ///Render planet with Vertex Buffer Object/Vertex Array Object
     void Draw();
     ///Terrain generation function in cartesion coordinates (spherically-symmetric)
-    inline vfloat terrainNoise(vfloat x, vfloat y, vfloat z);
-    inline vfloat terrainNoise(vvec3 v);
+    inline double terrainNoise(double theta, double phi);
+    inline double terrainNoise(glm::dvec2 polarCoords);
     void UpdatePhysics(double timeStep);
 private:
     
+    glm::dvec3 lastPlayerUpdatePosition;
     
-    void recursiveGetRootFaces(std::vector<Face*>& rootFaces, Face* f);
-    void getRootFaces(std::vector<Face*>& rootFaces);
+    inline vfloat getPlayerDisplacementSquared(const Player& player) const { return glm::length2(player.Position - lastPlayerUpdatePosition); }
+    
+    const std::string performanceOutput;
+    
+    void recursiveGetRootFaces(std::vector<Face*>& rootFaces, Face* f, Player& player);
+    void getRootFaces(std::vector<Face*>& rootFaces, Player& player);
     
     
     //Planet faces.  This array only contains the base icosahedron vertices, and deeper faces are stored on the heap (in a tree structure).  These are not directly transferred to the GPU
@@ -192,8 +203,8 @@ private:
     ///Like trySubdivide, this function accepts a face and a function of the face and the player.  Instead of subdividing the face if it meets the function's criteria, it instead COMBINES the face's children.  Also like trySubdivide, this function is heavily reliant on the tree structure of the faces (one may now see why it was chosen over a one-dimensional resizeable array).
     bool tryCombine(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
     ///This function is a pseudorandom number generator of two arguments (in this case the polar and azimuthal angles of the vertex in spherical coordinates)
-    inline vfloat randvfloat(vfloat seedx, vfloat seedy);
-    inline vfloat randvfloat(vvec2 vec);
+    inline double randvfloat(double seedx, double seedy);
+    inline double randvfloat(glm::dvec2 vec);
     ///converts a Cartesian vector to a two-dimesnional polar-azimuthal vector (ignores radius)
     inline glm::dvec2 sphericalCoordinates(vvec3 pos);
     ///construct base icosahedron
@@ -218,6 +229,8 @@ private:
     bool subdivided;
     unsigned int prevVerticesSize;
     
+    
+    inline bool faceInView(const Face& f);
     
     inline vvec3 GetPlayerDisplacement();
     
@@ -253,31 +266,32 @@ bool Planet::inHorizon(Face& face)
 
 
 //TODO: need new, more efficent RNG
-vfloat Planet::randvfloat(vfloat seedx, vfloat seedy)
+double Planet::randvfloat(double seedx, double seedy)
 {
     vfloat fract;
-    return std::modf(sin((12.9898 * (seedx+SEED) + 78.233 * (seedy+SEED))*437586142312314.5453), &fract);
+    return std::modf(std::sin((12.9898 * (seedx+SEED) + 78.233 * (seedy+SEED))*437586142312314.5453), &fract);
 }
-vfloat Planet::randvfloat(vvec2 vec)
+double Planet::randvfloat(glm::dvec2 vec)
 {
     return randvfloat(vec.x, vec.y);
 }
 
 glm::dvec2 Planet::sphericalCoordinates(vvec3 pos)
 {
-    return glm::dvec2(std::atan2(pos.y, pos.x), std::atan2(pos.z, sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z)));
+    return glm::dvec2(std::acos(pos.z / sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z)),std::atan2(pos.y, pos.x));
 }
 
 
-vfloat Planet::terrainNoise(vfloat x, vfloat y, vfloat z)
+double Planet::terrainNoise(double theta, double phi)
 {
-    float h = 0.01*randvfloat(sphericalCoordinates(vvec3(x,y,z)));
-    if (h<PlanetInfo.SeaLevel) h=0.7*(h-PlanetInfo.SeaLevel) + PlanetInfo.SeaLevel;
+//    vfloat h = RandomUtils::Uniform<vfloat>(0,0.01);
+    double h = 0.01*randvfloat(theta,phi);
+    if (h<PlanetInfo.SeaLevel-0.1) h=0.9*(h-PlanetInfo.SeaLevel) + PlanetInfo.SeaLevel;
     return h;//0.9 * sin(sin(((0.1*x + 0.1*y - 0.001*z))*0.1)) + 0.005*sin(sin((x + y + z)*100));
 }
 
-vfloat Planet::terrainNoise(vvec3 v)
+double Planet::terrainNoise(glm::dvec2 polarCoords)
 {
-    return terrainNoise(v.x,v.y,v.z);
+    return terrainNoise(polarCoords.x,polarCoords.y);
 }
 

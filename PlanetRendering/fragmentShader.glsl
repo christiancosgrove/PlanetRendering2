@@ -19,6 +19,10 @@ out vec4 color;
 in float height;
 in float latitude;
 in vec3 fragNormal;
+in vec2 uv;
+uniform sampler2D terrainTexture;
+uniform sampler2D normalTexture;
+
 
 layout(packed) uniform planet_info
 {
@@ -39,6 +43,11 @@ layout(packed) uniform planet_info
 uniform vec3 sunDir = vec3(1.0,0.0,0.0);
 const float ambientLight=0.1;
 
+float rand(vec2 co);
+const int numLevels=1;
+const float textureScaling=10;
+
+#define M_PI 3.1415926535897932384626433832795
 
 void main()
 {
@@ -61,9 +70,24 @@ void main()
     interp = clamp(10.*(height-seaLevel),0,1);
     interp*=interp*interp*interp*interp*interp*10000.;
     //color = color - (color - vec4(1,1,1,1))*interp;WD
-    float lightness = clamp(dot(sunDir, fragNormal),0,1);
+    vec2 newU = ((uv+vec2(1,1)))*0.5*textureScaling;
+    
+    vec3 norm=vec3(0,0,0);
+    // + texture(normalTexture,newU).xyz + texture(normalTexture,newU*0.1).xyz + texture(normalTexture,newU*10).xyz;
+    for (int i = 0; i<numLevels;i++)
+        norm+=texture(normalTexture, newU / (1 << i)).xyz;
+    norm=normalize(norm/numLevels+fragNormal);
+    float lightness = clamp(dot(sunDir, norm),0,1);
+    float mult=0;
+    for (int i = 0; i<numLevels;i++)
+        mult+=texture(terrainTexture, newU / (1 << i)).r;
+    color*=mult/numLevels;
     color*=ambientLight + (1-ambientLight) * (lightness + (1-newSpec) * pow(lightness,20));//vec4(fragNormal,1.0);
 //    gl_FragDepth =  log2(gl_FragCoord.z/256+1);
 //    float t = 100000.*(coord.x*coord.y*coord.z*coord.x*coord.y) + 0/100.;
 //    color = vec4(sin(t),sin(t+1.),sin(t+2.),1.0);
+}
+
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }

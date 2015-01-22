@@ -14,7 +14,7 @@
 #include <iostream>
 #include <algorithm>
 #include "PhysicalSystem.h"
-
+#include "TextureManager.h"
 
 vfloat MainGame_SDL::ElapsedMilliseconds = 0.0f;
 
@@ -31,8 +31,8 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-//    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-//    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetSwapInterval(1);
     
     
@@ -59,6 +59,12 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     //Set background color and default depth buffer values
     glClearColor(0,0,0,1);
     
+    
+    TextureManager textureManager;
+    textureManager.LoadImage(resourcePath()+"dirt.png");
+    textureManager.LoadImage(resourcePath()+"normal_dirt.png");
+    glManager.Programs[0].SetTexture("terrainTexture",0);
+    glManager.Programs[0].SetTexture("normalTexture",1);
     
     //print OpenGL version for reference
     std::cout << "gl_renderer:" << glGetString(GL_RENDERER) << std::endl;
@@ -134,6 +140,10 @@ void MainGame_SDL::HandleEvents(SolarSystem& solarSystem, Player& player)
                 case SDL_SCANCODE_DOWN:
                     solarSystem.TimeStep-=timeStepIncrement;
                     player.Velocity = glm::dvec3();
+                    std::cout << "Current time step: " << solarSystem.TimeStep << std::endl;
+                    break;
+                case SDL_SCANCODE_P:
+                    solarSystem.TimeStep = std::numeric_limits<double>::epsilon();
                     std::cout << "Current time step: " << solarSystem.TimeStep << std::endl;
                     break;
                 case SDL_SCANCODE_V:

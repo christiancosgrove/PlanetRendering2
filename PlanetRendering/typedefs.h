@@ -4,6 +4,9 @@
 //Just include or remove #define VERTEX_DOUBLE. Note: because GPUs are heavily optimized for them, single precision floating point numbers are significantly more efficient.  Double precision numbers are used when a large amount of detail is needed.
 //#define VERTEX_DOUBLE
 #define SMOOTH_FACES
+//#define USE_HEAP
+//#define POSTPROCESSING
+
 
 #ifdef VERTEX_DOUBLE
 

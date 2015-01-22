@@ -42,6 +42,8 @@ void GLManager::initGL()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
+    
+    glEnable(GL_MULTISAMPLE);
     glDepthFunc(GL_LEQUAL);
     glDepthRange(-1,1);
 //    glEnable(GL_MULTISAMPLE);

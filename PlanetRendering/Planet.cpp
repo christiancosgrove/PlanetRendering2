@@ -16,10 +16,15 @@
 #include "MainGame_SDL.h"
 #include <thread>
 #include "RandomUtils.h"
+#include<fstream>
+#include "ResourcePath.hpp"
+#include "AABB.h"
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
-Planet::Planet(glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity)
-: Radius(radius),
+Planet::Planet(int planetIndex, glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity)
+:
+performanceOutput("planet" + std::to_string(planetIndex) + ".csv"),
+Radius(radius),
 time(0),
 SEED(seed),
 CurrentRenderMode(RenderMode::SOLID),
@@ -42,13 +47,16 @@ PlanetInfo{
     glm::vec4(RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),RandomUtils::Uniform<float>(0,0.9f),1.),
     vmat4(),
     0.001f,
-    0.5f},
+    0.005f,
+    1.0f},
 PhysicsObject(static_cast<glm::dvec3>(pos), mass),
 TERRAIN_REGULARITY(terrainRegularity),
 Angle(0),
 AngularVelocity(100.,0.0,0)
 //5.972E24)
 {
+    lastPlayerUpdatePosition=player.Position;
+    std::ofstream stream(resourcePath() + performanceOutput, std::ios::out);
     generateBuffers();
     buildBaseMesh();
     //create a separate thread in which updates occur
@@ -69,13 +77,39 @@ Planet::~Planet()
     updateThread.join();
 }
 
+inline vfloat pointLineDist(vvec2 point1, vvec2 point2, vvec2 point);
+bool Planet::faceInView(const Face& f)
+{
+    
+    std::array<vvec2,3> transformedVertices;
+    for (int i = 0; i<3;i++)
+    {
+        vvec4 v = PlanetInfo.transformMatrix * vvec4(f.vertices[i],1.0);
+        transformedVertices[i]=vvec2(v.x/v.w,v.y/v.w);
+    }
+    
+    return AABB::Intersection(AABB(0,0,2,2),AABB(transformedVertices));
+//    for (vvec2 vert:v)
+//    {
+//        if (pointLineDist(transformedVertices[0], transformedVertices[1],vert)<0 &&
+//            pointLineDist(transformedVertices[1], transformedVertices[2],vert)<0 &&
+//            pointLineDist(transformedVertices[2], transformedVertices[0],vert)<0)
+//            return true;
+//    }
+//    return false;
+}
+//signed distance
+vfloat pointLineDist(vvec2 point1, vvec2 point2, vvec2 point)
+{
+    return (glm::dot(vvec2(point2.y-point1.y,point1.x-point2.x),point)+point2.x*point1.y-point2.y*point1.x)/glm::length(point2-point1);
+}
 
 
 //This function accepts a boolean-valued function of displacement.  If the function is true, the function will divide the given face into four subfaces, each of which will be recursively subjected to the same subdivision scheme.  It is important that the input function terminates at a particular level of detail, or the program will crash.
 bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
 {
     //perform horizon culling
-    if (iterator->level!=0 && !inHorizon(*iterator)) return false;
+//    if (iterator->level!=0 && !inHorizon(*iterator))  return false;
     if (iterator->level>MAX_LOD) return false;
     
     if (closed) return false;
@@ -85,50 +119,49 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         if (!iterator->AllChildrenNull())
             return true;
         
-        
         //face vertices
-        vvec3 v1 = iterator->vertices[0];
-        vvec3 v2 = iterator->vertices[1];
-        vvec3 v3 = iterator->vertices[2];
+        std::array<vvec3, 3> v;
+        for (int i = 0; i<3;i++)
+            v[i]=iterator->vertices[i];
         
-        vvec2 p1 = iterator->polarCoords[0];
-        vvec2 p2 = iterator->polarCoords[1];
-        vvec2 p3 = iterator->polarCoords[2];
+        std::array<vvec2,3> p;
+        for (int i = 0; i<3;i++)
+            p[i]=iterator->polarCoords[i];
         
-        vvec3 nv1 = glm::normalize(v1);
-        vvec3 nv2 = glm::normalize(v2);
-        vvec3 nv3 = glm::normalize(v3);
+        std::array<vvec3, 3> nv;
+        for (int i = 0;i<3;i++)
+            nv[i]=glm::normalize(v[i]);
         
         //lengths of face vertices
-        vfloat l1 = glm::length(v1)/Radius;
-        vfloat l2 = glm::length(v2)/Radius;
-        vfloat l3 = glm::length(v3)/Radius;
+        std::array<vfloat,3> l;
+        for (int i = 0; i<3;i++)
+            l[i]=glm::length(v[i])/Radius;
+        
         
         //normalized midpoints of face vertices
-        vvec3 m12 = glm::normalize((nv1 + nv2) * static_cast<vfloat>(0.5));
-        vvec3 m13 = glm::normalize((nv1 + nv3) * static_cast<vfloat>(0.5));
-        vvec3 m23 = glm::normalize((nv2 + nv3) * static_cast<vfloat>(0.5));
+        vvec3 m12 = glm::normalize((nv[0] + nv[1]) * static_cast<vfloat>(0.5));
+        vvec3 m13 = glm::normalize((nv[0] + nv[2]) * static_cast<vfloat>(0.5));
+        vvec3 m23 = glm::normalize((nv[1] + nv[2]) * static_cast<vfloat>(0.5));
         //normalized midpoints of face vertices (polar coords)
 //        vvec2 p12((v1.x+v2.x) / 2,(v1.y+v2.y) / 2);
 //        vvec2 p13((v1.x+v3.x) / 2,(v1.y+v3.y) / 2);
 //        vvec2 p23((v2.x+v3.x) / 2,(v2.y+v3.y) / 2);
-        vvec2 p12(std::fmod<vfloat>(v1.x+v2.x, M_PI) / 2,std::fmod<vfloat>(v1.y+v2.y, M_2_PI) / 2);
-        vvec2 p13(std::fmod<vfloat>(v1.x+v3.x, M_PI) / 2,std::fmod<vfloat>(v1.y+v3.y, M_2_PI) / 2);
-        vvec2 p23(std::fmod<vfloat>(v2.x+v3.x, M_PI) / 2,std::fmod<vfloat>(v2.y+v3.y, M_2_PI) / 2);
+        glm::dvec2 p12((v[0].x+v[1].x) / 2,(v[0].y+v[1].y) / 2);
+        glm::dvec2 p13((v[0].x+v[2].x) / 2,(v[0].y+v[2].y) / 2);
+        glm::dvec2 p23((v[1].x+v[2].x) / 2,(v[1].y+v[2].y) / 2);
         //height scale of terrain
         //proportional to 2^(-LOD) * nonlinear factor
         //the nonlinear factor is LOD^(TERRAIN_REGULARITY)
         //if the nonlinear factor is 1, the terrain is boring -- this is introduced to make higher-frequency noise more noticeable.
         vfloat fac =static_cast<vfloat>(3.)/static_cast<vfloat>(1 << iterator->level)*std::pow(static_cast<vfloat>(iterator->level+1), TERRAIN_REGULARITY);
         
+        m12*=1 + terrainNoise(p12) * fac;
+        m13*=1 + terrainNoise(p13) * fac;
+        m23*=1 + terrainNoise(p23) * fac;
         
-        m12*=1 + terrainNoise(m12) * fac;
-        m13*=1 + terrainNoise(m13) * fac;
-        m23*=1 + terrainNoise(m23) * fac;
-        
-        m12*=(l1 + l2)/static_cast<vfloat>(2.)*Radius;
-        m13*=(l1 + l3)/static_cast<vfloat>(2.)*Radius;
-        m23*=(l2 + l3)/static_cast<vfloat>(2.)*Radius;
+        m12*=(l[0] + l[1])/static_cast<vfloat>(2.)*Radius;
+        m13*=(l[0] + l[2])/static_cast<vfloat>(2.)*Radius;
+        m23*=(l[1] + l[2])/static_cast<vfloat>(2.)*Radius;
         
 //        m12+=Position;
 //        m13+=Position;
@@ -137,10 +170,10 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
         
         {
             std::lock_guard<std::mutex> lock(renderMutex);
-            f0 = new Face(m13,m12,m23,p13,p12,p23,iterator->level+1);
-            f1 = new Face(v3,m13,m23,p3,p13,p23,iterator->level+1);
-            f2 = new Face(m23,m12,v2,p23,p12,p2,iterator->level+1);
-            f3 = new Face(m13,v1,m12,p13,p1,p12,iterator->level+1);
+            f0 = new Face(iterator,m13,m12,m23,p13,p12,p23,iterator->level+1);
+            f1 = new Face(iterator,v[2],m13,m23,p[2],p13,p23,iterator->level+1);
+            f2 = new Face(iterator,m23,m12,v[1],p23,p12,p[1],iterator->level+1);
+            f3 = new Face(iterator,m13,v[0],m12,p13,p[0],p12,iterator->level+1);
         }
         iterator->children = {f0, f1, f2, f3};
         
@@ -182,6 +215,10 @@ void Planet::Update()
     if (closed) return;
     subdivided = false;
     //iterate through faces and perform necessary generation checks
+    
+    
+    auto t = std::chrono::high_resolution_clock::now();
+    
     for (auto it = faces.begin();it!=faces.end();it++)
     {
         if (recursiveCombine(&(*it), player))
@@ -189,11 +226,20 @@ void Planet::Update()
         if (recursiveSubdivide(&(*it), player))
             subdivided=true;
     }
+//    printf("1 time taken: %lli us\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count());
+    
     //update vertices if changes were made
+    
+    t = std::chrono::high_resolution_clock::now();
     
     unsigned int indsize, vertsize;
     GetIndicesVerticesSizes(indsize, vertsize);
-    if (subdivided || vertsize==0) updateVBO(player);
+    if (subdivided || vertsize==0)
+    {
+        updateVBO(player);
+        lastPlayerUpdatePosition=player.Position;
+    }
+//    printf("2 time taken: %lli us\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count());
 //    std::cout << "Height above earth surface: " << player.DistFromSurface * EARTH_DIAMETER << " m\n";
     //repeat indefinitely (on separate thread)
     
@@ -212,18 +258,22 @@ void Planet::generateBuffers()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
     //set up vertex attributes.  These contain position and normal data for each vertex.
     //Use preprocessor conditionals to differentiate between two possible precisions
 #ifdef VERTEX_DOUBLE
     glVertexAttribLPointer(0, 3, GL_DOUBLE, sizeof(Vertex), (void*)__offsetof(Vertex, x));
-    glVertexAttribLPointer(1, 3, GL_DOUBLE, sizeof(Vertex), (void*)__offsetof(Vertex, nx));
+    glVertexAttribLPointer(1, 2, GL_DOUBLE, sizeof(Vertex), (void*)__offsetof(Vertex, tx));
+    glVertexAttribLPointer(2, 3, GL_DOUBLE, sizeof(Vertex), (void*)__offsetof(Vertex, nx));
 #else
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),(void*)__offsetof(Vertex, x));
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),(void*)__offsetof(Vertex, nx));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),(void*)__offsetof(Vertex, tx));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),(void*)__offsetof(Vertex, nx));
 #endif
     //unbind VAO
     glBindVertexArray(0);
 }
+
 
 //Deprecated.  This function is a higher-performance alternative to the currently implemented sorting scheme in updateVBO().
 //It is faster (sometimes by a factor of 3), but it produces non-ideal normal discontinuities (mainly due to the recursive implementation of the function).
@@ -238,6 +288,7 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
     }
     //perform horizon culling
     if (face.level!=0 && !inHorizon(face)) return;
+    if (!faceInView(face)) return;
     if (!face.AnyChildrenNull())
     {
         vvec3 norm = face.GetNormal();
@@ -245,9 +296,9 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         unsigned int currIndex=newVertices.size();
         if (face.level==0)
         {
-            newVertices.push_back(Vertex(face.vertices[0], norm));
-            newVertices.push_back(Vertex(face.vertices[1], norm));
-            newVertices.push_back(Vertex(face.vertices[2], norm));
+            newVertices.push_back(Vertex(face.vertices[0], (vvec2)face.polarCoords[0], norm));
+            newVertices.push_back(Vertex(face.vertices[1], (vvec2)face.polarCoords[1], norm));
+            newVertices.push_back(Vertex(face.vertices[2], (vvec2)face.polarCoords[2], norm));
             index1 = currIndex + 0;
             index2 = currIndex + 1;
             index3 = currIndex + 2;
@@ -260,9 +311,9 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
         vvec3 norm3 = face.children[3]->GetNormal();
         
         
-        newVertices.push_back(Vertex(face.children[0]->vertices[0], glm::normalize(norm0 + norm1 + norm3)));
-        newVertices.push_back(Vertex(face.children[0]->vertices[1], glm::normalize(norm0 + norm1 + norm2)));
-        newVertices.push_back(Vertex(face.children[0]->vertices[2], glm::normalize(norm0 + norm2 + norm3)));
+        newVertices.push_back(Vertex(face.children[0]->vertices[0], (vvec2)face.children[0]->polarCoords[0], glm::normalize(norm0 + norm1 + norm3)));
+        newVertices.push_back(Vertex(face.children[0]->vertices[1], (vvec2)face.children[0]->polarCoords[1], glm::normalize(norm0 + norm1 + norm2)));
+        newVertices.push_back(Vertex(face.children[0]->vertices[2], (vvec2)face.children[0]->polarCoords[2], glm::normalize(norm0 + norm2 + norm3)));
         ni1 = currIndex + 0;
         ni2 = currIndex + 1;
         ni3 = currIndex + 2;
@@ -298,6 +349,7 @@ bool Planet::recursiveSubdivide(Face* face, Player& player)
     return false;
 }
 
+
 bool Planet::recursiveCombine(Face* face, Player& player)
 {
     if (closed) return false;
@@ -312,35 +364,36 @@ bool Planet::recursiveCombine(Face* face, Player& player)
                     
                     , player))
     {
-        
-        recursiveCombine(face->children[0], player) ||
-                recursiveCombine(face->children[1], player) ||
-                recursiveCombine(face->children[2], player) ||
-                recursiveCombine(face->children[3], player);
+        if (face->parent!=nullptr)
+        {
+            recursiveCombine(face->parent, player);
+        }
         return false;
     }
     else return true;
 }
 
-void Planet::getRootFaces(std::vector<Face*>& rootFaces)
+void Planet::getRootFaces(std::vector<Face*>& rootFaces, Player& player)
 {
     for (Face& f:faces)
-        recursiveGetRootFaces(rootFaces, &f);
+        recursiveGetRootFaces(rootFaces, &f,player);
 }
-
-void Planet::recursiveGetRootFaces(std::vector<Face *> &rootFaces, Face* f)
+void Planet::recursiveGetRootFaces(std::vector<Face *> &rootFaces, Face* f, Player& player)
 {
+    if (f==nullptr) return;
     if (!inHorizon(*f) && f->level!=0) return;
+//    if (!faceInView(*f)) return;
     for (auto& i:f->indices)i=-1;
     if (f->AllChildrenNull())
         rootFaces.push_back(f);
     else
         for (Face* child:f->children)
-            recursiveGetRootFaces(rootFaces, child);
+            recursiveGetRootFaces(rootFaces, child,player);
 }
 
 void Planet::updateVBO(Player& player)
 {
+    const vfloat displacementThreshold=0.1;
     auto t = std::chrono::high_resolution_clock::now();
     unsigned int indsize, vertsize;
     GetIndicesVerticesSizes(indsize, vertsize);
@@ -353,9 +406,7 @@ void Planet::updateVBO(Player& player)
 #ifdef SMOOTH_FACES
     
     std::vector<Face*> rootFaces;
-    getRootFaces(rootFaces);
-    
-    
+    getRootFaces(rootFaces,player);
     std::vector<std::pair<int, int>> verticesSorted(rootFaces.size()*3);
     
     for (int i = 0; i<rootFaces.size();i++)
@@ -366,19 +417,27 @@ void Planet::updateVBO(Player& player)
     }
     
     
-    
-    std::sort(verticesSorted.begin(),verticesSorted.end(),[this, &rootFaces](std::pair<int, int>& p1, std::pair<int, int>& p2)
-              {
-                  glm::vec2 c1=rootFaces[p1.second]->polarCoords[p1.first] + glm::vec2(M_PI,M_2_PI);
-                  glm::vec2 c2=rootFaces[p2.second]->polarCoords[p2.first] + glm::vec2(M_PI,M_2_PI);
-                  
-//                  return c1.x + 2 * Radius * c1.y + 4 * Radius * Radius * c1.z <
-//                  c2.x + 2 * Radius * c2.y + 4 * Radius * Radius * c2.z;
-                  return c1.x + 10 * c1.y < c2.x + 10*c2.y;
-              });
-    
-    
-    for (int j = 0; j<verticesSorted.size();j++)
+    const auto func =[this, &rootFaces](std::pair<int, int>& p1, std::pair<int, int>& p2)
+    {
+        glm::dvec2 c1=rootFaces[p1.second]->polarCoords[p1.first] + glm::dvec2(M_PI,M_2_PI);
+        glm::dvec2 c2=rootFaces[p2.second]->polarCoords[p2.first] + glm::dvec2(M_PI,M_2_PI);
+        
+        //                  return c1.x + 2 * Radius * c1.y + 4 * Radius * Radius * c1.z <
+        //                  c2.x + 2 * Radius * c2.y + 4 * Radius * Radius * c2.z;
+        return c1.x + 2*M_2_PI * c1.y < c2.x + 2*M_2_PI*c2.y;
+    };
+    //    if (getPlayerDisplacementSquared(player)>displacementThreshold) return;
+    t = std::chrono::high_resolution_clock::now();
+
+#ifdef USE_HEAP
+    std::make_heap(verticesSorted.begin(), verticesSorted.end(),func);
+    std::sort_heap(verticesSorted.begin(),verticesSorted.end(),func);
+#else
+    std::sort(verticesSorted.begin(), verticesSorted.end(),func);
+#endif
+    //    if (getPlayerDisplacementSquared(player)>displacementThreshold) return;
+    printf("Time: %lli\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()-t).count());
+        for (int j = 0; j<verticesSorted.size();j++)
     {
         const int maxNeighbors=6;
         
@@ -387,7 +446,7 @@ void Planet::updateVBO(Player& player)
         
         vvec3 normal = rootFaces.at(verticesSorted[j].second)->GetNormal();
         
-        newVertices.push_back(Vertex(rootFaces.at(verticesSorted[j].second)->vertices.at(verticesSorted[j].first),glm::vec3()));
+        newVertices.push_back(Vertex(rootFaces.at(verticesSorted[j].second)->vertices.at(verticesSorted[j].first),(vvec2)rootFaces.at(verticesSorted[j].second)->polarCoords.at(verticesSorted[j].first), glm::vec3()));
         
         rootFaces.at(verticesSorted[j].second)->indices.at(verticesSorted[j].first)=currentSize;
         int neig=0;
@@ -397,10 +456,9 @@ void Planet::updateVBO(Player& player)
             if (neig>maxNeighbors) break;
             if (k==j) continue;
             if (rootFaces.at(verticesSorted[k].second)->indices.at(verticesSorted[k].first)!=-1) continue;
-            vvec2 v1 =rootFaces.at(verticesSorted[k].second)->polarCoords.at(verticesSorted[k].first);
-            vvec2 v2 = rootFaces.at(verticesSorted[j].second)->polarCoords.at(verticesSorted[j].first);
-//            printf("v1: %f, %f, %f; %f, %f, %f\n", v1.x, v1.y, v1.z, v2.x, v2.y, v2.z);
-            if (v1==v2)
+            glm::dvec2 v1 =rootFaces.at(verticesSorted[k].second)->polarCoords.at(verticesSorted[k].first);
+            glm::dvec2 v2 = rootFaces.at(verticesSorted[j].second)->polarCoords.at(verticesSorted[j].first);
+            if (glm::length2(v1-v2)<std::numeric_limits<double>::epsilon())
             {
                 rootFaces.at(verticesSorted[k].second)->indices.at(verticesSorted[k].first) = currentSize;
                 normal+=rootFaces.at(verticesSorted[k].second)->GetNormal();
@@ -408,12 +466,14 @@ void Planet::updateVBO(Player& player)
             }
         }
         //This corrects seams. It leads to other unintended artifacts, so it is currently disabled.
-//        if (neig<maxNeighbors)
+//        if (neig<2)
 //        {
 //            vvec3 disp = rootFaces.at(verticesSorted[j].second)->vertices[verticesSorted[j].first] - rootFaces.at(verticesSorted[j].second)->GetCenter();
-//            newVertices[currentSize].SetPosition(newVertices[currentSize].GetPosition() + static_cast<vfloat>(0.01) * disp);
+//            newVertices[currentSize].SetPosition(newVertices[currentSize].GetPosition() + static_cast<vfloat>(0.1) * disp);
 //        }
-        normal/=(neig+1);
+//        printf("%f %f\n",
+//               rootFaces.at(verticesSorted[j].second)->polarCoords[0].x,rootFaces.at(verticesSorted[j].second)->polarCoords[0].y);
+        normal = glm::normalize(normal);
         newVertices[currentSize].SetNormal(normal);
     }
     
@@ -430,7 +490,11 @@ void Planet::updateVBO(Player& player)
     for (Face& f : faces)
         recursiveUpdate(f, 0, 0, 0, player, newVertices, newIndices);
 #endif
-    std::cout << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count() << "us\n";
+//    if (getPlayerDisplacementSquared(player)>displacementThreshold) return;
+    {
+        std::ofstream stream(resourcePath() + performanceOutput, std::ios::out | std::ios::app);
+        stream << rootFaces.size() << "," << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count() <<"\n";
+    }
     if (!closed)
     {
         std::lock_guard<std::mutex> lock(renderMutex);
@@ -465,15 +529,14 @@ void Planet::buildBaseMesh()
     //lower pentagon
     for (i = 6, phi=0.; i < 11; ++i, phi+=2.*M_PI/5.) {
         icosahedron[i] = vvec3(cosine * std::cos(phi), cosine * std::sin(phi), sine)*Radius;
-        
     }
     
     icosahedron[11] = vvec3(0.0, 0.0, 1.0)*Radius; // top vertex
     
     for (int i = 0; i<12;i++)
     {
-        vfloat len = glm::length(icosahedron[i]);
-        icosahedronPolar[i] = vvec2(std::acos(icosahedron[i].z / len), std::atan(icosahedron[i].y/icosahedron[i].x));
+        double len = glm::length(icosahedron[i]);
+        icosahedronPolar[i] = glm::dvec2(std::acos(icosahedron[i].z / len), std::atan(icosahedron[i].y/icosahedron[i].x));
     }
     
     int faceIndices[] = {
@@ -485,7 +548,7 @@ void Planet::buildBaseMesh()
     //generate 20 icosahedron faces
     for (int i = 0; i<20;i++)
     {
-        faces.push_back(Face(icosahedron[faceIndices[3 * i + 0]],
+        faces.push_back(Face(nullptr, icosahedron[faceIndices[3 * i + 0]],
                              icosahedron[faceIndices[3 * i + 1]],
                              icosahedron[faceIndices[3 * i + 2]],
                              icosahedronPolar[faceIndices[3 * i + 0]],
@@ -519,18 +582,18 @@ void Planet::Draw()
         std::lock_guard<std::mutex> lock(renderMutex);
         glBindBuffer(GL_ARRAY_BUFFER,VBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STREAM_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indsize, &indices[0], GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indsize, &indices[0], GL_DYNAMIC_DRAW);
         prevVerticesSize=vertsize;
     }
 //    glDisable(GL_DEPTH_TEST);
 //    glManager.Programs[1].Use();
 //    atmosphere.Draw();
     
-//
-    if (vertsize >0 || vertsize > 64)
+    if (vertsize >0)
     {
         glManager.Programs[0].Use();
+//        glEnable(GL_DEPTH_TEST);
         std::lock_guard<std::mutex> lock(renderMutex);
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -570,6 +633,8 @@ void Planet::setUniforms()
     PlanetInfo.Radius = static_cast<float>(Radius);
     PlanetInfo.transformMatrix = player.Camera.GetTransformMatrix()*glm::translate(vmat4(), static_cast<vvec3>(Position))*RotationMatrix;
     glManager.UpdateBuffer("planet_info", &PlanetInfo, sizeof(PlanetInfo));
-    glManager.Programs[0].SetVector3("sunDir", glm::vec3(RotationMatrixInv * glm::vec4(sin(0), cos(0),0.0,1.0)));
+//    std::cout << "t: " << time << std::endl;
+    
+    glManager.Programs[0].SetVector3("sunDir", glm::vec3(RotationMatrixInv * glm::vec4(0, 1,0.0,1.0)));
 //    player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
 }

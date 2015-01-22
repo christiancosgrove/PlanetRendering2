@@ -5,9 +5,7 @@
 //  Created by Christian on 9/28/14.
 //  Copyright (c) 2014 Christian. All rights reserved.
 //
-
-#ifndef __PlanetRendering__Player__
-#define __PlanetRendering__Player__
+#pragma once
 #include "glm/glm.hpp"
 #include "Camera.h"
 #include "typedefs.h"
@@ -22,8 +20,10 @@ public:
     void Update(double timeStep);
     Camera Camera;
     vfloat DistFromSurface;
+    inline vfloat GetMovementSpeed();
     std::mutex PlayerMutex;
 private:
+    glm::dvec3 previousPosition;
 };
 
-#endif /* defined(__PlanetRendering__Player__) */
+vfloat Player::GetMovementSpeed() { return glm::length(Position - previousPosition); }

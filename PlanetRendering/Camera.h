@@ -39,6 +39,8 @@ public:
     const vfloat NEAR_PLANE;
     //far clipping plane - all geometry FARTHER to camera from this value is invisible
 	const vfloat FAR_PLANE;
+    
+    inline bool PointInFrustum(vvec4 transformedPoint);
 private:
     //calculated from window width&height
 	vfloat aspectRatio;
@@ -46,5 +48,12 @@ private:
 
 vvec3 Camera::GetPosition() {
     return position;
+}
+
+bool Camera::PointInFrustum(vvec4 transformedPoint)
+{
+    if (transformedPoint.x/transformedPoint.w<-1 || transformedPoint.x/transformedPoint.w>1 ||
+        transformedPoint.y/transformedPoint.w<-1 || transformedPoint.y/transformedPoint.w>1) return false;
+    else return true;
 }
 

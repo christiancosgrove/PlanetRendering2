@@ -10,15 +10,17 @@
 #include "RandomUtils.h"
 SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight, const std::string& resourcePath) : player(_player), glManager(_glManager),
     PhysicalSystem(8.,0.001, resourcePath), planets{
-        new Planet(glm::vec3(0,-2,0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f)),
-        new Planet(glm::vec3(0,2, 0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f)),
-        new Planet(glm::vec3(0,20,0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, RandomUtils::Uniform<float>(0.05f, 0.8f))}
+        new Planet(0,glm::vec3(0,-2,0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, 0.4 + 0*RandomUtils::Uniform<float>(0.05f, 0.8f))}
+//        new Planet(1,glm::vec3(0,2, 0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, 0.4 + 0*RandomUtils::Uniform<float>(0.05f, 0.8f)),
+//        new Planet(2,glm::vec3(0,20,0), 1, 100, RandomUtils::Uniform<vfloat>(-10,10), _player, _glManager, 0.4 + 0*RandomUtils::Uniform<float>(0.05f, 0.8f))}
 {
+#ifdef POSTPROCESSING
     generateRenderTexture(windowWidth,windowHeight);
+#endif
     for (auto& p : planets) objects.push_back(p);
-    planets[1]->Velocity=glm::dvec3(0,0,-10);
     planets[0]->Velocity=glm::dvec3(0,0,10);
-    planets[2]->Velocity=glm::dvec3(10,0,0);
+//    planets[1]->Velocity=glm::dvec3(0,0,-10);
+//    planets[2]->Velocity=glm::dvec3(10,0,0);
     objects.push_back(&player);
 }
 
@@ -31,18 +33,22 @@ void SolarSystem::Update()
 void SolarSystem::Draw(int windowWidth, int windowHeight)
 {
     glManager.Programs[0].Use();
+#ifdef POSTPROCESSING
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0,0,windowWidth,windowHeight);
+#endif
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (auto p : planets)
         p->Draw();
+#ifdef POSTPROCESSING
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glManager.Programs[2].Use();
     glBindVertexArray(screenVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+#endif
 }
 
 SolarSystem::~SolarSystem()

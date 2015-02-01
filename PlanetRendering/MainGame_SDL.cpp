@@ -35,11 +35,22 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetSwapInterval(1);
     
+    const bool fullscreen=false;
+    
+    
+    
     
     //Initialize window and check for errors
     SDL_DisplayMode currentMode;
     SDL_GetCurrentDisplayMode(0, &currentMode);
-    window = SDL_CreateWindow("Planet Rendering", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentMode.w, currentMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP);
+    
+    Uint32 windowFlags=SDL_WINDOW_OPENGL;
+    if (fullscreen) windowFlags|=SDL_WINDOW_FULLSCREEN_DESKTOP;
+    
+    int width = fullscreen ? currentMode.w : 1280;
+    int height = fullscreen ? currentMode.h : 720;
+    
+    window = SDL_CreateWindow("Planet Rendering", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width,height, windowFlags);
     
     WINDOW_WIDTH = currentMode.w;
     WINDOW_HEIGHT = currentMode.h;

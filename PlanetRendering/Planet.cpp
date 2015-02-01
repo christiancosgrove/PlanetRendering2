@@ -106,7 +106,7 @@ vfloat pointLineDist(vvec2 point1, vvec2 point2, vvec2 point)
 
 
 //This function accepts a boolean-valued function of displacement.  If the function is true, the function will divide the given face into four subfaces, each of which will be recursively subjected to the same subdivision scheme.  It is important that the input function terminates at a particular level of detail, or the program will crash.
-bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
+bool Planet::trySubdivide(Face* iterator, Player& player)
 {
     //perform horizon culling
 //    if (iterator->level!=0 && !inHorizon(*iterator))  return false;
@@ -114,7 +114,11 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
     
     if (closed) return false;
     
-    if (func(player, *iterator))
+    if (std::max(std::max(
+                                 glm::length(GetPlayerDisplacement() - iterator->vertices[0]),
+                                 glm::length(GetPlayerDisplacement() - iterator->vertices[1])),
+                        glm::length(GetPlayerDisplacement() - iterator->vertices[2]))
+        < (vfloat)(1 << LOD_MULTIPLIER) / ((vfloat)(1 << (iterator->level))))
     {
         if (!iterator->AllChildrenNull())
             return true;
@@ -146,9 +150,9 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
 //        vvec2 p12((v1.x+v2.x) / 2,(v1.y+v2.y) / 2);
 //        vvec2 p13((v1.x+v3.x) / 2,(v1.y+v3.y) / 2);
 //        vvec2 p23((v2.x+v3.x) / 2,(v2.y+v3.y) / 2);
-        glm::dvec2 p12((v[0].x+v[1].x) / 2,(v[0].y+v[1].y) / 2);
-        glm::dvec2 p13((v[0].x+v[2].x) / 2,(v[0].y+v[2].y) / 2);
-        glm::dvec2 p23((v[1].x+v[2].x) / 2,(v[1].y+v[2].y) / 2);
+        glm::dvec2 p12(std::fmodf((v[0].x+v[1].x) / 2, M_PI),std::fmodf((v[0].y+v[1].y) / 2, M_2_PI));
+        glm::dvec2 p13(std::fmodf((v[0].x+v[2].x) / 2, M_PI),std::fmodf((v[0].y+v[2].y) / 2, M_2_PI));
+        glm::dvec2 p23(std::fmodf((v[1].x+v[2].x) / 2, M_PI),std::fmodf((v[1].y+v[2].y) / 2, M_2_PI));
         //height scale of terrain
         //proportional to 2^(-LOD) * nonlinear factor
         //the nonlinear factor is LOD^(TERRAIN_REGULARITY)
@@ -182,14 +186,23 @@ bool Planet::trySubdivide(Face* iterator, const std::function<bool (Player&, con
     return false;
 }
 //Similarly to trySubdivide, this function combines four faces into a larger face if a boolean-valued function is statisfied.
-bool Planet::tryCombine(Face* iterator, const std::function<bool (Player&, const Face&)>& func, Player& player)
+bool Planet::tryCombine(Face* iterator, Player& player)
 {
     if (closed) return false;
     if (iterator==nullptr) return false;
     if (iterator->AnyChildrenNull()) return false;
-    if ((func(player, *iterator) || func(player, *iterator->children[0])|| func(player, *iterator->children[1]) || func(player, *iterator->children[2]) || func(player, *iterator->children[3])) && iterator->level>0)
+    
+    
+    
+    if (std::min(std::min(
+                                                                        glm::length(GetPlayerDisplacement() - iterator->vertices[0]),
+                                                                        glm::length(GetPlayerDisplacement() - iterator->vertices[1])),
+                                                               glm::length(GetPlayerDisplacement() - iterator->vertices[2]))
+        >= (vfloat)(1 << (LOD_MULTIPLIER)) / ((vfloat)(1 << (iterator->level-1))) && iterator->level>0)
     {
         combineFace(iterator);
+        
+        if (iterator->parent!=nullptr) tryCombine(iterator->parent, player);
         
         return true;
     }
@@ -211,39 +224,48 @@ void Planet::combineFace(Face* face)
 //performed in background, manages terrain generation
 void Planet::Update()
 {
-    
-    if (closed) return;
-    subdivided = false;
-    //iterate through faces and perform necessary generation checks
-    
-    
-    auto t = std::chrono::high_resolution_clock::now();
-    
-    for (auto it = faces.begin();it!=faces.end();it++)
+    while (true)
     {
-        if (recursiveCombine(&(*it), player))
-            subdivided=true;
-        if (recursiveSubdivide(&(*it), player))
-            subdivided=true;
+        if (closed) return;
+        subdivided = false;
+        //iterate through faces and perform necessary generation checks
+        
+        
+//        std::vector<Face*> rootFaces;
+//        getRootFaces(rootFaces, player);
+//        for (Face* f:rootFaces)
+//            tryCombine(f, [this](Player& player, Face f)->bool { return std::min(std::min(
+//                                                                                          glm::length(GetPlayerDisplacement() - f.vertices[0]),
+//                                                                                          glm::length(GetPlayerDisplacement() - f.vertices[1])),
+//                                                                                 glm::length(GetPlayerDisplacement() - f.vertices[2]))
+//                >= (vfloat)(1 << (LOD_MULTIPLIER)) / ((vfloat)(1 << (f.level-1))); }, player);
+        
+        auto t = std::chrono::high_resolution_clock::now();
+        
+        for (auto it = faces.begin();it!=faces.end();it++)
+        {
+            if (recursiveCombine(&(*it), player))
+                subdivided=true;
+            if (recursiveSubdivide(&(*it), player))
+                subdivided=true;
+        }
+    //    printf("1 time taken: %lli us\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count());
+        
+        //update vertices if changes were made
+        
+        t = std::chrono::high_resolution_clock::now();
+        
+        unsigned int indsize, vertsize;
+        GetIndicesVerticesSizes(indsize, vertsize);
+        if (subdivided || vertsize==0)
+        {
+            updateVBO(player);
+            lastPlayerUpdatePosition=player.Position;
+        }
+    //    printf("2 time taken: %lli us\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count());
+    //    std::cout << "Height above earth surface: " << player.DistFromSurface * EARTH_DIAMETER << " m\n";
+        //repeat indefinitely (on separate thread)
     }
-//    printf("1 time taken: %lli us\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count());
-    
-    //update vertices if changes were made
-    
-    t = std::chrono::high_resolution_clock::now();
-    
-    unsigned int indsize, vertsize;
-    GetIndicesVerticesSizes(indsize, vertsize);
-    if (subdivided || vertsize==0)
-    {
-        updateVBO(player);
-        lastPlayerUpdatePosition=player.Position;
-    }
-//    printf("2 time taken: %lli us\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count());
-//    std::cout << "Height above earth surface: " << player.DistFromSurface * EARTH_DIAMETER << " m\n";
-    //repeat indefinitely (on separate thread)
-    
-    Update();
 }
 
 void Planet::generateBuffers()
@@ -334,14 +356,7 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
 
 bool Planet::recursiveSubdivide(Face* face, Player& player)
 {
-    if (trySubdivide(face,
-                     [this](Player& player, Face f)->bool {
-                         return std::max(std::max(
-                                                  glm::length(GetPlayerDisplacement() - f.vertices[0]),
-                                                  glm::length(GetPlayerDisplacement() - f.vertices[1])),
-                                         glm::length(GetPlayerDisplacement() - f.vertices[2]))
-                         < (float)(1 << LOD_MULTIPLIER) / ((float)(1 << (f.level))); }
-                     , player))
+    if (trySubdivide(face, player))
     {
         for (Face* f:face->children) recursiveSubdivide(f, player);
         return true;
@@ -354,20 +369,10 @@ bool Planet::recursiveCombine(Face* face, Player& player)
 {
     if (closed) return false;
     if (face==nullptr) return false;
-    if (!tryCombine(face,
-                    
-                    [this](Player& player, Face f)->bool { return std::min(std::min(
-                                                                                    glm::length(GetPlayerDisplacement() - f.vertices[0]),
-                                                                                    glm::length(GetPlayerDisplacement() - f.vertices[1])),
-                                                                           glm::length(GetPlayerDisplacement() - f.vertices[2] - static_cast<vvec3>(Position)))
-                        >= (double)(1 << (LOD_MULTIPLIER)) / ((double)(1 << (f.level-1))); }
-                    
-                    , player))
+    if (!tryCombine(face, player))
     {
-        if (face->parent!=nullptr)
-        {
-            recursiveCombine(face->parent, player);
-        }
+        for (auto& child:face->children)
+            recursiveCombine(child, player);
         return false;
     }
     else return true;
@@ -424,7 +429,7 @@ void Planet::updateVBO(Player& player)
         
         //                  return c1.x + 2 * Radius * c1.y + 4 * Radius * Radius * c1.z <
         //                  c2.x + 2 * Radius * c2.y + 4 * Radius * Radius * c2.z;
-        return c1.x + 2*M_2_PI * c1.y < c2.x + 2*M_2_PI*c2.y;
+        return c1.x + 20*M_2_PI * c1.y < c2.x + 20*M_2_PI*c2.y; //this multiplier must be sufficiently large to separate the x and y components of the polar coordinates
     };
     //    if (getPlayerDisplacementSquared(player)>displacementThreshold) return;
     t = std::chrono::high_resolution_clock::now();
@@ -436,7 +441,7 @@ void Planet::updateVBO(Player& player)
     std::sort(verticesSorted.begin(), verticesSorted.end(),func);
 #endif
     //    if (getPlayerDisplacementSquared(player)>displacementThreshold) return;
-    printf("Time: %lli\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()-t).count());
+//    printf("Time: %lli\n", std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()-t).count());
         for (int j = 0; j<verticesSorted.size();j++)
     {
         const int maxNeighbors=6;
@@ -446,7 +451,7 @@ void Planet::updateVBO(Player& player)
         
         vvec3 normal = rootFaces.at(verticesSorted[j].second)->GetNormal();
         
-        newVertices.push_back(Vertex(rootFaces.at(verticesSorted[j].second)->vertices.at(verticesSorted[j].first),(vvec2)rootFaces.at(verticesSorted[j].second)->polarCoords.at(verticesSorted[j].first), glm::vec3()));
+        newVertices.push_back(Vertex(rootFaces.at(verticesSorted[j].second)->vertices.at(verticesSorted[j].first),(vvec2)rootFaces.at(verticesSorted[j].second)->polarCoords.at(verticesSorted[j].first), vvec3()));
         
         rootFaces.at(verticesSorted[j].second)->indices.at(verticesSorted[j].first)=currentSize;
         int neig=0;
@@ -456,7 +461,7 @@ void Planet::updateVBO(Player& player)
             if (neig>maxNeighbors) break;
             if (k==j) continue;
             if (rootFaces.at(verticesSorted[k].second)->indices.at(verticesSorted[k].first)!=-1) continue;
-            glm::dvec2 v1 =rootFaces.at(verticesSorted[k].second)->polarCoords.at(verticesSorted[k].first);
+            glm::dvec2 v1 = rootFaces.at(verticesSorted[k].second)->polarCoords.at(verticesSorted[k].first);
             glm::dvec2 v2 = rootFaces.at(verticesSorted[j].second)->polarCoords.at(verticesSorted[j].first);
             if (glm::length2(v1-v2)<std::numeric_limits<double>::epsilon())
             {
@@ -486,15 +491,15 @@ void Planet::updateVBO(Player& player)
             newIndices.push_back(f->indices[2]);
         }
     }
+    {
+        std::ofstream stream(resourcePath() + performanceOutput, std::ios::out | std::ios::app);
+        stream << rootFaces.size() << "," << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count() <<"\n";
+    }
 #else
     for (Face& f : faces)
         recursiveUpdate(f, 0, 0, 0, player, newVertices, newIndices);
 #endif
 //    if (getPlayerDisplacementSquared(player)>displacementThreshold) return;
-    {
-        std::ofstream stream(resourcePath() + performanceOutput, std::ios::out | std::ios::app);
-        stream << rootFaces.size() << "," << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count() <<"\n";
-    }
     if (!closed)
     {
         std::lock_guard<std::mutex> lock(renderMutex);
@@ -635,6 +640,6 @@ void Planet::setUniforms()
     glManager.UpdateBuffer("planet_info", &PlanetInfo, sizeof(PlanetInfo));
 //    std::cout << "t: " << time << std::endl;
     
-    glManager.Programs[0].SetVector3("sunDir", glm::vec3(RotationMatrixInv * glm::vec4(0, 1,0.0,1.0)));
+    glManager.Programs[0].SetVector3("sunDir", glm::vec3(RotationMatrixInv * vvec4(0, 1,0.0,1.0)));
 //    player.Camera.PlanetRotation = CurrentRotationMode==RotationMode::ROTATION ? time*ROTATION_RATE : 0.0;
 }

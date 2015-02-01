@@ -199,9 +199,9 @@ private:
     
     ///This function, which accepts a face and a boolean-valued function of the player's position and that face, checks whether a face is ready to be subdivided (in this case, close enough to the camera) and performs the subdivision.  The function argument of this method makes it more modular; the function used to CHECK whether to subdivide the face is external.
     ///takes a function of the player information and the current face
-    bool trySubdivide(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
+    bool trySubdivide(Face* face, Player& player);
     ///Like trySubdivide, this function accepts a face and a function of the face and the player.  Instead of subdividing the face if it meets the function's criteria, it instead COMBINES the face's children.  Also like trySubdivide, this function is heavily reliant on the tree structure of the faces (one may now see why it was chosen over a one-dimensional resizeable array).
-    bool tryCombine(Face* face, const std::function<bool(Player&, const Face&)>& func, Player& player);
+    bool tryCombine(Face* face, Player& player);
     ///This function is a pseudorandom number generator of two arguments (in this case the polar and azimuthal angles of the vertex in spherical coordinates)
     inline double randvfloat(double seedx, double seedy);
     inline double randvfloat(glm::dvec2 vec);

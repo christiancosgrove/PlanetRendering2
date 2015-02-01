@@ -70,22 +70,23 @@ void main()
     interp = clamp(10.*(height-seaLevel),0,1);
     interp*=interp*interp*interp*interp*interp*10000.;
     //color = color - (color - vec4(1,1,1,1))*interp;WD
-    vec2 newU = ((uv+vec2(1,1)))*0.5*textureScaling;
+    vec2 newU = ((uv+vec2(0.0,0.0)))*0.5*textureScaling;
     
     vec3 norm=vec3(0,0,0);
     // + texture(normalTexture,newU).xyz + texture(normalTexture,newU*0.1).xyz + texture(normalTexture,newU*10).xyz;
     for (int i = 0; i<numLevels;i++)
         norm+=texture(normalTexture, newU / (1 << i)).xyz;
-    norm=normalize(norm/numLevels+fragNormal);
+    norm=normalize(norm/numLevels/3+fragNormal);
     float lightness = clamp(dot(sunDir, norm),0,1);
     float mult=0;
     for (int i = 0; i<numLevels;i++)
         mult+=texture(terrainTexture, newU / (1 << i)).r;
-    color*=mult/numLevels;
-    color*=ambientLight + (1-ambientLight) * (lightness + (1-newSpec) * pow(lightness,20));//vec4(fragNormal,1.0);
+//    color*=mult/numLevels;
+//    color=vec3(newU,0.5);
+    color*=ambientLight + (1-ambientLight) * (lightness + (1-newSpec) * pow(lightness,100));//vec4(fragNormal,1.0);
 //    gl_FragDepth =  log2(gl_FragCoord.z/256+1);
 //    float t = 100000.*(coord.x*coord.y*coord.z*coord.x*coord.y) + 0/100.;
-//    color = vec4(sin(t),sin(t+1.),sin(t+2.),1.0);
+//    color = vec4(sin(newU.x*20),sin(newU.y*100+1.),sin(newU.x*100+2.),1.0);
 }
 
 float rand(vec2 co){

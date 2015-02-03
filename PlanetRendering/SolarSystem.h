@@ -9,6 +9,7 @@
 #include "PhysicalSystem.h"
 #include "Planet.h"
 #include <array>
+#include "ParticleSystem.h"
 class SolarSystem : public PhysicalSystem
 {
 public:
@@ -27,5 +28,9 @@ private:
     GLuint screenVAO;
     GLuint texLocation;
     Planet::RenderMode currentRenderMode;
+    
+    //temp
+    ParticleSystem particleSystem;
+    
     void generateRenderTexture(int windowWidth, int windowHeight);
 };

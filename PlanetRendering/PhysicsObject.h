@@ -5,9 +5,7 @@
 //  Created by Christian Cosgrove on 10/23/14.
 //  Copyright (c) 2014 Christian. All rights reserved.
 //
-
-#ifndef __PlanetRendering__PhysicsObject__
-#define __PlanetRendering__PhysicsObject__
+#pragma once
 #include "glm/glm.hpp"
 #include "typedefs.h"
 
@@ -31,5 +29,3 @@ public:
 private:
     
 };
-
-#endif /* defined(__PlanetRendering__PhysicsObject__) */

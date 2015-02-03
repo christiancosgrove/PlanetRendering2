@@ -8,7 +8,8 @@
 
 #include "SolarSystem.h"
 #include "RandomUtils.h"
-SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight, const std::string& resourcePath) : player(_player), glManager(_glManager),
+#include "glm/gtc/type_ptr.hpp"
+SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth, int windowHeight, const std::string& resourcePath) : player(_player), glManager(_glManager), particleSystem(100),
     PhysicalSystem(8.,0.001, resourcePath), planets{
         new Planet(0,glm::vec3(0,-2,0), 1, 100, RandomUtils::Uniform<vfloat>(-15,25), _player, _glManager, 0.3 + 0*RandomUtils::Uniform<float>(0.05f, 0.8f)),
         new Planet(1,glm::vec3(0,2, 0), 1, 100, RandomUtils::Uniform<vfloat>(-25,25), _player, _glManager, 0.3 + 0*RandomUtils::Uniform<float>(0.05f, 0.8f)),
@@ -17,6 +18,10 @@ SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth
 #ifdef POSTPROCESSING
     generateRenderTexture(windowWidth,windowHeight);
 #endif
+    
+    glManager.AddProgram("fragmentShaderParticles.glsl", "vertexShaderParticles.glsl");
+    
+    
     for (auto& p : planets) objects.push_back(p);
     planets[0]->Velocity=glm::dvec3(0,0,10);
     planets[1]->Velocity=glm::dvec3(0,0,-10);
@@ -27,6 +32,7 @@ SolarSystem::SolarSystem(Player& _player, GLManager& _glManager, int windowWidth
 void SolarSystem::Update()
 {
     PhysicalSystem::Update();
+    particleSystem.Update(TimeStep);
 }
 
 #include <iostream>
@@ -49,6 +55,12 @@ void SolarSystem::Draw(int windowWidth, int windowHeight)
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 #endif
+    
+    
+    glManager.Programs[3].Use();
+    glManager.Programs[3].SetMatrix4("transformMatrix", glm::value_ptr(player.Camera.GetTransformMatrix()));
+    particleSystem.Draw();
+    glManager.Programs[0].Use();
 }
 
 SolarSystem::~SolarSystem()

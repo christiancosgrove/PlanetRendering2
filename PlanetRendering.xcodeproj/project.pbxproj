@@ -17,6 +17,8 @@
 		AA68DB6E19D8404F00B073C6 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA68DB6D19D8404F00B073C6 /* OpenGL.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		AA68DB7119D8407700B073C6 /* fragmentShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */; };
 		AA68DB7419D8408A00B073C6 /* vertexShader.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA68DB7319D8408A00B073C6 /* vertexShader.glsl */; };
+		AA6FE7BB1A807528009B5E8E /* vertexShaderParticles.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA6FE7BA1A807528009B5E8E /* vertexShaderParticles.glsl */; };
+		AA6FE7BD1A80755F009B5E8E /* fragmentShaderParticles.glsl in Resources */ = {isa = PBXBuildFile; fileRef = AA6FE7BC1A80755F009B5E8E /* fragmentShaderParticles.glsl */; };
 		AA852B2C1A64BC200048A87C /* RandomUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA852B2B1A64BC200048A87C /* RandomUtils.cpp */; };
 		AACC3ED319DCE87500FEDC84 /* MainGame_SDL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */; };
 		AACC3ED519DCE8B700FEDC84 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACC3ED419DCE8B700FEDC84 /* SDL2.framework */; };
@@ -72,6 +74,8 @@
 		AA68DB6D19D8404F00B073C6 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		AA68DB6F19D8407700B073C6 /* fragmentShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = fragmentShader.glsl; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
 		AA68DB7319D8408A00B073C6 /* vertexShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vertexShader.glsl; sourceTree = "<group>"; };
+		AA6FE7BA1A807528009B5E8E /* vertexShaderParticles.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vertexShaderParticles.glsl; sourceTree = "<group>"; };
+		AA6FE7BC1A80755F009B5E8E /* fragmentShaderParticles.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = fragmentShaderParticles.glsl; sourceTree = "<group>"; };
 		AA852B2B1A64BC200048A87C /* RandomUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RandomUtils.cpp; sourceTree = "<group>"; };
 		AACC3ED119DCE87500FEDC84 /* MainGame_SDL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MainGame_SDL.cpp; sourceTree = "<group>"; };
 		AACC3ED219DCE87500FEDC84 /* MainGame_SDL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainGame_SDL.h; sourceTree = "<group>"; };
@@ -201,6 +205,8 @@
 				AAE3CF761A01D434004D10E5 /* postFragmentShader.glsl */,
 				AAE3CF781A01D441004D10E5 /* postVertexShader.glsl */,
 				CA29317B1A03E51E00C45002 /* README.txt */,
+				AA6FE7BA1A807528009B5E8E /* vertexShaderParticles.glsl */,
+				AA6FE7BC1A80755F009B5E8E /* fragmentShaderParticles.glsl */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -265,6 +271,8 @@
 			files = (
 				AAE3CF791A01D441004D10E5 /* postVertexShader.glsl in Resources */,
 				CA29317C1A03E51E00C45002 /* README.txt in Resources */,
+				AA6FE7BD1A80755F009B5E8E /* fragmentShaderParticles.glsl in Resources */,
+				AA6FE7BB1A807528009B5E8E /* vertexShaderParticles.glsl in Resources */,
 				CA80FD4319F6BB2E009AA760 /* atmosphericFrag.glsl in Resources */,
 				AA4BABD719DA04B10022C8BC /* glm in Resources */,
 				AA68DB7119D8407700B073C6 /* fragmentShader.glsl in Resources */,

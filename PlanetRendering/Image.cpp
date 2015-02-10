@@ -8,7 +8,7 @@
 
 #include "Image.h"
 
-Image::Image(int index, size_t width, size_t height, std::vector<unsigned char>& _pixels) : WIDTH(width), HEIGHT(height), pixels(_pixels)
+Image::Image(int index, GLsizei width, GLsizei height, std::vector<unsigned char>& _pixels) : WIDTH(width), HEIGHT(height), pixels(_pixels)
 {
     //load texture
     glGenTextures(1, &Texture);

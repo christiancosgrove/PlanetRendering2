@@ -13,7 +13,7 @@ PhysicalSystem::PhysicalSystem(double g, double timeStep, const std::string& res
 {
     std::ofstream ostream(resourcePath + "energy.csv", std::ios::out);
 }
-#include <iostream>
+
 void PhysicalSystem::Update()
 {
     //Calculate forces before integration
@@ -27,6 +27,7 @@ void PhysicalSystem::Update()
         //This can be remedied through space partitioning
         for (PhysicsObject* object2 : objects)
         {
+            if (object2->Mass*object->Mass<=std::numeric_limits<double>::epsilon()) continue;
             //Prevent double-counting
             if (object2==object) continue;
             //Calculate displacement vector

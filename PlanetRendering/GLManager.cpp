@@ -92,12 +92,12 @@ GLuint GLProgram::CompileShader(const std::string& shaderName, GLenum type)
 
 int GLManager::AddProgram(const std::string fragmentShaderName, const std::string& vertexShaderName)
 {
-    int id = Programs.size();
-    fprintf(stdout, "Compiling program %i\n", id);
+    int id = (int)Programs.size();
+    fprintf(stdout, "Compiling program %d\n", id);
     Programs.push_back(GLProgram(fragmentShaderName, vertexShaderName));
     return id;
 }
-#include <iostream>
+
 void GLManager::AddUniformBuffer(const std::string& name, std::size_t size, std::initializer_list<GLuint> programs)
 {
     GLuint ubo;
@@ -110,7 +110,6 @@ void GLManager::AddUniformBuffer(const std::string& name, std::size_t size, std:
         glUseProgram(program);
         GLint index = glGetUniformBlockIndex(program, name.c_str());
         
-        std::cout << index << std::endl;
         GLuint bindingPoint = 0;
         glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, ubo);
         glUniformBlockBinding(program, index, bindingPoint);

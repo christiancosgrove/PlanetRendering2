@@ -29,7 +29,7 @@ public:
     inline void AddParticle(const Particle& particle);
     void Update(double timeStep);
     void Draw();
-    
+    void AppendParticles(std::vector<PhysicsObject*>& physicsObjects);
 private:
     
     void generateVBO();

@@ -19,6 +19,7 @@
 #include<fstream>
 #include "ResourcePath.hpp"
 #include "AABB.h"
+#include "glm/vec3.hpp"
 
 //Constructor for planet.  Initializes VBO (experimental) and builds the base icosahedron mesh.
 Planet::Planet(int planetIndex, glm::vec3 pos, vfloat radius, double mass, vfloat seed, Player& _player, GLManager& _glManager, float terrainRegularity)
@@ -171,15 +172,15 @@ bool Planet::trySubdivide(Face* iterator, Player& player)
 //        m13+=Position;
 //        m23+=Position;
         Face *f0,*f1,*f2,*f3;
+        f0 = new Face(iterator,m13,m12,m23,p13,p12,p23,iterator->level+1);
+        f1 = new Face(iterator,v[2],m13,m23,p[2],p13,p23,iterator->level+1);
+        f2 = new Face(iterator,m23,m12,v[1],p23,p12,p[1],iterator->level+1);
+        f3 = new Face(iterator,m13,v[0],m12,p13,p[0],p12,iterator->level+1);
         
         {
             std::lock_guard<std::mutex> lock(renderMutex);
-            f0 = new Face(iterator,m13,m12,m23,p13,p12,p23,iterator->level+1);
-            f1 = new Face(iterator,v[2],m13,m23,p[2],p13,p23,iterator->level+1);
-            f2 = new Face(iterator,m23,m12,v[1],p23,p12,p[1],iterator->level+1);
-            f3 = new Face(iterator,m13,v[0],m12,p13,p[0],p12,iterator->level+1);
+            iterator->children = {f0, f1, f2, f3};
         }
-        iterator->children = {f0, f1, f2, f3};
         
         return true;
     }
@@ -200,6 +201,7 @@ bool Planet::tryCombine(Face* iterator, Player& player)
                                                                glm::length(GetPlayerDisplacement() - iterator->vertices[2]))
         >= (vfloat)(1 << (LOD_MULTIPLIER)) / ((vfloat)(1 << (iterator->level-1))) && iterator->level>0)
     {
+        
         combineFace(iterator);
         
         if (iterator->parent!=nullptr) tryCombine(iterator->parent, player);
@@ -211,6 +213,8 @@ bool Planet::tryCombine(Face* iterator, Player& player)
 
 void Planet::combineFace(Face* face)
 {
+//    std::lock_guard<std::mutex> lock(renderMutex);
+    //locking here leads to stalling at deep levels; currently disabled.
     if (closed) return;
     if (face->level==0) return;
     for (Face*& f : face->children)
@@ -255,7 +259,7 @@ void Planet::Update()
         
         t = std::chrono::high_resolution_clock::now();
         
-        unsigned int indsize, vertsize;
+        size_t indsize, vertsize;
         GetIndicesVerticesSizes(indsize, vertsize);
         if (subdivided || vertsize==0)
         {
@@ -315,7 +319,7 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
     {
         vvec3 norm = face.GetNormal();
         unsigned int ni1,ni2,ni3; //new indices
-        unsigned int currIndex=newVertices.size();
+        unsigned int currIndex=(unsigned)newVertices.size();
         if (face.level==0)
         {
             newVertices.push_back(Vertex(face.vertices[0], (vvec2)face.polarCoords[0], norm));
@@ -325,7 +329,7 @@ void Planet::recursiveUpdate(Face& face, unsigned int index1, unsigned int index
             index2 = currIndex + 1;
             index3 = currIndex + 2;
         }
-        currIndex = newVertices.size();
+        currIndex = (unsigned)newVertices.size();
         
         vvec3 norm0 = face.children[0]->GetNormal();
         vvec3 norm1 = face.children[1]->GetNormal();
@@ -400,7 +404,7 @@ void Planet::updateVBO(Player& player)
 {
     const vfloat displacementThreshold=0.1;
     auto t = std::chrono::high_resolution_clock::now();
-    unsigned int indsize, vertsize;
+    size_t indsize, vertsize;
     GetIndicesVerticesSizes(indsize, vertsize);
     std::vector<Vertex> newVertices;
     newVertices.reserve(vertsize);
@@ -447,7 +451,7 @@ void Planet::updateVBO(Player& player)
         const int maxNeighbors=6;
         
         if (rootFaces.at(verticesSorted[j].second)->indices.at(verticesSorted[j].first)!=-1) continue;
-        int currentSize = newVertices.size();
+        int currentSize = (int)newVertices.size();
         
         vvec3 normal = rootFaces.at(verticesSorted[j].second)->GetNormal();
         
@@ -466,7 +470,7 @@ void Planet::updateVBO(Player& player)
             if (glm::length2(v1-v2)<std::numeric_limits<double>::epsilon())
             {
                 rootFaces.at(verticesSorted[k].second)->indices.at(verticesSorted[k].first) = currentSize;
-                normal+=rootFaces.at(verticesSorted[k].second)->GetNormal();
+                normal += rootFaces.at(verticesSorted[k].second)->GetNormal();
                 neig++;
             }
         }
@@ -517,11 +521,10 @@ void Planet::buildBaseMesh()
     
     vvec2 icosahedronPolar[12];
     
-    //reference angle for icosahedron vertices in radians -- used to calculate Cartesian coordinates of vertices
-    double theta = 26.56505117707799 * M_PI / 180.0;
     
-    double sine = std::sin(theta);
-    double cosine = std::cos(theta);
+    
+    double sine = std::sin(icotheta);
+    double cosine = std::cos(icotheta);
     
     icosahedron[0] = vvec3(0.0f, 0.0f, -1.0f)*Radius; //bottom vertex
     //upper pentagon
@@ -543,6 +546,8 @@ void Planet::buildBaseMesh()
         double len = glm::length(icosahedron[i]);
         icosahedronPolar[i] = glm::dvec2(std::acos(icosahedron[i].z / len), std::atan(icosahedron[i].y/icosahedron[i].x));
     }
+    
+    
     
     int faceIndices[] = {
         0,2,1,  0,3,2,  0,4,3,  0,5,4,  0,1,5,
@@ -580,7 +585,7 @@ void Planet::Draw()
             break;
     }
     
-    unsigned int indsize, vertsize;
+    size_t indsize, vertsize;
     GetIndicesVerticesSizes(indsize, vertsize);
     if (prevVerticesSize!=vertsize)
     {
@@ -589,7 +594,7 @@ void Planet::Draw()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_DYNAMIC_DRAW);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indsize, &indices[0], GL_DYNAMIC_DRAW);
-        prevVerticesSize=vertsize;
+        prevVerticesSize=(unsigned)vertsize;
     }
 //    glDisable(GL_DEPTH_TEST);
 //    glManager.Programs[1].Use();
@@ -603,7 +608,7 @@ void Planet::Draw()
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
+        glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)0);
         glBindVertexArray(0);
     }
 }
@@ -615,6 +620,99 @@ void Planet::UpdatePhysics(double timeStep)
     RotationMatrixInv=glm::inverse(RotationMatrix);//glm::rotate(vmat4(), -Angle, glm::normalize(AngularVelocity));
     Angle+=static_cast<vfloat>(timeStep) * glm::length(AngularVelocity);
     player.Camera.PlanetRotation=Angle;
+}
+
+glm::dvec3 Planet::polarCoords(glm::dvec3 vec)
+{
+    glm::dvec3 disp = Position - vec;
+    double r = std::sqrt(disp.x*disp.x + disp.y * disp.y + disp.z * disp.z);
+    double theta = std::acos(disp.z/r);
+    double phi = std::atan(disp.y/disp.x);
+    return glm::dvec3(r, theta, phi);
+}
+
+template<typename T>
+inline bool between(T a, T b, T x)
+{
+    return (x > std::min<T>(a,b)) && (x < std::max<T>(a,b));
+}
+
+void Planet::CheckCollision(PhysicsObject *object)
+{
+    
+    glm::dvec3 polar = polarCoords(object->Position);
+    
+//    glm::dvec3 normal = glm::normalize(object->Position - Position);
+//    
+//    double dist = glm::length(object->Position-Position);
+//    
+//    
+//    if (dist<Radius)
+//    {
+//        
+//        glm::dvec3 relVel = object->Velocity - Velocity;
+//        double normalVel = glm::dot(relVel, normal);
+//        
+//        const double restitution = 0.8;
+//        
+//        double impulse1 = -(1.0+restitution) * normalVel / (1.0 / Mass + 1.0 / object->Mass);
+//        
+//        glm::dvec3 imp = impulse1 * normal;
+//        
+//        Velocity-=imp / Mass;
+//        object->Velocity+=imp / object->Mass;
+//    }
+//    for (Face& f:faces)
+//    {
+//        std::lock_guard<std::mutex> lock(renderMutex);
+//        bool faceFound=true;
+//        Face* currentFace = &f;
+//        if (currentFace==nullptr) continue;
+//        while (!currentFace->AnyChildrenNull())
+//        {
+//            Face* newF=nullptr;
+//            //select face
+//            for (Face* f:currentFace->children)
+//            {
+//                if (between<double>(f->polarCoords[0].x, f->polarCoords[1].x, polar.y) &&
+//                    between<double>(f->polarCoords[0].y, f->polarCoords[1].y, polar.z) &&
+//                    between<double>(f->polarCoords[0].x, f->polarCoords[2].x, polar.y) &&
+//                    between<double>(f->polarCoords[0].y, f->polarCoords[2].y, polar.z) &&
+//                    between<double>(f->polarCoords[1].x, f->polarCoords[2].x, polar.y) &&
+//                    between<double>(f->polarCoords[1].y, f->polarCoords[2].y, polar.z))
+//                {
+//                    newF=f;
+//                }
+//            }
+//            if (newF==nullptr) {  faceFound=false; break; }
+//            else if (glm::length2(newF->GetCenter() - static_cast<vvec3>(object->Position))>1e-3f) {
+//                faceFound=false; break; }
+//            currentFace=newF;
+//        }
+//        
+//        if (faceFound)
+//        {
+//        
+//            glm::dvec3 normal = static_cast<glm::dvec3>(currentFace->GetNormal());
+//            
+//            double dist = glm::length(object->Position-Position);
+//            
+//            if (glm::dot(normal, (object->Position) - static_cast<glm::dvec3>(currentFace->GetCenter()))<0)
+//            {
+//                glm::dvec3 relVel = object->Velocity - Velocity;
+//                double normalVel = glm::dot(relVel, normal);
+//                
+//                const double restitution = 0.8;
+//                
+//                double impulse1 = -(1.0+restitution) * normalVel / (1.0 / Mass + 1.0 / object->Mass);
+//                
+//                glm::dvec3 imp = impulse1 * normal;
+//                
+//                Velocity-=imp / Mass;
+//                object->Velocity+=imp / object->Mass;
+//            }
+//        }
+//    }
 }
 
 void Planet::setUniforms()

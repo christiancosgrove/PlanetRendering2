@@ -161,7 +161,15 @@ public:
     inline double terrainNoise(double theta, double phi);
     inline double terrainNoise(glm::dvec2 polarCoords);
     void UpdatePhysics(double timeStep);
+    
+    
+    //uses the space partitioning of the planet's surface to perform efficient collision detection between points and surface
+    void CheckCollision(PhysicsObject* object);
 private:
+    
+    //reference angle for icosahedron vertices in radians -- used to calculate Cartesian coordinates of vertices
+    const double icotheta = 26.56505117707799 * M_PI / 180.0;
+    
     
     glm::dvec3 lastPlayerUpdatePosition;
     
@@ -191,6 +199,7 @@ private:
     std::mutex renderMutex;
     
     PlanetAtmosphere atmosphere;
+    inline glm::dvec3 polarCoords(glm::dvec3 vec);
     
     inline bool inHorizon(vvec3 vertex);
     inline bool inHorizon(Face& face);
@@ -234,7 +243,7 @@ private:
     
     inline vvec3 GetPlayerDisplacement();
     
-    inline void GetIndicesVerticesSizes(unsigned int& indsize, unsigned int& vertsize);
+    inline void GetIndicesVerticesSizes(size_t& indsize, size_t& vertsize);
 };
 
 vvec3 Planet::GetPlayerDisplacement()
@@ -243,7 +252,7 @@ vvec3 Planet::GetPlayerDisplacement()
     return vmat3(RotationMatrixInv) * (player.Camera.position- static_cast<vvec3>(Position));//*glm::inverse(vmat3(RotationMatrix));
 }
 
-void Planet::GetIndicesVerticesSizes(unsigned int& indsize, unsigned int& vertsize)
+void Planet::GetIndicesVerticesSizes(size_t& indsize, size_t& vertsize)
 {
     std::lock_guard<std::mutex> lock(renderMutex);
     vertsize = vertices.size();

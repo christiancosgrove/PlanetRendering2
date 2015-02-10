@@ -11,8 +11,8 @@
 class Image
 {
 public:
-    Image(int index, size_t width, size_t height, std::vector<unsigned char>& pixels);
-    const size_t WIDTH, HEIGHT;
+    Image(int index, GLsizei width, GLsizei height, std::vector<unsigned char>& pixels);
+    const unsigned WIDTH, HEIGHT;
     std::vector<unsigned char> pixels;
     GLuint Texture;
     inline glm::vec3 GetFloatPixel(int i) const;

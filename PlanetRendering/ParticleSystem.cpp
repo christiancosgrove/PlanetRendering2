@@ -19,11 +19,21 @@ ParticleSystem::ParticleSystem(int numParticles) : NUM_PARTICLES(numParticles), 
     
     for (int i = 0; i<NUM_PARTICLES;i++)
     {
+        particles[i].Mass = std::numeric_limits<double>::epsilon();
+        particles[i].Energy=0;
+        particles[i].Inactive=false;
         particles[i].Position = glm::vec3(
-                                          RandomUtils::Normal<float>(0, 0.1),
-                                          RandomUtils::Normal<float>(0, 0.1),
-                                          RandomUtils::Normal<float>(0, 0.1));
+                                          RandomUtils::Normal<float>(0, 1),
+                                          RandomUtils::Normal<float>(0, 1),
+                                          RandomUtils::Normal<float>(0, 1));
+        particles[i].Velocity = glm::vec3(
+                                          RandomUtils::Normal<float>(0, 0.5),
+                                          RandomUtils::Normal<float>(0, 0.5),
+                                          RandomUtils::Normal<float>(0, 0.5));
     }
+    glBindVertexArray(vao);
+    updateVBO();
+    glBindVertexArray(0);
 }
 
 void ParticleSystem::generateVBO()
@@ -34,9 +44,8 @@ void ParticleSystem::generateVBO()
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     
-    
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     
     glBindVertexArray(0);
     printf("GL error1: %i\n", glGetError());
@@ -46,32 +55,37 @@ void ParticleSystem::updateVBO()
 {
     for (int i = 0; i<NUM_PARTICLES;i++)
     {
-        drawArray[i] = glm::vec3(particles[i].Position);
+        drawArray[i] = particles[i].Position;
     }
-    glBindVertexArray(vao);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * drawArray.size(), &drawArray[0], GL_DYNAMIC_DRAW);
-    glBindVertexArray(0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * drawArray.size(), &drawArray[0], GL_DYNAMIC_DRAW);
 }
 
 void ParticleSystem::Draw()
 {
-    updateVBO();
-    
+    glPointSize(5);
     //todo: fix: this drawing method causes crashes.
     glBindVertexArray(vao);
-
-    glDrawArrays(GL_POINTS, 0, drawArray.size());
-    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    updateVBO();
+    glDrawArrays(GL_POINTS, 0, (GLsizei)drawArray.size());
     glBindVertexArray(0);
     
 }
 
 void ParticleSystem::Update(double timeStep)
 {
-//    for (Particle& p:particles)
-//    {
-//        
-//        p.UpdatePhysics(timeStep);
-//    }
+    for (auto& p:particles)
+    {
+//        p.ApplyForce(glm::dvec3(0,0,1));
+        p.UpdatePhysics(timeStep);
+    }
+}
+
+void ParticleSystem::AppendParticles(std::vector<PhysicsObject *> &physicsObjects)
+{
+    for (int i = 0; i<NUM_PARTICLES;i++)
+    {
+        physicsObjects.push_back(&particles[i]);
+    }
 }
 

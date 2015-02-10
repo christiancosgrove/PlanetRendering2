@@ -21,7 +21,7 @@ std::string get_file_contents(const char *filename)
     {
         std::string contents;
         in.seekg(0, std::ios::end);
-        contents.resize(in.tellg());
+        contents.resize((size_t)in.tellg());
         in.seekg(0, std::ios::beg);
         in.read(&contents[0], contents.size());
         in.close();
@@ -41,6 +41,6 @@ void TextureManager::LoadImage(const std::string &location)
     
     decodePNG(out, width, height, (const unsigned char*)&in[0], in.size());
     
-    int index = images.size();
-    images.push_back(Image(index, width, height, out));
+    size_t index = images.size();
+    images.push_back(Image(index, (GLsizei)width, (GLsizei)height, out));
 }

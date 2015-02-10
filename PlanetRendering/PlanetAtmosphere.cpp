@@ -38,19 +38,19 @@ void PlanetAtmosphere::buildMesh()
     {
         for (float j = 0; j<2 * M_PI; j+=2*M_PI / polarVertices)
         {
-            unsigned int currIndex = vertices.size();
+            size_t currIndex = vertices.size();
             vertices.push_back(Vertex(RADIUS * glm::vec3(std::cos(i) * std::sin(j), std::sin(i) * std::sin(j), cos (j))));
             vertices.push_back(Vertex(RADIUS * glm::vec3(std::cos(i) * std::sin(j+2*M_PI / polarVertices), std::sin(i) * std::sin(j+2*M_PI / polarVertices), cos (j+2*M_PI / polarVertices))));
             vertices.push_back(Vertex(RADIUS * glm::vec3(std::cos(i+2*M_PI / azimuthalVertices) * std::sin(j), std::sin(i+2*M_PI / azimuthalVertices) * std::sin(j), cos (j))));
             vertices.push_back(Vertex(RADIUS * glm::vec3(std::cos(i+2*M_PI / azimuthalVertices) * std::sin(j+2*M_PI / polarVertices), std::sin(i+2*M_PI / azimuthalVertices) * std::sin(j+2*M_PI / polarVertices), cos (j+2*M_PI / polarVertices))));
             
-            indices.push_back(currIndex + 2);
-            indices.push_back(currIndex + 1);
-            indices.push_back(currIndex + 0);
+            indices.push_back((unsigned)(currIndex + 2));
+            indices.push_back((unsigned)(currIndex + 1));
+            indices.push_back((unsigned)(currIndex + 0));
             
-            indices.push_back(currIndex + 2);
-            indices.push_back(currIndex + 3);
-            indices.push_back(currIndex + 1);
+            indices.push_back((unsigned)(currIndex + 2));
+            indices.push_back((unsigned)(currIndex + 3));
+            indices.push_back((unsigned)(currIndex + 1));
         }
     }
     glBindVertexArray(sphereVAO);
@@ -64,7 +64,7 @@ void PlanetAtmosphere::Draw()
 {
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBindVertexArray(sphereVAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)0);
     glBindVertexArray(0);
 }
 void PlanetAtmosphere::SetUniforms(GLManager& glManager, Planet& planet)

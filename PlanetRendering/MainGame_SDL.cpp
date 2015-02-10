@@ -67,6 +67,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     glManager.AddUniformBuffer("planet_info", sizeof(float), {0});
     glManager.AddProgram(resourcePath() + "atmosphericFrag.glsl", resourcePath() + "atmosphericVert.glsl");
     glManager.AddProgram(resourcePath() + "postFragmentShader.glsl", resourcePath() + "postVertexShader.glsl");
+    glManager.AddProgram(resourcePath() + "fragmentShaderParticles.glsl", resourcePath() + "vertexShaderParticles.glsl");
     //Set background color and default depth buffer values
     glClearColor(0,0,0,1);
     
@@ -85,7 +86,7 @@ MainGame_SDL::MainGame_SDL() : gameState(GameState::PLAY)
     Player player(currentMode.w, currentMode.h);
     
     //seed random generator (change time(nullptr) to number for a deterministic seed)
-    srand(time(nullptr));
+    srand((unsigned)time(nullptr));
     
     SolarSystem solarSystem(player, glManager, WINDOW_WIDTH, WINDOW_HEIGHT, resourcePath());
     
